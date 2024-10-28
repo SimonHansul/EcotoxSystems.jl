@@ -155,6 +155,9 @@ function treplicates(
     return vcat(sim...)
 end
 
+set_vecval(C_W::Real) = [C_W]
+set_vecval(C_W::AbstractVector) = C_W
+
 
 """
     exposure(simcall::Expr, C_Wvec::Vector{Float64}; kwargs...)
@@ -164,15 +167,16 @@ Simulate exposure to a single stressor over a Vector of constant exposure concen
 function exposure(
     simulator::Function, 
     p::ComponentVector, 
-    C_Wvec::Vector{Float64}
-    )
+    C_Wmat::Matrix{R}
+    ) where R <: Real
     
     let C_W_int = p.glb.C_W # we will modify this value and then reset to the initial value
         sim = DataFrame()
 
-        for C_W in C_Wvec
-            p.glb.C_W[1] = C_W
+        for (i,C_W) in enumerate(eachrow(C_Wmat))
+            p.glb.C_W = C_W
             sim_i = simulator(p)
+            sim_i[!,:treatment_id] .= i
             append!(sim, sim_i)
         end
         
@@ -181,6 +185,8 @@ function exposure(
         return sim
     end
 end
+
+
 
 """
 Threaded version of `exposure()`.
