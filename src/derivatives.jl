@@ -75,24 +75,17 @@ Individual-level part of the DEB-ODE model with arbitrary number of stressors, a
 
     # scaled damage dynamics based on the minimal model
 
-    du.ind.D_G = @. (1 - ind.embryo) * p.ind.k_D_G * (glb.C_W - ind.D_G)
-    du.ind.D_M = @. (1 - ind.embryo) * p.ind.k_D_M * (glb.C_W - ind.D_M)
-    du.ind.D_A = @. (1 - ind.embryo) * p.ind.k_D_A * (glb.C_W - ind.D_A)
-    du.ind.D_R = @. (1 - ind.embryo) * p.ind.k_D_R * (glb.C_W - ind.D_R)
-    du.ind.D_h = @. (1 - ind.embryo) * p.ind.k_D_h * (glb.C_W - ind.D_h)
-
-    # response to chemical stressors based on independent action
-
-    ind.y_G = prod(@. softNEC2neg(ind.D_G, p.ind.e_G, p.ind.b_G))  
-    ind.y_M = prod(@. softNEC2pos(ind.D_M, p.ind.e_M, p.ind.b_M))  
-    ind.y_A = prod(@. softNEC2neg(ind.D_A, p.ind.e_A, p.ind.b_A))  
-    ind.y_R = prod(@. softNEC2neg(ind.D_R, p.ind.e_R, p.ind.b_R))
-    ind.h_z = sum(@. softNEC2GUTS(ind.D_h, p.ind.e_h, p.ind.b_h)) 
-    du.ind.S_z = -ind.h_z * ind.S_z
-
-    # calculation of temperature correction factor
-
-    ind.y_T = exp((p.ind.T_A / p.ind.T_ref) - (p.ind.T_A / p.glb.T)) 
+    du.ind.D_z .= @. (1 - ind.embryo) * p.ind.k_D_z * (glb.C_W - ind.D_z)
+    du.ind.D_h .= @. (1 - ind.embryo) * p.ind.k_D_h * (glb.C_W - ind.D_h)
+    
+    ind.s_z .= @. softNEC2neg(ind.D_z, p.ind.e_z, p.ind.b_z) # stress values for all chemical stressors and PMoas
+    ind.h_z = sum(@. softNEC2GUTS(ind.D_h, p.ind.e_h, p.ind.b_h)) # hazard rate according to GUTS-RED-SD
+    ind.s_j = mapslices(prod, ind.s_z; dims=1) #prod(ind.s_z, dims = 2) # stress values per chemical stressor
+    y_G, y_M, y_A, y_R = ind.s_j # unpacking the relative responses
+    y_M = 1/y_M
+    
+    du.ind.S_z = -ind.h_z * ind.S_z # survival probability according to GUTS-RED-SD
+    ind.y_T = exp((p.ind.T_A / p.ind.T_ref) - (p.ind.T_A / p.glb.T)) # temperature correction
 
     # ingestion rates and feedback with resource pools
 
@@ -108,12 +101,12 @@ Individual-level part of the DEB-ODE model with arbitrary number of stressors, a
 
     # remaining derivatives
 
-    du.ind.A = du.ind.I * p.ind.eta_IA * ind.y_A # Assimilation flux
-    du.ind.M = ind.S * p.ind.k_M * ind.y_M * ind.y_T # Somatic maintenance flux
-    du.ind.J = ind.H * p.ind.k_J * ind.y_M * ind.y_T #  
-    du.ind.S = sig(p.ind.kappa * du.ind.A, du.ind.M, -(du.ind.M / p.ind.eta_SA - p.ind.kappa * du.ind.A), ind.y_G * p.ind.eta_AS * (p.ind.kappa * du.ind.A - du.ind.M))    
+    du.ind.A = du.ind.I * p.ind.eta_IA * y_A # Assimilation flux
+    du.ind.M = ind.S * p.ind.k_M * y_M * ind.y_T # Somatic maintenance flux
+    du.ind.J = ind.H * p.ind.k_J * y_M * ind.y_T #  
+    du.ind.S = sig(p.ind.kappa * du.ind.A, du.ind.M, -(du.ind.M / p.ind.eta_SA - p.ind.kappa * du.ind.A), y_G * p.ind.eta_AS * (p.ind.kappa * du.ind.A - du.ind.M))    
     du.ind.H = (1 - ind.adult) * clipneg(((1 - p.ind.kappa) * du.ind.A) - du.ind.J)
-    du.ind.R = ind.adult * clipneg(p.ind.eta_AR * ind.y_R * ((1 - p.ind.kappa) * du.ind.A - du.ind.J))  # reproduction for adults
+    du.ind.R = ind.adult * clipneg(p.ind.eta_AR * y_R * ((1 - p.ind.kappa) * du.ind.A - du.ind.J))  # reproduction for adults
 
     return nothing
 end
@@ -122,7 +115,6 @@ end
 DEB-ODE model with arbitrary number of stressors, assuming IA to compute combined effects. 
 """
 function DEBODE!(du, u, p, t)
-
     DEBODE_global!(du, u, p, t)
     DEBODE_individual!(du, u, p, t)
 end

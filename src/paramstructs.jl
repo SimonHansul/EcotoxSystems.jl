@@ -36,23 +36,16 @@ species_params = ComponentVector(
     k_M = 0.59,     # somatic maintenance rate constant [d^-1]
     k_J = 0.504,    # maturity maintenance rate constant [d^-1]
     H_p = 1 / 3,    # maturity at puberty [μgC]
-    k_D_G = [0.0],  # toxicokinetic rate constants | PMoA growth efficiency
-    k_D_M = [0.0],  # toxicokinetic rate constants | PMoA maintenance costs
-    k_D_A = [0.0],  # toxicokinetic rate constants | PMoA assimilation efficiency
-    k_D_R = [0.38], # toxicokinetic rate constants | PMoA reproduction efficiency
-    k_D_h = [0.0],  # toxicokinetic rate constants | PMoA hazard rate
-    e_G = [1e10],   # sensitivity parameters | PMoA growth efficiency
-    e_M = [1e10],   # sensitivity parameters | PMoA maintenance costs
-    e_A = [1e10],   # sensitivity parameters | PMoA assimilation efficiency
-    e_R = [167.0],  # sensitivity parameters | PMoA reproduction efficiency
-    e_h = [1e10],   # sensitivity parameters | PMoA hazard rate
-    b_G = [1e10],   # slope parameters | PMoA growth efficiency
-    b_M = [1e10],   # slope parameters | PMoA maintenance costs
-    b_A = [1e10],   # slope parameters | PMoA assimilation efficiency
-    b_R = [0.93],   # slope parameters | PMoA reproduction efficiency
-    b_h = [1e10],   # slope parameters | PMoA reproduction efficiency
-    f_Xthr = 0.5,   # functional response threshold for starvation mortality
-    s_min = 0.25,   # daily survival mortality at complete food deprivation
+    k_D_z = [0 0 0 .38;], # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
+    e_z = [0 0 0 167;], # sensitivity parameters (thresholds)
+    b_z = [0 0 0 0.93;], # slope parameters
+    k_D_h = [0;], # k_D - value for GUTS-Sd module (1 row = 1 stressor)
+    e_h = [0;], # sensitivity parameter (threshold) for GUTS-SD module
+    b_h = [0;], # slope parameter for GUTS-SD module 
+    # these are curently only used in an individual-based context, but could find application in the pure-ODE implementation 
+    # for example by triggering emptying of the reproduction buffer through callbacks
+    f_Xthr = 0.5,  # functional response threshold for starvation mortality
+    s_min = 0.25,  # daily survival mortality at complete food deprivation
     a_max = Truncated(Normal(60, 6), 0, Inf), # maximum life span 
     tau_R = 2.0 # reproduction interval
 )

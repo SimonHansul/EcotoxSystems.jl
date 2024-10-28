@@ -163,20 +163,20 @@ Simulate exposure to a single stressor over a Vector of constant exposure concen
 """
 function exposure(
     simulator::Function, 
-    defaultparams::ComponentVector, 
+    p::ComponentVector, 
     C_Wvec::Vector{Float64}
     )
     
-    let C_W_int = defaultparams.glb.C_W # we will modify this value and then reset to the initial value
+    let C_W_int = p.glb.C_W # we will modify this value and then reset to the initial value
         sim = DataFrame()
 
         for C_W in C_Wvec
-            defaultparams.glb.C_W[1] = C_W
-            sim_i = simulator(defaultparams)
+            p.glb.C_W[1] = C_W
+            sim_i = simulator(p)
             append!(sim, sim_i)
         end
         
-        defaultparams.glb.C_W = C_W_int 
+        p.glb.C_W = C_W_int 
 
         return sim
     end

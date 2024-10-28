@@ -2,58 +2,39 @@
 Simulate single stressors with different PMoAs
 =#
 
-using Plots.Measures
 
-using MechanisticEffectModels.ParamStructs
-using MechanisticEffectModels.DEBODE
+using DataFramesMeta
+import EnergyBudgetDiffEqs: exposure, relative_response
 
-ENV["JULIA_DEBUG"] = Main
 
-params = Params()
-isolate_pmoas!(params, ["M"])
-params.spc.k_D_M = [1.]
-params.spc.e_M = [1.]
-params.spc.b_M = [2.]
+p = DEB.params()
+p.spc.k_D_z .= 0
+
+p.glb.t_max = 42.
+
+p.spc.e_z .= 1.
+p.spc.b_z .= 0.1
+
 
 
 let C_Wvec =  vcat([0], round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2))
-    global sim = DataFrame()
+    global sims = DataFrame()
     pmoas = ["G", "M", "A", "R"]
-    for pmoa in pmoas
-        for C_W in C_Wvec
-            glb = GlobalParams(t_max = 42., C_W = [C_W])
-            spc = SpeciesParams(
-                kappa_0 = 0.538,
-                k_D_G = [0.1], 
-                k_D_M = [0.1], 
-                k_D_A = [0.1], 
-                k_D_R = [0.1], 
-                k_D_h = [0.1], 
-                e_G = [1.],
-                e_M = [1.],
-                e_A = [1.],
-                e_R = [1.],
-                e_h = [1.],
-                b_G = [0.5],
-                b_M = [0.5],
-                b_A = [0.5],
-                b_R = [0.5],
-                b_h = [0.5]
-                )
-            theta = Params(glb = glb, spc = spc)
-            isolate_pmoas!(theta.spc, [pmoa])
-            sim_zj = DEBODE.simulator(theta)
-            sim_zj[!,:C_W] .= C_W
-            sim_zj[!,:pmoa] .= pmoa
-            append!(sim, sim_zj)
-        end # for C_W in ...
-    end # for pmoa in ...
-    
-    sim = relative_response(sim, [:S, :R], :C_W; groupby_vars = [:t, :pmoa])
+    for (j,pmoa) in enumerate(pmoas)
 
-    sort!(sim, :t)
+        p.spc.k_D_z .= 0.
+        p.spc.k_D_z[1,j] = 1
+
+        sim_j = exposure(DEB.simulator, p, C_Wvec)
+        sim_j[!,:pmoa] .= pmoa
+        append!(sims, sim_j)
+    end 
     
-    rankcor = combine(groupby(sim, :pmoa)) do sim_j
+    sims = relative_response(sims, [:S, :R], :C_W_1; groupby_vars = [:t, :pmoa])
+
+    sort!(sims, :t)
+    
+    rankcor = combine(groupby(sims, :pmoa)) do sim_j
         @chain sim_j begin
             combine(groupby(_, :C_W_1), :y_R => last) 
             corspearman(_.C_W_1, _.y_R_last)
@@ -64,7 +45,8 @@ let C_Wvec =  vcat([0], round.(10 .^ range(log10(1.01), log10(10.), length = 5),
     plt = plot(
         layout = (2,4), title = hcat(pmoas...), 
         ylim = (0, 1.01),
-        xlabel = "t", ylabel = hcat([gridylabel("y_S", 1, 4), gridylabel("y_R", 1, 4)]...), 
+        xlabel = "t", 
+        ylabel = "relative response", 
         size = (800,450), 
         bottommargin = 5mm, leftmargin = 2.5mm, lw = 2,
         leg = [false false false true false false false false],
@@ -72,8 +54,8 @@ let C_Wvec =  vcat([0], round.(10 .^ range(log10(1.01), log10(10.), length = 5),
         )
         
     for (j,pmoa) in enumerate(pmoas)
-        @df @subset(sim, :pmoa .== pmoa) groupedlineplot!(plt, :t, :y_S, :C_W, subplot = j, label = hcat(unique(:C_W)...))
-        @df @subset(sim, :pmoa .== pmoa) groupedlineplot!(plt, :t, :y_R, :C_W, subplot = 4+j, label = hcat(unique(:C_W)...))
+        @df @subset(sims, :pmoa .== pmoa) plot!(plt, :t, :y_S, group = :C_W_1, subplot = j, label = hcat(unique(:C_W_1)...))
+        @df @subset(sims, :pmoa .== pmoa) plot!(plt, :t, :y_R, group = :C_W_1, subplot = 4+j, label = hcat(unique(:C_W_1)...))
     end
     
     display(plt)

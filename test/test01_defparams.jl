@@ -1,20 +1,16 @@
-#=
-Testing the default parameters
 
-- is the maximum maturity equal to maturity at puberty?
-- does the maximum structure match with what is calculated from parameters?
-- does the mass balance check out?
-=#
 
 @testset begin  
-    p = defaultparams
+
+
+    p = DEB.params()
     p.glb.t_max = 56.
     p.spc.Z = Dirac(1.)
-    global sim = DEBODE.simulator(p, reltol = 1e-3)
+    global sim = DEB.simulator(p, reltol = 1e-3)
 
 
-    @test isapprox(maximum(sim.H), p.spc.H_p_0, rtol = 0.1) # test for maximum maturity
-    @test isapprox(maximum(sim.S), DEBODE.calc_S_max(p.spc), rtol = 0.1)
+    @test isapprox(maximum(sim.H), p.spc.H_p, rtol = 0.1) 
+    @test isapprox(maximum(sim.S), DEB.calc_S_max(p.spc), rtol = 0.1)
 end;
 
 
@@ -22,10 +18,13 @@ end;
 Basic test of @replicates macro
 =#
 
+import EnergyBudgetDiffEqs: @replicates
+
+using Chain
 @testset begin
-    p = defaultparams
+    p = DEB.params()
     p.spc.Z = Truncated(Normal(1., 0.1), 0, Inf)
-    sim = @replicates DEBODE.simulator(p) 10
+    sim = @replicates DEB.simulator(p) 10
 
     plt = @df sim plot(
         plot(:t, :S, group = :replicate, color = 1),

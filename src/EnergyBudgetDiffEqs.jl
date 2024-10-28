@@ -11,17 +11,15 @@ module EnergyBudgetDiffEqs
 	using Base.Threads
 
     include("utils.jl")
+    export relative_response
 	
 	include("drcfuncts.jl")
 
 	include("paramstructs.jl")
-	export defaultparams
 
 	include("derivatives.jl")
-	export sig, clipneg
 
 	include("statevars.jl")
-	export initialize_statevars
 
 	include("simulators.jl")
 	export @replicates, replicates, treplicates, exposure

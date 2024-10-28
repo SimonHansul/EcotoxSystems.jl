@@ -1,5 +1,9 @@
 const X_EMB_INT_REL = 0.001 
 
+constrmvec(x::AbstractMatrix) = MVector{size(x)[1],Float64}(zeros(size(x)[1]))
+constrmvec(x::AbstractVector) = MVector{length(x),Float64}(zeros(length(x)))
+constrmmat(x::AbstractMatrix) = MMatrix{size(x)...,Float64}(zeros(size(x)))
+
 function initialize_individual_statevars(p::ComponentVector, id = 1, cohort = 0)::ComponentVector
     ComponentVector(
         embryo = 1,
@@ -19,23 +23,20 @@ function initialize_individual_statevars(p::ComponentVector, id = 1, cohort = 0)
         M = 0, # somatic maintenance
         J = 0, # maturity maintenance 
 
-        D_G = MVector{length(p.ind.k_D_G), Float64}(zeros(length(p.ind.k_D_G))), # scaled damage | growth efficiency
-        D_M = MVector{length(p.ind.k_D_M), Float64}(zeros(length(p.ind.k_D_M))), # scaled damage | maintenance costs 
-        D_A = MVector{length(p.ind.k_D_A), Float64}(zeros(length(p.ind.k_D_A))), # scaled damage | assimilation efficiency
-        D_R = MVector{length(p.ind.k_D_R), Float64}(zeros(length(p.ind.k_D_R))), # scaled damage | reproduction efficiency
-        D_h = MVector{length(p.ind.k_D_h), Float64}(zeros(length(p.ind.k_D_h))), # scaled damage | hazard rate
+        D_z = constrmmat(p.ind.k_D_z), # sublethal damage per stressor and PMoA
+        D_h = constrmvec(p.ind.k_D_h), # lethal damage per stressor
 
-        y_G = 1., # relative response | growth efficiency
-        y_M = 1., # relative response | maintenance costs 
-        y_A = 1., # relative response | assimilation efficiency
-        y_R = 1., # relative response | reproduction efficiency
-        y_T = 1., # relative response | temperature effects
-        h_z = 0., # hazard rate | chemical stressors
+        s_z = constrmmat(p.ind.k_D_z), # relative response per stressor and pmoa
+        s_j = constrmvec(p.ind.k_D_z[1,:]), # relative response per pmoa
+        
+        y_T = 1., # relative response to temperature
+        h_z = 0., # hazard rate caused by chemical stressors
         S_z = 1., # chemical-related survival probability
 
         h_fX = 0., # starvation-induced hazard rate
 
-        # these are only needed in the IBM version
+        # these are curently only needed in the IBM version, 
+        # but may find application in the pure-ODE implementation 
         id = id, 
         cohort = cohort,
         age = 0,
