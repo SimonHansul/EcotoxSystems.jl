@@ -42,5 +42,5 @@ using StatsBase
     # checking that maximum size increases strictly monotonically with increasing food availability
     rankcor_size = combine(groupby(sim, :Xdot_in), :S => maximum) |> x -> corspearman(x.Xdot_in, x.S_maximum)
 
-    @test rankcor == 1 
+    @test rankcor_size == 1 
 end

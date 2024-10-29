@@ -26,17 +26,17 @@ function initialize_individual_statevars(p::ComponentVector, id = 1, cohort = 0)
         D_z = constrmmat(p.ind.k_D_z), # sublethal damage per stressor and PMoA
         D_h = constrmvec(p.ind.k_D_h), # lethal damage per stressor
 
-        s_z = constrmmat(p.ind.k_D_z), # relative response per stressor and pmoa
-        s_j = constrmvec(p.ind.k_D_z[1,:]), # relative response per pmoa
+        y_z = constrmmat(p.ind.k_D_z), # relative response per stressor and pmoa
+        y_j = constrmvec(p.ind.k_D_z[1,:]), # relative response per pmoa
         
         y_T = 1., # relative response to temperature
         h_z = 0., # hazard rate caused by chemical stressors
         S_z = 1., # chemical-related survival probability
 
-        h_fX = 0., # starvation-induced hazard rate
-
         # these are curently only needed in the IBM version, 
         # but may find application in the pure-ODE implementation 
+
+        h_fX = 0., # starvation-induced hazard rate
         id = id, 
         cohort = cohort,
         age = 0,
