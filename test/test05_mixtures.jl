@@ -28,7 +28,42 @@ p = ComponentVector(
         C_W = [0., 0.],               # external chemical concentrations [μg L-1]
         T = 293.15                 # ambient temperature [K]
     ),
-    spc = DEB.species_params
+    spc = ComponentVector(
+        Z = Dirac(1.0), # individual variability through zoom factor
+        propagate_zoom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
+            Idot_max_rel = 1/3, 
+            Idot_max_rel_emb = 1/3,
+            X_emb_int = 1,
+            H_p = 1, 
+            K_X = 1
+        ),
+        T_A = 8000.0,    # Arrhenius temperature [K]
+        T_ref = 293.15,  # reference temperature [K]
+        X_emb_int = 19.42, # initial vitellus [μgC]
+        K_X = 1000.0, # half-saturation constant for food uptake [μgC L-1]
+        Idot_max_rel = 22.9,      # maximum size-specific ingestion rate [μgC μgC^-(2/3) d-1]
+        Idot_max_rel_emb = 22.9,  # size-specific embryonic ingestion rate [μgC μgC^-(2/3) d-1]
+        kappa = 0.539,  # somatic allocation fraction [-]
+        eta_IA = 0.33,  # assimilation efficiency [-]
+        eta_AS = 0.8,   # growth efficiency [-]
+        eta_SA = 0.8,  # shrinking efficiency [-]
+        eta_AR = 0.95,  # reproduction efficiency [-]
+        k_M = 0.59,     # somatic maintenance rate constant [d^-1]
+        k_J = 0.504,    # maturity maintenance rate constant [d^-1]
+        H_p = 1 / 3,    # maturity at puberty [μgC]
+        k_D_z = [0 0 0 0; 0 0 0 0], # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
+        e_z = [0 0 0 167;], # sensitivity parameters (thresholds)
+        b_z = [0 0 0 0.93;], # slope parameters
+        k_D_h = [0;], # k_D - value for GUTS-Sd module (1 row = 1 stressor)
+        e_h = [0;], # sensitivity parameter (threshold) for GUTS-SD module
+        b_h = [0;], # slope parameter for GUTS-SD module 
+        # these are curently only used in an individual-based context, but could find application in the pure-ODE implementation 
+        # for example by triggering emptying of the reproduction buffer through callbacks
+        f_Xthr = 0.5,  # functional response threshold for starvation mortality
+        s_min = 0.25,  # daily survival mortality at complete food deprivation
+        a_max = Truncated(Normal(60, 6), 0, Inf), # maximum life span 
+        tau_R = 2.0 # reproduction interval
+    )    
 )
 
 # simulating two stressors with different PMoAs
@@ -56,8 +91,11 @@ sim = exposure(DEB.simulator, p, C_Wmat);
 )
 
 
-sim.y_z__1
+p.spc.k_D_z
 
+DEB.constrmmat(p.spc.k_D_z)
+
+DEB.simulator(p)
 
 # simulating stressors with identical PMoAs
 
@@ -79,14 +117,3 @@ sim = exposure(DEB.simulator, p, C_Wmat);
     plot(:t, :R, group = :treatment_id)
 )
     
-
-p.glb.C_W
-
-
-@df sim plot(
-    plot(:t, :y_j_4, group = :treatment_id)
-)
-
-
-p.glb.C_W
-
