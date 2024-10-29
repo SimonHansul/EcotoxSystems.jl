@@ -53,14 +53,15 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
     # and so related to the survival curve we expect if an individual is depleted from food
     # by calling sig(), we express this if/else statement as a continuous function
 
-i    let s_f = sig(
-        ind.f_X, p.ind.f_Xthr, 
-        (1 - p.ind.s_min) * ind.f_X / p.ind.f_Xthr + p.ind.s_min,1.)^m.dt
 
-        if rand() > s_f
-            ind.cause_of_death = 2.
-        end
-    end
+    #let s_f = sig(
+    #    ind.f_X, p.ind.f_Xthr, 
+    #    (1 - p.ind.s_min) * ind.f_X / p.ind.f_Xthr + p.ind.s_min,1.)^m.dt
+    #
+    #    if rand() > s_f
+    #        ind.cause_of_death = 2.
+    #    end
+    #end
 
     # reproduction, assuming a constant reproduction period
     
@@ -91,6 +92,7 @@ i    let s_f = sig(
 
     return nothing
 end
+
 
 @with_kw mutable struct DEBIndividual <: AbstractDEBIndividual
 

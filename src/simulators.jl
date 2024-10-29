@@ -116,6 +116,7 @@ function IBM_simulator(
     p::ComponentVector; 
     global_ode! = DEBODE_global!,
     individual_ode! = DEBODE_individual!,
+    individual_rules! = default_individual_rules!,
     dt = 1/24, 
     saveat = 1,
     record_individuals = true,
@@ -128,6 +129,7 @@ function IBM_simulator(
         p; 
         global_ode! = global_ode!, 
         individual_ode! = individual_ode!,
+        individual_rules! = individual_rules!,
         dt = dt, 
         saveat = saveat,
         record_individuals = record_individuals
