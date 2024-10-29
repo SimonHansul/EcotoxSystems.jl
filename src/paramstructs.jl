@@ -35,7 +35,7 @@ species_params = ComponentVector(
     eta_AR = 0.95,  # reproduction efficiency [-]
     k_M = 0.59,     # somatic maintenance rate constant [d^-1]
     k_J = 0.504,    # maturity maintenance rate constant [d^-1]
-    H_p = 1 / 3,    # maturity at puberty [μgC]
+    H_p = 100,    # maturity at puberty [μgC]
     k_D_z = [0 0 0 .38;], # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
     e_z = [0 0 0 167;], # sensitivity parameters (thresholds)
     b_z = [0 0 0 0.93;], # slope parameters

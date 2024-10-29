@@ -1,29 +1,35 @@
 module EnergyBudgetDiffEqs
 
-	using Parameters
-	using ComponentArrays
-	using OrdinaryDiffEq
-	using Distributions
-	using DataFrames
-	using PrecompileTools
-	using StaticArrays
-	using StatsBase
-	using Base.Threads
+using Parameters
+using ComponentArrays
+using OrdinaryDiffEq
+using Distributions
+using DataFrames
+using PrecompileTools
+using StaticArrays
+using StatsBase
+using Random
+using Base.Threads
 
-    include("utils.jl")
-    export relative_response
-	
-	include("drcfuncts.jl")
+include("utils.jl")
+export relative_response
 
-	include("paramstructs.jl")
+include("drcfuncts.jl")
+include("paramstructs.jl")
+include("derivatives.jl")
+include("statevars.jl")
 
-	include("derivatives.jl")
+# infrastructure to incorporate ODE-based model into an IBM framework
 
-	include("statevars.jl")
+abstract type AbstractDEBIBM end
 
-	include("simulators.jl")
-	export @replicates, replicates, treplicates, exposure
+include("individuals.jl")
+include("individualbasedmodel.jl")
+include("ibmschedules.jl")
 
-	include("traits.jl")
+include("simulators.jl")
+export ODE_simulator, IBM_simulator, @replicates, replicates, treplicates, exposure
+
+include("traits.jl")
 
 end # module EnergyBudgetDiffEqs

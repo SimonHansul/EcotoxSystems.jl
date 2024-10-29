@@ -4,7 +4,11 @@ constrmvec(x::AbstractMatrix) = MVector{size(x)[1],Float64}(zeros(size(x)[1]))
 constrmvec(x::AbstractVector) = MVector{length(x),Float64}(zeros(length(x)))
 constrmmat(x::AbstractMatrix) = MMatrix{size(x)...,Float64}(zeros(size(x)))
 
-function initialize_individual_statevars(p::ComponentVector, id = 1, cohort = 0)::ComponentVector
+function initialize_individual_statevars(
+    p::ComponentVector; 
+    id = 1, 
+    cohort = 0)::ComponentVector
+    
     ComponentVector(
         embryo = 1,
         juvenile = 0,

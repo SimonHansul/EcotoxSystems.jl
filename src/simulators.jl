@@ -16,54 +16,44 @@
 
 Run the model as ODE system. 
 
-**args**:
-
-- `p::ComponentVector`: Parameters defined as ComponentVector. Default models assume entries `glb` and `spc` for global and species-specific parameters, respectively. `spc` will be internally converted to `ind` to represent individual-specific parameters. 
-
-**kwargs**:
-
-- `model = EnergyBudgetDiffEqs!`: Definition of the derivatives. A function form `du!(du, u, p, t)::Nothing`. See definition of `EnergyBudgetDiffEqs!` in `derivatives.jl` for an example, or see docs and examples of [DifferentialEquations.jl](https://docs.sciml.ai/DiffEqDocs/stable/) for more details.
-- `alg = Tsit5()`: Algorithm to be used by `solve` function 
-- `saveat = 1`: When or how often to save ODE solutions to output
-- `reltol = 1e-6`: Relative tolerance of ODE solutions
-- `model` : Definition of the derivatives in a form that is compatible with the DifferentialEquations.jl interface
-- `callbacks` : Definition of callbacks, e.g. for life-stage transitions
-- `returntype` : The return type as enum `ReturnType`. 
-- `kwargs...`: Additional keyword argument are passed on to `OrdinaryDiffEq.solve`
 
 **Example**: 
 
 ```Julia
-sim = simulator(Params())
+import EnergyBudgetDiffEqs as DEB
+p = DEB.params() # loads the default parameters
+sim = DEB.ODE_simulator(p)
 ```
 
 """
-function simulator(
+function ODE_simulator(
     p::ComponentVector; 
     alg = Tsit5(),
     saveat = 1,
     reltol = 1e-6,
     model = DEBODE!,
+    statevars_init = initialize_statevars,
+    ind_params_init = generate_individual_params,
     callbacks = DEBODE_callbacks,
     returntype::ReturnType = dataframe,
     kwargs...
     )
 
-    individual_params = generate_individual_params(p)
-    u = initialize_statevars(individual_params)
+    individual_params = ind_params_init(p)
+    u = statevars_init(individual_params)
 
     prob = ODEProblem(model, u, (0, p.glb.t_max), individual_params) # define the problem
     sol = solve(prob, alg; callback = callbacks, saveat = saveat, reltol = reltol, kwargs...) # get solution to the IVP
 
-    if returntype == odesol
+    if returntype == odesol # directly return the ODE solution object
         return sol
     end
 
-    if returntype == dataframe
+    if returntype == dataframe # return solution as dataframe
         return  DataFrame(hcat(sol.t, hcat(sol.u...)'), getcolnames(sol)) # convert solution to dataframe
     end
 
-    error("returntype $returntype does not seem to be implemented")
+    error("returntype $returntype not implemented")
 end
 
 
@@ -94,6 +84,98 @@ macro replicates(simcall::Expr, nreps::Int)
         sim
     end
 end
+
+"""
+    IBM_simulator(
+        p::ComponentVector; 
+        dt = 1/24, 
+        saveat = 1,
+        showinfo::Number = Inf
+        )::DataFrame
+
+Simulate the individual-based version of the default model. 
+
+```
+import EnergyBudgetDiffEqs as DEB
+p = DEB.params()
+sim = DEB.IBMsimulator(p)
+```
+
+args
+
+- `p`: The parameter collection with defined global and species parameters.
+
+kwargs
+
+- `dt`: Length of a timestep in the model (unit according to chosen unit of rate parameters)
+- `saveat`: Time interval at which to record output
+- `showinfo`: Time interval at which to print an update. Nothing will be printed if `showinfo == Inf` (the default).
+
+"""
+function IBM_simulator(
+    p::ComponentVector; 
+    global_ode! = DEBODE_global!,
+    individual_ode! = DEBODE_individual!,
+    dt = 1/24, 
+    saveat = 1,
+    record_individuals = true,
+    showinfo::Number = Inf
+    )::DataFrame
+
+    showinfo < Inf ? @info("Running IndividualBasedModel simulation with t_max=$(p.glb.t_max)") : nothing
+    
+    m = IndividualBasedModel(
+        p; 
+        global_ode! = global_ode!, 
+        individual_ode! = individual_ode!,
+        dt = dt, 
+        saveat = saveat,
+        record_individuals = record_individuals
+        )
+
+    while !(m.t > m.p.glb.t_max)
+        if showinfo < Inf && isapprox(m.t % showinfo, 0, atol = m.dt)
+            @info("t=$(m.t)") : nothing
+        end
+
+        model_step!(m)
+    end
+
+    return individual_record_to_df(m)
+end
+
+"""
+individual_record_to_df(
+    m::AbstractDEBIBM; 
+    cols::Union{Symbol,Vector{Symbol}} = :all
+    )::DataFrame
+
+Convert individual record to Data Frame.
+
+args 
+
+- `m::AbstractDEBIBM`: Model object containing an `individual_record` field as Vector of Component Vectors
+
+kwargs
+
+- `cols`: A Vector of Symbols indicating the 
+
+"""
+function individual_record_to_df(
+    m::AbstractDEBIBM; 
+    )::DataFrame
+
+
+    cols = vcat(
+        [:t, :id],
+        [keys(m.individual_record[1])...]
+    )  |> unique
+
+    
+    hcat([map(x -> getproperty(x, y), m.individual_record) for y in cols]...) |> 
+    x -> DataFrame(x, cols)
+end
+
 
 
 """

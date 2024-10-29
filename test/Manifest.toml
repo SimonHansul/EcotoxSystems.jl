@@ -2,7 +2,7 @@
 
 julia_version = "1.11.0"
 manifest_format = "2.0"
-project_hash = "a0de638b7146076cbe8e44656c036e5073fecf1e"
+project_hash = "163bfcb59ded34de1defb143e410a9336a7644f9"
 
 [[deps.ADTypes]]
 git-tree-sha1 = "eea5d80188827b35333801ef97a40c2ed653b081"
@@ -638,7 +638,7 @@ version = "1.1.0"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
 [[deps.EnergyBudgetDiffEqs]]
-deps = ["ComponentArrays", "DataFrames", "Distributions", "OrdinaryDiffEq", "Parameters", "PrecompileTools", "StaticArrays", "StatsBase"]
+deps = ["ComponentArrays", "DataFrames", "Distributions", "OrdinaryDiffEq", "Parameters", "PrecompileTools", "Random", "StaticArrays", "StatsBase"]
 path = ".."
 uuid = "a070e96f-54e2-4e3c-8571-6208d1dd8981"
 version = "0.1.0"

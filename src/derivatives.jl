@@ -60,7 +60,7 @@ DEBODE_callbacks = CallbackSet(cb_juvenile, cb_adult)
 
 
 @inline function DEBODE_global!(du, u, p, t)::Nothing
-
+    
     du.glb.X_p = p.glb.Xdot_in - p.glb.k_V * u.glb.X_p  
 
     return nothing
