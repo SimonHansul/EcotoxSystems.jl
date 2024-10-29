@@ -16,8 +16,7 @@ p.spc.e_z .= 1.
 p.spc.b_z .= 0.1
 
 
-
-let C_Wvec =  vcat([0], round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2))
+let C_Wvec =  hcat([0], round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2)...)' |> Matrix
     global sims = DataFrame()
     pmoas = ["G", "M", "A", "R"]
     for (j,pmoa) in enumerate(pmoas)

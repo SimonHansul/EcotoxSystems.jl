@@ -60,7 +60,3 @@ sim = exposure(DEB.simulator, p, C_Wmat);
     plot(:t, :R, group = :treatment_id)
 )
 
-sim.y_z
-
-
-sim.C_W_2

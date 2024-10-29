@@ -78,12 +78,9 @@ Individual-level part of the DEB-ODE model with arbitrary number of stressors, a
     du.ind.D_z = @. (1 - ind.embryo) * p.ind.k_D_z * (glb.C_W - ind.D_z)
     du.ind.D_h = @. (1 - ind.embryo) * p.ind.k_D_h * (glb.C_W - ind.D_h)
     
-    ind.s_z .= @. softNEC2pos(ind.D_z, p.ind.e_z, p.ind.b_z) # stress values for all chemical stressors and PMoas
-    ind.h_z = sum(@. softNEC2GUTS(ind.D_h, p.ind.e_h, p.ind.b_h)) # hazard rate according to GUTS-RED-SD
+    ind.s_z .= @. p[2] * (ind.D_z - p.ind.e_z) * (0.5 + (1 / pi) * atan(1e6 * (ind.D_z - p.ind.b_z))) # stress values for all chemical stressors and PMoas
     ind.s_j = mapslices(prod, ind.s_z; dims=1) # stress values per chemical stressor
-    
-    y_G, y_M, y_A, y_R = ind.s_j # unpacking the stress values per chemica
-    y_M = 1/y_M
+    ind.h_z = sum(@. softNEC2GUTS(ind.D_h, p.ind.e_h, p.ind.b_h)) # hazard rate according to GUTS-RED-SD
     
     du.ind.S_z = -ind.h_z * ind.S_z # survival probability according to GUTS-RED-SD
     ind.y_T = exp((p.ind.T_A / p.ind.T_ref) - (p.ind.T_A / p.glb.T)) # temperature correction
@@ -102,17 +99,17 @@ Individual-level part of the DEB-ODE model with arbitrary number of stressors, a
 
     # remaining derivatives
 
-    du.ind.A = du.ind.I * p.ind.eta_IA * y_A # Assimilation flux
-    du.ind.M = ind.S * p.ind.k_M * y_M * ind.y_T # Somatic maintenance flux
-    du.ind.J = ind.H * p.ind.k_J * y_M * ind.y_T #  
+    du.ind.A = du.ind.I * p.ind.eta_IA * 1/(1+ind.s_j[3]) # Assimilation flux
+    du.ind.M = ind.S * p.ind.k_M * (1 + ind.s_j[2]) * ind.y_T # Somatic maintenance flux
+    du.ind.J = ind.H * p.ind.k_J * (1 + ind.s_j[2]) * ind.y_T #  
     du.ind.S = sig(
         p.ind.kappa * du.ind.A, 
         du.ind.M, 
         -(du.ind.M / p.ind.eta_SA - p.ind.kappa * du.ind.A), 
-        ind.s_j[1] * p.ind.eta_AS * (p.ind.kappa * du.ind.A - du.ind.M)
+        1/(1+ind.s_j[1]) * p.ind.eta_AS * (p.ind.kappa * du.ind.A - du.ind.M)
         )    
     du.ind.H = (1 - ind.adult) * clipneg(((1 - p.ind.kappa) * du.ind.A) - du.ind.J)
-    du.ind.R = ind.adult * clipneg(p.ind.eta_AR * y_R * ((1 - p.ind.kappa) * du.ind.A - du.ind.J))  # reproduction for adults
+    du.ind.R = ind.adult * clipneg(p.ind.eta_AR * 1/(1 + ind.s_j[4]) * ((1 - p.ind.kappa) * du.ind.A - du.ind.J))  # reproduction for adults
 
     return nothing
 end

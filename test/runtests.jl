@@ -5,19 +5,15 @@ using Distributions
 using OrdinaryDiffEq
 using DataFrames, ComponentArrays
 using Plots, StatsPlots
+using StatsBase
 default(leg = false)
+
+rankcor
 
 using Revise
 @time import EnergyBudgetDiffEqs as DEB
 
 
-
 include("test01_defparams.jl")
-
-
-mat = rand(2,3)
-vec = rand(2,1)
-
-mat .* vec
-
-prod(mat, dims = 2)
+include("test02_debparamsweeps.jl")
+include("test03_TD_singlestressors.jl")
