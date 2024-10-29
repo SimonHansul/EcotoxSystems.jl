@@ -1,3 +1,8 @@
+
+reformat_labels(labels::Vector{String}) = replace.(labels, "glb." => "", "ind." => "", "[" => "_", "]"=>"", ","=>"_") 
+getcolnames(sol::O) where O <: ODESolution = ComponentArrays.labels(sol.u[1]) |> reformat_labels |> x-> vcat("t", x)
+
+
 function extract_colnames(c::R, k::Symbol) where R <: Real
     return k
 end

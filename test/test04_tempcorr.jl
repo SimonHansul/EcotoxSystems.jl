@@ -9,6 +9,11 @@
         size = (1200,350), 
         xlabel = "Time (d)"
         )
+
+    p = DEB.params()
+    p.glb.T = 293.15
+    p.glb.t_max = 56.
+    p.spc.K_X = 12e3
     
     sim = DataFrame()
 

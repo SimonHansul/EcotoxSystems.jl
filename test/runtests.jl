@@ -18,3 +18,7 @@ include("test02_debparamsweeps.jl") # performs a parameter sweep
 include("test03_singlestressors.jl") # simulates single stressors
 include("test04_tempcorr.jl") # simulates temperature effects
 include("test05_mixtures.jl") # simulates chemical mixtures
+
+using BenchmarkTools
+
+@benchmark DEB.simulator(DEB.params())

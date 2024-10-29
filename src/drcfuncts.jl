@@ -195,6 +195,7 @@ softNEC2pos(x, p1, p2) = softNEC2pos(x, (p1, p2))
 
 
 
+
 """
 Differentiable version of the NEC2neg model.
 """
