@@ -12,25 +12,28 @@ using Distributions
 using DataFramesMeta
 using DataFrames
 
-
 # trying to store individuals in Memory instead of Vector
 begin
     # FIXME: the number of individuals seems very low
     # the food input is about 10-times higher than expected to reach a certain population size
     # check back with paper draft example...
 
-    p.glb.Xdot_in = 30_000
+    # FIXME: lots of memory allocs in the ODE part
+    # (cf https://discourse.julialang.org/t/can-i-avoid-allocations-when-broadcasting-over-slices/102501/2)
+    # keyword "broadcast fusion" https://bkamins.github.io/julialang/2023/03/31/broadcast.html
+
+    p.glb.Xdot_in = 100_000
     p.glb.k_V = 0.1
-    p.glb.V_patch = 0.5
+    p.glb.V_patch = 2.
     p.glb.N0 = 10
-    p.glb.t_max = 56
+    p.glb.t_max = 63
 
     p.spc.Z = Truncated(Normal(1, 0.05), 0, Inf)
     p.spc.tau_R = 2.
     
     p.spc.f_Xthr = 0.9
 
-    @time sim_ibm = treplicates(IBM_simulator, p, 1)
+    VSCodeServer.@profview_allocs sim_ibm = IBM_simulator(p, saveat = 1, showinfo = 14)
 
     
     popsize = combine(
@@ -41,8 +44,8 @@ begin
     plot(
         (@df popsize plot(:t, :N, group = :replicate)),
         (@df popsize plot(:t, :M, group = :replicate)),
-        (@df sim_ibm plot(:t, :S, group = :replicate .* :id)), 
-        (@df sim_ibm plot(:t, :f_X, group = :replicate .* :id)), 
+        #(@df sim_ibm plot(:t, :S, group = :replicate .* :id)), 
+        #(@df sim_ibm plot(:t, :f_X, group = :replicate .* :id)), 
         leg = false
     )
 

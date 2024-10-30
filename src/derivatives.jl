@@ -77,10 +77,10 @@ Individual-level part of the DEB-ODE model with arbitrary number of stressors, a
 
     # scaled damage dynamics based on the minimal model
 
-    du.ind.D_z = @. (1 - ind.embryo) * p.ind.k_D_z * (glb.C_W - ind.D_z)
-    du.ind.D_h = @. (1 - ind.embryo) * p.ind.k_D_h * (glb.C_W - ind.D_h)
+    @. du.ind.D_z = (1 - ind.embryo) * p.ind.k_D_z * (glb.C_W - ind.D_z)
+    @. du.ind.D_h = (1 - ind.embryo) * p.ind.k_D_h * (glb.C_W - ind.D_h)
     
-    ind.y_z .= @. softNEC2neg(ind.D_z, p.ind.e_z, p.ind.b_z) # relative responses per stressor and PMoA
+    @. ind.y_z = @. softNEC2neg(ind.D_z, p.ind.e_z, p.ind.b_z) # relative responses per stressor and PMoA
     ind.y_j = mapslices(prod, ind.y_z; dims=1) # relative responses per PMoA are obtained as the product over all chemical stressors
     ind.y_j[2] /= ind.y_j[2]^2 # for pmoas with increasing responses (M), the relative response has to be inverted  (x/x^2 == 1/x) 
 
