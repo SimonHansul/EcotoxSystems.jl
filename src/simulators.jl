@@ -137,7 +137,7 @@ function IBM_simulator(
 
     while !(m.t > m.p.glb.t_max)
         if showinfo < Inf && isapprox(m.t % showinfo, 0, atol = m.dt)
-            @info("t=$(m.t)") : nothing
+            @info("t=$(m.t)")
         end
 
         model_step!(m)

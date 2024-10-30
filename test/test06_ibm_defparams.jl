@@ -1,7 +1,7 @@
 using Pkg; Pkg.activate("test")
 using Plots, StatsPlots
 using Revise
-import EnergyBudgetDiffEqs: params, ODE_simulator, IBM_simulator
+import EnergyBudgetDiffEqs: params, ODE_simulator, IBM_simulator, @replicates, DEBIndividual, treplicates
 
 p = params()
 p.spc.H_p = 100.
@@ -9,21 +9,49 @@ p.spc.H_p = 100.
 @df sim_ode plot(:t, [:S, :R, :H], layout = (1,3))
 
 using Distributions
+using DataFramesMeta
+using DataFrames
 
 
-# FIXME: there's no food
+# trying to store individuals in Memory instead of Vector
+begin
+    # FIXME: the number of individuals seems very low
+    # the food input is about 10-times higher than expected to reach a certain population size
+    # check back with paper draft example...
 
-p.glb.Xdot_in = 1e10
-p.glb.k_V
-p.spc.Z = Truncated(Normal(1, 0.05), 0, Inf)
-p.spc.tau_R = 2.
-p.spc.eta_AR
+    p.glb.Xdot_in = 30_000
+    p.glb.k_V = 0.1
+    p.glb.V_patch = 0.5
+    p.glb.N0 = 10
+    p.glb.t_max = 56
 
-sim_ibm = IBM_simulator(p)
+    p.spc.Z = Truncated(Normal(1, 0.05), 0, Inf)
+    p.spc.tau_R = 2.
+    
+    p.spc.f_Xthr = 0.9
+
+    @time sim_ibm = treplicates(IBM_simulator, p, 1)
+
+    
+    popsize = combine(
+        groupby(sim_ibm, [:t, :replicate]), 
+        x -> (N = nrow(x), M = sum(x.S) + sum(x.R))
+        )
+
+    plot(
+        (@df popsize plot(:t, :N, group = :replicate)),
+        (@df popsize plot(:t, :M, group = :replicate)),
+        (@df sim_ibm plot(:t, :S, group = :replicate .* :id)), 
+        (@df sim_ibm plot(:t, :f_X, group = :replicate .* :id)), 
+        leg = false
+    )
+
+end
 
 @df sim_ibm plot(
-    plot(:t, :S), 
-    plot(:t, :f_X)
+    plot(:t, :S, group = :id), 
+    plot(:t, :f_X, group = :id),
+    leg = false
 )
 
 

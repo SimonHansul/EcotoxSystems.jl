@@ -2,25 +2,15 @@
 
 get_recorded_individual_var_indices(m::AbstractDEBIBM) = map(x -> x in m.recorded_individual_vars,  keys(ind)) |> BitVector
 
-"""
-    get_global_statevars!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
 
-
-"""
 function get_global_statevars!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
     
     a.du.glb = m.du.glb
-    a.u.glb = m.du.glb
+    a.u.glb = m.u.glb
 
     return nothing
 end
 
-
-"""
-    set_global_statevars!(m::AbstractDEBIBM, a::AbstractDEBIndividual)::Nothing
-
-Updates global state variables and derivatives according to modifications by an individual.
-"""
 function set_global_statevars!(m::AbstractDEBIBM, a::AbstractDEBIndividual)::Nothing
 
     m.du.glb = a.du.glb 
@@ -28,7 +18,6 @@ function set_global_statevars!(m::AbstractDEBIBM, a::AbstractDEBIndividual)::Not
 
     return nothing
 end
-
 
 """
     individual_step!(a::Agent, m::Model)::Nothing
@@ -56,29 +45,11 @@ function individual_step!(a::AbstractDEBIndividual, m::AbstractDEBIBM)
     return nothing
 end
 
-
-"""
-    Euler!(u::ComponentVector, du::ComponentVector, dt::Real, statevar_indices::Vector{Int})::Nothing
-
-Applying the Euler scheme to state variables. 
-
-args
-
-- `u`: State variables
-- `du`: Derivatives
-- `dt`: Timestep
-
-"""
 function Euler!(u::ComponentVector, du::ComponentVector, dt::Real)::Nothing
     u .+= du .* dt
     return nothing
 end
 
-"""
-    record_individual!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
-
-Pushes the individual state variables to `m.individual_record` in fixed time intervals, according to `m.saveat`.
-"""
 function record_individual!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
 
     if m.record_individuals && isapprox(m.t % m.saveat, 0, atol = m.dt)
@@ -91,24 +62,8 @@ function record_individual!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothin
     return nothing
 end
 
-
-"""
-    filter_individuals!(m::AbstractDEBIBM)
-
-Remove dead individuals from a model. 
-Agents are flagged to be removed if `cause_of_death>0`.
-"""
 filter_individuals!(m::AbstractDEBIBM) = m.individuals = filter(x -> x.u.ind.cause_of_death == 0, m.individuals)
 
-
-"""
-    step_all_individuals!(m::AbstractDEBIBM)::Nothing
-
-Executes individual_step! for all individuals in the model. 
-Records individual states.
-Filters individuals vector to remove dead indiviualds. 
-Agents which die will be recorded a last time before they are removed.
-"""
 function step_all_individuals!(m::AbstractDEBIBM)::Nothing
     
     shuffle!(m.individuals)
@@ -126,12 +81,6 @@ function step_all_individuals!(m::AbstractDEBIBM)::Nothing
     return nothing
 end
 
-
-"""
-    model_step!(m::AbstractDEBIBM)::Nothing
-
-Execute a single model step of a IndividualBasedModel.
-"""
 function model_step!(m::AbstractDEBIBM)::Nothing
     # calculate global derivatives
     # change in resource abundance, chemical stressor exposure etc.

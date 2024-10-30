@@ -84,7 +84,6 @@ Individual-level part of the DEB-ODE model with arbitrary number of stressors, a
     ind.y_j = mapslices(prod, ind.y_z; dims=1) # relative responses per PMoA are obtained as the product over all chemical stressors
     ind.y_j[2] /= ind.y_j[2]^2 # for pmoas with increasing responses (M), the relative response has to be inverted  (x/x^2 == 1/x) 
 
-
     ind.h_z = sum(@. softNEC2GUTS(ind.D_h, p.ind.e_h, p.ind.b_h)) # hazard rate according to GUTS-RED-SD
 
     du.ind.S_z = -ind.h_z * ind.S_z # survival probability according to GUTS-RED-SD
