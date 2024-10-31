@@ -29,7 +29,7 @@
             p.glb.T = T_C + 273.15
   
             # generate the predidction
-            sim_i = DEB.simulator(p)
+            sim_i = DEB.ODE_simulator(p)
 
             # plot the trajectories
             @df sim_i plot!(plt, :t, :S, ylabel = "S", subplot = 1, leg = :outertopleft, label = "T = $(T_C)") 

@@ -23,7 +23,7 @@ using StatsBase
             p.glb.dX_in = dX_in
             p.glb.t_max = 56.
             p.spc.K_X = 12e3
-            sim_i = DEB.simulator(p, reltol = 1e-10)
+            sim_i = DEB.ODE_simulator(p, reltol = 1e-10)
 
             # plot the trajectories
             @df sim_i plot!(plt, :t, :S, ylabel = "S", subplot = 1, leg = :outertopleft, label = "dX_in = $(dX_in)") 

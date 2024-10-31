@@ -51,12 +51,12 @@ p = ComponentVector(
         k_M = 0.59,     # somatic maintenance rate constant [d^-1]
         k_J = 0.504,    # maturity maintenance rate constant [d^-1]
         H_p = 1 / 3,    # maturity at puberty [μgC]
-        k_D_z = [0 0 0 0; 0 0 0 0], # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
-        e_z = [0 0 0 167;], # sensitivity parameters (thresholds)
-        b_z = [0 0 0 0.93;], # slope parameters
-        k_D_h = [0;], # k_D - value for GUTS-Sd module (1 row = 1 stressor)
-        e_h = [0;], # sensitivity parameter (threshold) for GUTS-SD module
-        b_h = [0;], # slope parameter for GUTS-SD module 
+        k_D_z = zeros((2, 4)), # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
+        e_z = ones((2, 4)), # sensitivity parameters (thresholds)
+        b_z = ones((2,4)), # slope parameters
+        k_D_h = zeros((2,1)), # k_D - value for GUTS-Sd module (1 row = 1 stressor)
+        e_h = ones((2,1)), # sensitivity parameter (threshold) for GUTS-SD module
+        b_h = ones((2,1)), # slope parameter for GUTS-SD module 
         # these are curently only used in an individual-based context, but could find application in the pure-ODE implementation 
         # for example by triggering emptying of the reproduction buffer through callbacks
         f_Xthr = 0.5,  # functional response threshold for starvation mortality
@@ -66,12 +66,14 @@ p = ComponentVector(
     )    
 )
 
+
 # simulating two stressors with different PMoAs
 
 p.spc.k_D_z = [
     1. 0. 0. 0.; # stressor 1 has PMoA G
     0. 0. 0. 1. # stressor 2 has PMoA R
     ]
+
 # setting all dose-response params to the same values
 p.spc.e_z = ones(size(p.spc.k_D_z))
 p.spc.b_z = fill(1, size(p.spc.k_D_z))
@@ -83,7 +85,7 @@ C_Wmat = [ # simulating a ray design
     1.5 1.5;
 ]
 
-sim = exposure(DEB.simulator, p, C_Wmat);
+@time sim = exposure(p->DEB.ODE_simulator(p, alg=RK4()), p, C_Wmat);
 
 @df sim plot(
     plot(:t, :S, group = :treatment_id, leg = true),
@@ -95,7 +97,7 @@ p.spc.k_D_z
 
 DEB.constrmmat(p.spc.k_D_z)
 
-DEB.simulator(p)
+DEB.ODE_simulator(p)
 
 # simulating stressors with identical PMoAs
 
