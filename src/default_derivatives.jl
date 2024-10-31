@@ -2,13 +2,13 @@
 # derivatives of the default model(s)
 
 """
-function sig(
-    x::Real, 
-    x_thr::Real,
-    y_left::Real, 
-    y_right::Real; 
-    beta::Real = 30
-    )::Real
+    sig(
+        x::Real, 
+        x_thr::Real,
+        y_left::Real, 
+        y_right::Real; 
+        beta::Real = 30
+        )::Real
 
 Sigmoid switch function. 
 Used to replace simple if-statements with a continuous function in ODE models. 
@@ -94,7 +94,7 @@ end
 """
     DEBkiss!(du, u, p, t)::Nothing
 
-Dynamics of DEBkiss model with maturity and explicit simulation 
+Dynamics of DEBkiss model with maturity and explicit simulation of resource dynamics.
 
 The density of structure is ignored, and instead `S^(2/3)` is applied for surface-area scaling. 
 This affects the dimension of `dI_max`, but has no effect on the model dynamics.
