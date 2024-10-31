@@ -21,7 +21,7 @@ Furthermore, in the context of models developed for ecotoxicology and ecological
 we need to consider the organism-level as well as the environment (*individual* and *global* in the diagram below). <br>
 
 The equation-based part is a system of ODEs. We exploit [ComponentArrays.jl](https://github.com/jonniedie/ComponentArrays.jl) 
-to define parameters and state variables for each component. Components are further sub-divided to an extent that is considered practical, e.g. into a DEB and TKTD component
+to define parameters and state variables for each component. Components are further sub-divided to an extent that is considered practical, e.g. into a DEB and TKTD component.
 
 <img src="implementation_logic.png" alt="Implementation logic">
 
@@ -41,7 +41,7 @@ using Pkg; Pkg.add("https://github.com/simonhansul/eotoxsystems.jl")
 
 The following code executes the *default* model and parameters. <br>
 This is a Dynamic Energy Budget Toxicokinetic-Toxicodynamic (DEB-TKTD) model based on the DEBkiss model developed by Tjalling Jager. <br> 
-Inspect `derivatives.jl` to see how this default model is defined. 
+Inspect `default_derivatives.jl` to see how this default model is defined. 
 
 ```Julia
 from EcotoxSystems import params, ODE_simulator
@@ -85,7 +85,7 @@ sim = IBM_simulator(params)
 We can thus relatively easily switch between both modes. This can be useful for several reasons:
 
 - We can develop and unit-test test the ODE part independently of the rule-based part
-- During calibration, we often only need 
+- During calibration, we often only need the ODE part.
 - We can more easily re-combine different rules and ODE-systems, respectively, to study model behaviour, perform model selections, Bayesian model averaging, etc.
 
 In essence, the idea that is at the heart of this package is that even the most complex scientific models should be transparent, extensible, testable and maintainable. This is of course an ideal to strive for, and not a destination that we have reached.  <br>

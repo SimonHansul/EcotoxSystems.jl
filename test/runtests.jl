@@ -24,10 +24,13 @@ using Revise
 #TODO: include randomized inputs in each test
 
 include("test01_defaults.jl") # simulates the default parameters
-include("test02_debparamsweeps.jl") # performs a parameter sweep
-include("test03_singlestressors.jl") # simulates single stressors
-include("test04_tempcorr.jl") # simulates temperature effects
+include("test02_food.jl") # performs a parameter sweep
+include("test03_toxicity.jl") # simulates single stressors
+include("test04_temperature.jl") # simulates temperature effects
 include("test05_mixtures.jl") # simulates chemical mixtures
+
+
+include("Aqua.jl")
 
 
 

@@ -17,14 +17,13 @@ using Distributions
 using DataFramesMeta
 using DataFrames
 
-
 begin
     p = params()
 
     p.glb.dX_in = 1e3
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.05
-    p.glb.N0 = 1
+    p.glb.N0 = 1.
     p.glb.t_max = 21
 
     p.spc.Z = Truncated(Normal(1, 0.05), 0, Inf)
@@ -39,6 +38,7 @@ begin
 end
 
 # TODO: convert comparison between ODE and IBM simulator to a proper test
+# there is some divergence but it looks o.k.
 
 @df sim_ode plot(:t, :S, xlabel = "t", ylabel = "Resource abundance", leg = true, label = "ODE simulator")
 @df sim_ibm.spc plot!(:t, :S, label = "IBM simulator")
@@ -57,91 +57,61 @@ begin
     # (cf https://discourse.julialang.org/t/can-i-avoid-allocations-when-broadcasting-over-slices/102501/2)
     # keyword "broadcast fusion" https://bkamins.github.io/julialang/2023/03/31/broadcast.html
 
-    p.glb.dX_in = 100_000
+    # we can play a little with the parameters here, bu
+
+    p.glb.dX_in = 30_000 #2e4 * 0.66 * 0.5
     p.glb.k_V = 0.1
-    p.glb.V_patch = 2.
+    p.glb.V_patch = 0.5
     p.glb.N0 = 10
-    p.glb.t_max = 63
+    p.glb.t_max = 56
 
     p.spc.Z = Truncated(Normal(1, 0.05), 0, Inf)
     p.spc.tau_R = 2.
+    p.spc.eta_IA = 0.33
     
-    p.spc.f_Xthr = 0.9
+    p.spc.f_Xthr = 0.75
+    p.spc.s_min = 0.25
 
-    sim_ibm = @replicates IBM_simulator(p, saveat = 1, showinfo = 14) 1
-
+    @time sim_ibm = treplicates(x -> IBM_simulator(p, saveat = 1, showinfo = 7), p, 4)
     
-    #popsize = combine(
-    #    groupby(sim_ibm.spc, [:t, :replicate]), 
-    #    x -> (N = nrow(x), M = sum(x.S) + sum(x.R))
-    #    )
-#
-    #plot(
-    #    (@df popsize plot(:t, :N, group = :replicate)),
-    #    (@df popsize plot(:t, :M, group = :replicate)),
-    #    #(@df sim_ibm plot(:t, :S, group = :replicate .* :id)), 
-    #    #(@df sim_ibm plot(:t, :f_X, group = :replicate .* :id)), 
-    #    leg = false
-    #)
-#
+   
+    plot(
+        (@df sim_ibm.glb plot(:t, :N, group = :replicate)),
+        #(@df sim_ibm.spc plot(:t, :S, group = :replicate .* :id)), 
+        #(@df sim_ibm.spc plot(:t, :S, group = :replicate .* :id)), 
+        (@df sim_ibm.spc plot(:t, :f_X, group = :replicate .* :id)), 
+        leg = false
+    )
 end
 
 
+# trying the simulation without TKTD to compare exec time
 
+function simple!(du, u, p, t) 
+    # turning off all possible toxic effects
 
+    u.ind.y_j .= 1
+    u.ind.h_z = 0.
 
-# try
+    EcotoxSystems.DEBkiss!(du, u, p, t)
+end
 
+p.glb.t_max = 56.
 
-@df sim_ibm plot(
+@time sim_ibm = IBM_simulator(p, individual_ode! = simple!, showinfo = 7);
+VSCodeServer.@profview IBM_simulator(p, individual_ode! = simple!)
+
+popsize = combine(
+    groupby(sim_ibm.spc, [:t]), 
+    x -> (N = nrow(x), M = sum(x.S) + sum(x.R))
+    )
+
+@df popsize plot(:t, :N)
+
+@df sim_ibm.spc plot(
+    plot(:t, :I, group = :id),
     plot(:t, :S, group = :id), 
     plot(:t, :f_X, group = :id),
     leg = false
 )
 
-
-(glb = (
-    X = -21.667178163038983, 
-    C_W = [1.0e-323]), 
-ind = 
-(
-    embryo = 0.0, 
-    juvenile = 0.0, 
-    adult = 0.0, 
-    X_emb = -30.50278570500914, 
-    S = 3.6198141420927143, 
-    S_max_hist = 0.0, 
-    H = 3.8312451146890707, 
-    R = 0.0, 
-    f_X = 0.0,
-    I_emb = 0.0, 
-    I_p = 0.0, 
-    I = 30.50278570500914, 
-    A = 10.065919282653017, 
-    M = 0.9007628157340829, 
-    J = 0.8091436746139695, 
-    D_z = [0.0 0.0 0.0 0.0], 
-    D_h = [0.0], 
-    y_z = [0.0 0.0 0.0 0.0], 
-    y_j = [0.0, 0.0, 0.0, 0.0], 
-    y_T = 0.0, 
-    h_z = 0.0, 
-    S_z = -0.0, 
-    h_fX = 0.0, 
-    id = 0.0, 
-    cohort = 0.0, 
-    age = 0.0, 
-    cause_of_death = 0.0, 
-    time_since_last_repro = 0.0,
-    cum_offspring = 0.0
-    ))
-
-
-import EcotoxSystems: sig
-
-smin = 0.5
-f_Xthr = 0.25
-
-x = 0.25
-
-plot(x -> sig(x, f_Xthr, (1 - smin) * x / f_Xthr + smin, 1, beta = 1e3), xlim = (0,1), ylim = (0,1))

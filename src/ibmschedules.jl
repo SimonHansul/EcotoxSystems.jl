@@ -90,12 +90,17 @@ function step_all_individuals!(m::AbstractDEBIBM)::Nothing
     return nothing
 end
 
+function default_global_rules!(m)
+    m.u.glb.N = length(m.individuals) # tracking population size
+end
+
 function model_step!(m::AbstractDEBIBM)::Nothing
     # calculate global derivatives
     # change in resource abundance, chemical stressor exposure etc.
     
     m.global_ode!(m.du, m.u, m.p, m.t)
     Euler!(m.u, m.du, m.dt) 
+    m.global_rules!(m)
     step_all_individuals!(m)
     
     # global statevars are updated after individual derivatives are calculated

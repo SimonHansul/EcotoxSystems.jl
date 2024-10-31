@@ -1,6 +1,7 @@
 
 mutable struct IndividualBasedModel <: AbstractDEBIBM
     global_ode!::Function
+    global_rules!::Function
     individuals::Vector{DEBIndividual}
     du::ComponentVector
     u::ComponentVector
@@ -18,6 +19,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
         IndividualBasedModel(
             p::ComponentVector; 
             global_ode! = DEBODE_global!,
+            global_rules! = default_global_rules!,
             individual_ode! = DEBODE_individual!,
             individual_rules! = default_individual_rules!,
             dt = 1/24, 
@@ -36,6 +38,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
     function IndividualBasedModel(
         p::ComponentVector; 
         global_ode! = DEBODE_global!,
+        global_rules! = default_global_rules!,
         individual_ode! = DEBODE_individual!,
         individual_rules! = default_individual_rules!,
         dt = 1/24, 
@@ -45,6 +48,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
 
         m = new()
         m.global_ode! = global_ode!
+        m.global_rules! = global_rules!
         m.individuals = Vector{DEBIndividual}(undef, Int(p.glb.N0))
         
         # setting up global states and individuals

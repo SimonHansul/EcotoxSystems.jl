@@ -55,14 +55,14 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
 
     # this is a crude 
 
-    let s_f = sig(
+    s_f = sig(
         ind.f_X, p.ind.f_Xthr, 
         (1 - p.ind.s_min) * ind.f_X / p.ind.f_Xthr + p.ind.s_min,1.)^m.dt
     
-        if rand() > s_f
-            ind.cause_of_death = 2.
-        end
+    if rand() > s_f
+        ind.cause_of_death = 2.
     end
+
 
     # reproduction, assuming a constant reproduction period
     

@@ -150,7 +150,7 @@ end
 
 combine_outputs(outputs::Vector{N}; idcol = :replicate) where N <: NamedTuple = begin
 
-    out = [combine_outputs([out[1] for out in outputs]) for i in 1:length(outputs[1])]
+    out = [combine_outputs([out[i] for out in outputs], idcol = idcol) for i in 1:length(outputs[1])]
 
     return NamedTuple(zip(keys(outputs[1]), out))
 end
@@ -229,14 +229,14 @@ function treplicates(
     nreps::Int64; 
     kwargs...)
 
-    sim = Vector{DataFrame}(undef, nreps)
+    sim = Vector{Any}(undef, nreps)
 
     @threads for replicate in 1:nreps
         sim_i = simulator(defaultparams; kwargs...)
         sim[replicate] = sim_i
     end
     
-    return combine_outputs(sim)
+    return combine_outputs(Vector{typeof(sim[1])}(sim))
 end
 
 set_vecval(C_W::Real) = [C_W]
