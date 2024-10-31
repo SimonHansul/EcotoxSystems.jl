@@ -1,4 +1,4 @@
-module EnergyBudgetDiffEqs
+module EcotoxSystems
 
 using Parameters
 using ComponentArrays
@@ -32,4 +32,4 @@ export ODE_simulator, IBM_simulator, @replicates, replicates, treplicates, expos
 
 include("traits.jl")
 
-end # module EnergyBudgetDiffEqs
+end # module EcotoxSystems

@@ -1,31 +1,44 @@
 using Pkg; Pkg.activate("test")
 using Plots, StatsPlots
 using Revise
-import EnergyBudgetDiffEqs: params, ODE_simulator, IBM_simulator, @replicates, DEBIndividual, treplicates
+@time using EcotoxSystems
+@time import EcotoxSystems: params, ODE_simulator, IBM_simulator 
+@time import EcotoxSystems: @replicates, DEBIndividual, treplicates
 
-
-@time using DataFrames
+@time using DataFrames, DataFramesMeta
 
 using DrWatson
 using PackageCompiler
 
 @time using Plots
-
-#create_sysimage([""])
-#
-#
-#create_sysimage(["Test", "Revise", "BenchmarkTools"],
-#    sysimage_path = projectdir("TestSysimage.so")
-#    )
-
-p = params()
-p.spc.H_p = 100.
-@time sim_ode = ODE_simulator(p);
-@df sim_ode plot(:t, [:S, :R, :H], layout = (1,3))
+default(leg = false)
 
 using Distributions
 using DataFramesMeta
 using DataFrames
+
+
+begin
+    p = params()
+
+    #p.glb.dX_in = 100_000
+    #p.glb.k_V = 0.1
+    #p.glb.V_patch = 2.
+    #p.glb.N0 = 10
+    #p.glb.t_max = 63
+    #p.spc.Z = Truncated(Normal(1, 0.05), 0, Inf)
+    #p.spc.tau_R = 2.
+    #p.spc.f_Xthr = 0.9
+    #p.spc.H_p = 100.
+
+
+    @time sim_ode = ODE_simulator(p);
+end
+
+@df sim_ode plot(:t, [:S, :R, :H, :X], layout = (1,4), size = (800,350))
+
+
+
 
 # TODO: how can I test whether the food feedback is correct?
 
@@ -37,7 +50,8 @@ using DataFrames
 # --> global vars are currently not returned!
 #   - implement recording of global satates
 
-#
+# v2 
+# include X in the ode-vs-ibm comparison
 
 # trying to store individuals in Memory instead of Vector
 begin
@@ -56,7 +70,7 @@ begin
     
     p.spc.f_Xthr = 0.9
 
-    VSCodeServer.@profview_allocs sim_ibm = IBM_simulator(p, saveat = 1, showinfo = 14)
+    sim_ibm = IBM_simulator(p, saveat = 1, showinfo = 14)
 
     
     popsize = combine(
@@ -118,7 +132,7 @@ ind =
     ))
 
 
-import EnergyBudgetDiffEqs: sig
+import EcotoxSystems: sig
 
 smin = 0.5
 f_Xthr = 0.25

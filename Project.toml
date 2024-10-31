@@ -1,4 +1,4 @@
-name = "EnergyBudgetDiffEqs"
+name = "EcotoxSystems"
 uuid = "a070e96f-54e2-4e3c-8571-6208d1dd8981"
 authors = ["SimonHansul <simonhansul@gmail.com>"]
 version = "0.1.0"

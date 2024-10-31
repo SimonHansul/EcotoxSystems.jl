@@ -1,4 +1,4 @@
-        6 module EnergyBudgetDiffEqs
+        6 module EcotoxSystems
         - 
         - 	using Parameters
         - 	using ComponentArrays
@@ -26,4 +26,4 @@
         - 
         - 	include("traits.jl")
         - 
-        - end # module EnergyBudgetDiffEqs
+        - end # module EcotoxSystems

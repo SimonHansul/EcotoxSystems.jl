@@ -11,7 +11,7 @@
         - default(leg = false)
         - 
         - using Revise
-        1 @time import EnergyBudgetDiffEqs as DEB
+        1 @time import EcotoxSystems as DEB
         - 
         - #TODO: include randomized inputs in each test
         - 

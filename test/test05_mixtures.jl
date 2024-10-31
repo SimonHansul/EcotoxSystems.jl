@@ -4,7 +4,7 @@ Simulate single stressors with different PMoAs
 
 
 using DataFramesMeta
-import EnergyBudgetDiffEqs: exposure, relative_response
+import EcotoxSystems: exposure, relative_response
 
 p = DEB.params()
 p.spc.k_D_z .= 0

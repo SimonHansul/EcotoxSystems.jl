@@ -63,8 +63,8 @@ Params() = deepcopy(defaultparams) # for backward compat with old struct-based i
 params() = deepcopy(defaultparams)
 
 getval(x::Distribution) = rand(x) 
-getval(x::Vector{Distribution}) = rand.(x)
 getval(x::Any) = x
+#getval(x::Vector{Distribution}) = rand.(x)
 
 propagate_zoom(ind::ComponentVector) = begin
     zprop = ind[keys(ind.propagate_zoom)] .* ind.Z .^ ind.propagate_zoom
@@ -78,7 +78,7 @@ end
 Generate individual-specific parameter set from species-specific parameter set. 
 If a parameter entry is a distribution, a random sample is taken. 
 
-This also works for Vectrs of distributions.
+This also works for Vectors of distributions.
 """
 generate_individual_params(p::ComponentVector) = begin
     ind = getval.(p.spc) |> propagate_zoom

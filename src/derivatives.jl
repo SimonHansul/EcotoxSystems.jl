@@ -67,11 +67,12 @@ DEBODE_callbacks = CallbackSet(cb_juvenile, cb_adult)
 end
 
 
+"""
+    function TKTD_mix_IA!(du, u, p, t)::Nothing
 
+Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
 """
-Individual-level part of the DEB-ODE model with arbitrary number of stressors, assuming IA to compute combined effects.
-"""
-@inline function DEBODE_individual!(du, u, p, t)::Nothing
+@inline function TKTD_mix_IA!(du, u, p, t)::Nothing
 
     @unpack glb, ind = u
 
@@ -85,8 +86,26 @@ Individual-level part of the DEB-ODE model with arbitrary number of stressors, a
     ind.y_j[2] /= ind.y_j[2]^2 # for pmoas with increasing responses (M), the relative response has to be inverted  (x/x^2 == 1/x) 
 
     ind.h_z = sum(@. softNEC2GUTS(ind.D_h, p.ind.e_h, p.ind.b_h)) # hazard rate according to GUTS-RED-SD
-
     du.ind.S_z = -ind.h_z * ind.S_z # survival probability according to GUTS-RED-SD
+    
+    return nothing
+end
+
+"""
+    DEBkiss!(du, u, p, t)::Nothing
+
+Dynamics of DEBkiss model with maturity and explicit simulation 
+
+The density of structure is ignored, and instead `S^(2/3)` is applied for surface-area scaling. 
+This affects the dimension of `dI_max`, but has no effect on the model dynamics.
+
+If model output is to be compared to length data, a statistical weight-lenght relationship 
+has to be applied to the model output.
+"""
+function DEBkiss!(du, u, p, t)::Nothing
+
+    @unpack glb, ind = u
+
     ind.y_T = exp((p.ind.T_A / p.ind.T_ref) - (p.ind.T_A / p.glb.T)) # temperature correction
 
     # ingestion rates and feedback with resource pools
@@ -113,6 +132,19 @@ Individual-level part of the DEB-ODE model with arbitrary number of stressors, a
         )    
     du.ind.H = (1 - ind.adult) * clipneg(((1 - p.ind.kappa) * du.ind.A) - du.ind.J) # maturiation flux
     du.ind.R = ind.adult * clipneg(p.ind.eta_AR * ind.y_j[4] * ((1 - p.ind.kappa) * du.ind.A - du.ind.J))  # reproduction flux
+
+    return nothing
+end
+
+
+
+"""
+Individual-level part of the DEB-ODE model with arbitrary number of stressors, assuming IA to compute combined effects.
+"""
+@inline function DEBODE_individual!(du, u, p, t)::Nothing
+    
+    TKTD_mix_IA!(du, u, p, t)
+    DEBkiss!(du, u, p, t)
 
     return nothing
 end

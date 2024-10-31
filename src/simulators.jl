@@ -20,7 +20,7 @@ Run the model as ODE system.
 **Example**: 
 
 ```Julia
-import EnergyBudgetDiffEqs as DEB
+import EcotoxSystems as DEB
 p = DEB.params() # loads the default parameters
 sim = DEB.ODE_simulator(p)
 ```
@@ -96,7 +96,7 @@ end
 Simulate the individual-based version of the default model. 
 
 ```
-import EnergyBudgetDiffEqs as DEB
+import EcotoxSystems as DEB
 p = DEB.params()
 sim = DEB.IBMsimulator(p)
 ```
@@ -121,7 +121,7 @@ function IBM_simulator(
     saveat = 1,
     record_individuals = true,
     showinfo::Number = Inf
-    )::DataFrame
+    )
 
     showinfo < Inf ? @info("Running IndividualBasedModel simulation with t_max=$(p.glb.t_max)") : nothing
     
@@ -143,30 +143,18 @@ function IBM_simulator(
         model_step!(m)
     end
 
-    return individual_record_to_df(m)
+    return m #global_record_to_df(m), individual_record_to_df(m)
 end
 
-"""
-individual_record_to_df(
-    m::AbstractDEBIBM; 
-    cols::Union{Symbol,Vector{Symbol}} = :all
-    )::DataFrame
 
-Convert individual record to Data Frame.
+function global_record_to_df(m::AbstractDEBIBM)::DataFrame
+    return DataFrame()
+end
 
-args 
 
-- `m::AbstractDEBIBM`: Model object containing an `individual_record` field as Vector of Component Vectors
-
-kwargs
-
-- `cols`: A Vector of Symbols indicating the 
-
-"""
 function individual_record_to_df(
     m::AbstractDEBIBM; 
     )::DataFrame
-
 
     cols = vcat(
         [:t, :id],

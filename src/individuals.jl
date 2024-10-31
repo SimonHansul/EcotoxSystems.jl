@@ -26,7 +26,7 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
     ind.age += m.dt 
 
     #### life-stage transitions
-    # here, we re-use the continuous callback functions defined in EnergyBudgetDiffEqs
+    # here, we re-use the continuous callback functions defined in EcotoxSystems
     # it happens to be the case that we can treat the individual as an integrator in the callback functions, 
     # since "u" is a field of the individual, just like for integrators
 

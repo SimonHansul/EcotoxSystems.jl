@@ -128,9 +128,9 @@ kwargs:
 ## Example 
 
 ```Julia@f
-using MechanisticEffectModels.EnergyBudgetDiffEqs, MechanisticEffectModels.Utils
+using MechanisticEffectModels.EcotoxSystems, MechanisticEffectModels.Utils
 
-simfunct(x) = @replicates EnergyBudgetDiffEqs.simulator(x) 10
+simfunct(x) = @replicates EcotoxSystems.simulator(x) 10
 
 sim = exposure(simfunct, Params(), [0., 100., 200.]) |>
 x -> relative_response(x, [:S, :H, :R]) # -> data frame will contain columns y_S, y_H, y_R for control-normalized values

@@ -11,7 +11,7 @@ using StatsBase
 default(leg = false)
 
 using Revise
-@time import EnergyBudgetDiffEqs as DEB
+@time import EcotoxSystems as DEB
 
 # creating a sysimage for the tests
 #using PackageCompiler

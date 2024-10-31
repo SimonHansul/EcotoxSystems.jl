@@ -69,7 +69,6 @@ function record_global!(m::AbstractDEBIBM)::Nothing
             m.global_record,
             ComponentVector(m.u; t = m.t)
         )
-
     end
 
     return nothing

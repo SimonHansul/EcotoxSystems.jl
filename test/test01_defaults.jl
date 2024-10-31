@@ -18,7 +18,7 @@ end;
 Basic test of @replicates macro
 =#
 
-import EnergyBudgetDiffEqs: @replicates
+import EcotoxSystems: @replicates
 
 using Chain
 @testset begin

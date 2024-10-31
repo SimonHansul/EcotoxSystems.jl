@@ -637,7 +637,7 @@ version = "1.1.0"
     ScientificTypes = "321657f4-b219-11e9-178b-2701a2544e81"
     Unitful = "1986cc42-f94f-5a68-af5c-568840ba703d"
 
-[[deps.EnergyBudgetDiffEqs]]
+[[deps.EcotoxSystems]]
 deps = ["ComponentArrays", "DataFrames", "Distributions", "OrdinaryDiffEq", "Parameters", "PrecompileTools", "Random", "StaticArrays", "StatsBase"]
 path = ".."
 uuid = "a070e96f-54e2-4e3c-8571-6208d1dd8981"
