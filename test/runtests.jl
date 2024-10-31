@@ -13,6 +13,14 @@ default(leg = false)
 using Revise
 @time import EnergyBudgetDiffEqs as DEB
 
+# creating a sysimage for the tests
+#using PackageCompiler
+#create_sysimage(
+#    ["Plots", "StatsPlots", "Revise", "OrdinaryDiffEq", "StatsBase", "BenchmarkTools", "Chain", "DataFrames", "DataFramesMeta", "Distributions", "Test"],
+#    sysimage_path = projectdir("TestSysimage.so")
+#    )
+
+
 #TODO: include randomized inputs in each test
 
 include("test01_defparams.jl") # simulates the default parameters

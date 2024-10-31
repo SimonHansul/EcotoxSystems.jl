@@ -9,6 +9,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
     dt::Real
     idcount::Int
     saveat::Real
+    global_record::Vector{ComponentVector}
     individual_record::Vector{ComponentVector}
 
     record_individuals::Bool
@@ -45,11 +46,10 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
         m = new()
         m.global_ode! = global_ode!
         m.individuals = Vector{DEBIndividual}(undef, Int(p.glb.N0))
+        
+        # setting up global states and individuals
+        
         m.u = ComponentVector(glb = initialize_global_statevars(p))
-        
-        #m.global_statevar_names = Symbol[keys(m.u)...]
-        #m.global_statevar_indices = collect(eachindex(m.global_statevar_names))
-        
         m.du = similar(m.u) 
         m.p = p
         m.t = 0
@@ -58,6 +58,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
         m.idcount = 0
 
         m.record_individuals = record_individuals
+        m.global_record = ComponentVector[]
         m.individual_record = ComponentVector[]
 
         # initialize individuals

@@ -3,7 +3,7 @@
 Calculate maximum structural length slmax [m^(1/3)]
 """
 function calc_SL_max(spc::ComponentVector)::Float64
-    return ((spc.kappa * spc.Idot_max_rel * spc.eta_IA) / spc.k_M)
+    return ((spc.kappa * spc.dI_max * spc.eta_IA) / spc.k_M)
 end
 
 """

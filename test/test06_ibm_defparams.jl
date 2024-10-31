@@ -3,6 +3,21 @@ using Plots, StatsPlots
 using Revise
 import EnergyBudgetDiffEqs: params, ODE_simulator, IBM_simulator, @replicates, DEBIndividual, treplicates
 
+
+@time using DataFrames
+
+using DrWatson
+using PackageCompiler
+
+@time using Plots
+
+#create_sysimage([""])
+#
+#
+#create_sysimage(["Test", "Revise", "BenchmarkTools"],
+#    sysimage_path = projectdir("TestSysimage.so")
+#    )
+
 p = params()
 p.spc.H_p = 100.
 @time sim_ode = ODE_simulator(p);
@@ -12,17 +27,25 @@ using Distributions
 using DataFramesMeta
 using DataFrames
 
+# TODO: how can I test whether the food feedback is correct?
+
+# v1
+# simulate a single individual
+# in output:
+#   calculate dI from I
+#   calculate dX from X_pF
+# --> global vars are currently not returned!
+#   - implement recording of global satates
+
+#
+
 # trying to store individuals in Memory instead of Vector
 begin
-    # FIXME: the number of individuals seems very low
-    # the food input is about 10-times higher than expected to reach a certain population size
-    # check back with paper draft example...
-
     # FIXME: lots of memory allocs in the ODE part
     # (cf https://discourse.julialang.org/t/can-i-avoid-allocations-when-broadcasting-over-slices/102501/2)
     # keyword "broadcast fusion" https://bkamins.github.io/julialang/2023/03/31/broadcast.html
 
-    p.glb.Xdot_in = 100_000
+    p.glb.dX_in = 100_000
     p.glb.k_V = 0.1
     p.glb.V_patch = 2.
     p.glb.N0 = 10
@@ -59,7 +82,7 @@ end
 
 
 (glb = (
-    X_p = -21.667178163038983, 
+    X = -21.667178163038983, 
     C_W = [1.0e-323]), 
 ind = 
 (

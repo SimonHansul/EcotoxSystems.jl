@@ -52,7 +52,7 @@ end
 
 function initialize_global_statevars(p::ComponentVector)
     ComponentArray( # initial states
-        X_p = p.glb.Xdot_in, # initial resource abundance equal to influx rate
+        X = p.glb.dX_in, # initial resource abundance equal to influx rate
         C_W = p.glb.C_W # external stressor concentrations
     )
 end

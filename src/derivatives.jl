@@ -61,7 +61,7 @@ DEBODE_callbacks = CallbackSet(cb_juvenile, cb_adult)
 
 @inline function DEBODE_global!(du, u, p, t)::Nothing
 
-    du.glb.X_p = p.glb.Xdot_in - p.glb.k_V * u.glb.X_p  
+    du.glb.X = p.glb.dX_in - p.glb.k_V * u.glb.X  
 
     return nothing
 end
@@ -91,14 +91,14 @@ Individual-level part of the DEB-ODE model with arbitrary number of stressors, a
 
     # ingestion rates and feedback with resource pools
 
-    ind.f_X = (glb.X_p / p.glb.V_patch) / ((glb.X_p / p.glb.V_patch) + p.ind.K_X)
+    ind.f_X = (glb.X / p.glb.V_patch) / ((glb.X / p.glb.V_patch) + p.ind.K_X)
     
     dI_emb = ind.embryo * (Complex(ind.S)^(2/3)).re * p.ind.Idot_max_rel_emb * ind.y_T
-    dI = (1-ind.embryo) * ind.f_X * p.ind.Idot_max_rel * (Complex(ind.S)^(2/3)).re * ind.y_T
+    dI = (1-ind.embryo) * ind.f_X * p.ind.dI_max * (Complex(ind.S)^(2/3)).re * ind.y_T
     
     du.ind.I = dI_emb + dI
 
-    du.glb.X_p -= dI  # Change in external resource abundance
+    du.glb.X -= dI  # Change in external resource abundance
     du.ind.X_emb = -dI_emb  # Change in vitellus
 
     # remaining derivatives

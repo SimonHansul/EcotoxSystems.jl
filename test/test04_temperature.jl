@@ -34,7 +34,7 @@
             # plot the trajectories
             @df sim_i plot!(plt, :t, :S, ylabel = "S", subplot = 1, leg = :outertopleft, label = "T = $(T_C)") 
             @df sim_i plot!(plt, :t, :R, ylabel = "R", subplot = 2)
-            @df sim_i plot!(plt, :t, :X_p ./p.glb.V_patch, ylabel = "[X_p]", subplot = 3, 
+            @df sim_i plot!(plt, :t, :X ./p.glb.V_patch, ylabel = "[X]", subplot = 3, 
                 yscale = :log10
                 )
 

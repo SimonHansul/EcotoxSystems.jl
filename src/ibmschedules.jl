@@ -62,6 +62,19 @@ function record_individual!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothin
     return nothing
 end
 
+function record_global!(m::AbstractDEBIBM)::Nothing
+
+    if isapprox(m.t % m.saveat, 0, atol = m.dt)
+        push!(
+            m.global_record,
+            ComponentVector(m.u; t = m.t)
+        )
+
+    end
+
+    return nothing
+end
+
 filter_individuals!(m::AbstractDEBIBM) = m.individuals = filter(x -> x.u.ind.cause_of_death == 0, m.individuals)
 
 function step_all_individuals!(m::AbstractDEBIBM)::Nothing
@@ -91,9 +104,10 @@ function model_step!(m::AbstractDEBIBM)::Nothing
     
     # global statevars are updated after individual derivatives are calculated
     # this is important because individuals affect global states using mutating operators
-    m.u.glb.X_p = max(0, m.u.glb.X_p) # HOTFIX : negative resource abundances can cause chaos
-
+    m.u.glb.X = max(0, m.u.glb.X) # HOTFIX : negative resource abundances can cause chaos
     m.t += m.dt
+
+    record_global!(m)
 
     return nothing
 end
