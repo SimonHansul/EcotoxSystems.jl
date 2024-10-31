@@ -13,30 +13,30 @@ using Base.Threads
 
 abstract type AbstractDEBIBM end
 
-#include("utils.jl")
-#export relative_response
+include("utils.jl")
+
 #
 ## definition of the default model
 #
-#include("drcfuncts.jl")
-#include("default_params.jl")
-#include("default_derivatives.jl")
-#include("default_statevars.jl")
-#
-## infrastructure to incorporate ODE-based model into an IBM framework
-#
-#include("individuals.jl")
-#include("individualbasedmodel.jl")
-#include("ibmschedules.jl")
-#
-## functions to simulate models
-#
-#include("simulators.jl")
-#export ODE_simulator, IBM_simulator, @replicates, replicates, treplicates, exposure
-#
-## inferring traits from simulations - this is probably misplaced here and should go live somewhere else
-## atm we sill need it
-#
-#include("traits.jl")
+include("drcfuncts.jl")
+include("default_params.jl")
+include("default_derivatives.jl")
+include("default_statevars.jl")
+
+# infrastructure to incorporate ODE-based model into an IBM framework
+
+include("individuals.jl")
+include("individualbasedmodel.jl")
+include("ibmschedules.jl")
+
+# functions to simulate models
+
+include("simulators.jl")
+export ODE_simulator, IBM_simulator, @replicates, replicates, treplicates, exposure
+
+# inferring traits from simulations - this is probably misplaced here and should go live somewhere else
+# atm we sill need it
+
+include("traits.jl")
 
 end # module EcotoxSystems

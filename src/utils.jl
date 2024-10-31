@@ -41,45 +41,6 @@ robustmin(x) = length(x)>0 ? minimum(x) : Inf
 ismin(x::AbstractVector) = x .== minimum(x)
 
 
-"""
-    trim!(spc::ComponentVector)
-
-Trim TKTD parameters to the smallest number of stressors indicated for any PMoA.
-For example `k_D_G = [1., 0.], k_D_M = [1.]` will be trimmed to `k_D_G = [1.], k_D_M = [1.]`.
-
-- `spc`: An instance of a species defaultparams type
-"""
-function trim!(spc::ComponentVector)
-
-    num_stressors = min(
-        length(spc.k_D_G),
-        length(spc.k_D_M),
-        length(spc.k_D_A),
-        length(spc.k_D_R),
-        length(spc.k_D_h)
-    )
-
-    spc.k_D_G = spc.k_D_G[1:num_stressors]
-    spc.k_D_M = spc.k_D_M[1:num_stressors]
-    spc.k_D_A = spc.k_D_A[1:num_stressors]
-    spc.k_D_R = spc.k_D_R[1:num_stressors]
-    spc.k_D_h = spc.k_D_h[1:num_stressors]
-
-    spc.drc_functs_G = spc.drc_functs_G[1:num_stressors]
-    spc.drc_functs_M = spc.drc_functs_M[1:num_stressors]
-    spc.drc_functs_A = spc.drc_functs_A[1:num_stressors]
-    spc.drc_functs_R = spc.drc_functs_R[1:num_stressors]
-    spc.drc_functs_h = spc.drc_functs_h[1:num_stressors]
-    
-    spc.drc_params_G = spc.drc_params_G[1:num_stressors]
-    spc.drc_params_M = spc.drc_params_M[1:num_stressors]
-    spc.drc_params_A = spc.drc_params_A[1:num_stressors]
-    spc.drc_params_R = spc.drc_params_R[1:num_stressors]
-    spc.drc_params_h = spc.drc_params_h[1:num_stressors]
-end
-
-
-
 function rr(x::R, x_ref::R)::Float64 where R <: Real
     if x_ref == 0.
         return 1.
@@ -92,9 +53,9 @@ function rr(x::R, x_ref::Missing)::Missing where R <: Real
     return missing
 end
 
-robustmin(x) = length(x)>0 ? minimum(x) : Inf
+robustmin(x::AbstractVector) = length(x)>0 ? minimum(x) : Inf
 
-function robustmean(x)
+function robustmean(x::AbstractVector)
     xfilt = filter(xi -> isfinite(xi) & !ismissing(xi), x)
 
     if length(xfilt)==0
@@ -186,5 +147,3 @@ function idcol!(sim::Any, col::Symbol, val)
         idcol!(df, col, val)
     end
 end
-
-
