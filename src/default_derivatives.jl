@@ -11,7 +11,7 @@ function sig(
     )::Real
 
 Sigmoid switch function. 
-This can be useful to replace simple if-statements with a continuous function. 
+Used to replace simple if-statements with a continuous function in ODE models. 
 
 `y_left` and `y_right` are the function values left and right of the threshold `x_thr`.
 
@@ -28,7 +28,7 @@ This can be useful to replace simple if-statements with a continuous function.
 end
 
 """
-Clip negative values as a continuous function.
+Clip negative values at 0 as a continuous function, using `sig`.
 """
 function clipneg(x::Real)::Real
     return sig(x, 0., 0., x)
@@ -111,14 +111,18 @@ function DEBkiss!(du, u, p, t)::Nothing
     # ingestion rates and feedback with resource pools
 
     ind.f_X = (glb.X / p.glb.V_patch) / ((glb.X / p.glb.V_patch) + p.ind.K_X)
+
+    # calculation of resource uptake for embryos vs hatched individuals
     
     dI_emb = ind.embryo * (Complex(ind.S)^(2/3)).re * p.ind.Idot_max_rel_emb * ind.y_T
     dI = (1-ind.embryo) * ind.f_X * p.ind.dI_max * (Complex(ind.S)^(2/3)).re * ind.y_T
+
+    # ingestion rate is the sum of both (dI_emb and dI are mutually exclusive)
     
     du.ind.I = dI_emb + dI
 
     du.glb.X -= dI  # Change in external resource abundance
-    du.ind.X_emb = -dI_emb  # Change in vitellus
+    du.ind.X_emb = -dI_emb  # Change in vitellus (yolk)
 
     # remaining derivatives
 

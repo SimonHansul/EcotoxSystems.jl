@@ -65,10 +65,7 @@ end
 function record_global!(m::AbstractDEBIBM)::Nothing
 
     if isapprox(m.t % m.saveat, 0, atol = m.dt)
-        push!(
-            m.global_record,
-            ComponentVector(m.u; t = m.t)
-        )
+        push!(m.global_record,ComponentVector(m.u; t = m.t))
     end
 
     return nothing

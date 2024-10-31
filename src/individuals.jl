@@ -53,6 +53,7 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
     # and so related to the survival curve we expect if an individual is depleted from food
     # by calling sig(), we express this if/else statement as a continuous function
 
+    # this is a crude 
 
     let s_f = sig(
         ind.f_X, p.ind.f_Xthr, 

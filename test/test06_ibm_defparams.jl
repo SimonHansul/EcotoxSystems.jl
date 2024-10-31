@@ -21,41 +21,39 @@ using DataFrames
 begin
     p = params()
 
-    #p.glb.dX_in = 100_000
-    #p.glb.k_V = 0.1
-    #p.glb.V_patch = 2.
-    #p.glb.N0 = 10
-    #p.glb.t_max = 63
-    #p.spc.Z = Truncated(Normal(1, 0.05), 0, Inf)
-    #p.spc.tau_R = 2.
-    #p.spc.f_Xthr = 0.9
-    #p.spc.H_p = 100.
+    p.glb.dX_in = 1e3
+    p.glb.k_V = 0.1
+    p.glb.V_patch = 0.05
+    p.glb.N0 = 1
+    p.glb.t_max = 21
+
+    p.spc.Z = Truncated(Normal(1, 0.05), 0, Inf)
+    p.spc.tau_R = Inf # don't simulate reproduction
+    p.spc.f_Xthr = 0.9
+    p.spc.H_p = 100.
+    p.spc.a_max = Inf
 
 
-    @time sim_ode = ODE_simulator(p);
+    sim_ode = ODE_simulator(p);
+    sim_ibm = IBM_simulator(p, dt = 1/2400) 
 end
 
-@df sim_ode plot(:t, [:S, :R, :H, :X], layout = (1,4), size = (800,350))
+# TODO: convert comparison between ODE and IBM simulator to a proper test
+
+@df sim_ode plot(:t, :S, xlabel = "t", ylabel = "Resource abundance", leg = true, label = "ODE simulator")
+@df sim_ibm.spc plot!(:t, :S, label = "IBM simulator")
+
+@df sim_ode plot(
+    :t, :X, 
+    xlabel = "t", ylabel = "Resource abundance", 
+    leg = true, label = "ODE simulator"
+    )
+@df sim_ibm.glb plot!(:t, :X, label = "IBM simulator")
 
 
-
-
-# TODO: how can I test whether the food feedback is correct?
-
-# v1
-# simulate a single individual
-# in output:
-#   calculate dI from I
-#   calculate dX from X_pF
-# --> global vars are currently not returned!
-#   - implement recording of global satates
-
-# v2 
-# include X in the ode-vs-ibm comparison
-
-# trying to store individuals in Memory instead of Vector
 begin
     # FIXME: lots of memory allocs in the ODE part
+    # probably a whoopsie in how I used broadcasting in the TKTD model
     # (cf https://discourse.julialang.org/t/can-i-avoid-allocations-when-broadcasting-over-slices/102501/2)
     # keyword "broadcast fusion" https://bkamins.github.io/julialang/2023/03/31/broadcast.html
 
@@ -70,23 +68,30 @@ begin
     
     p.spc.f_Xthr = 0.9
 
-    sim_ibm = IBM_simulator(p, saveat = 1, showinfo = 14)
+    sim_ibm = @replicates IBM_simulator(p, saveat = 1, showinfo = 14) 1
 
     
-    popsize = combine(
-        groupby(sim_ibm, [:t, :replicate]), 
-        x -> (N = nrow(x), M = sum(x.S) + sum(x.R))
-        )
-
-    plot(
-        (@df popsize plot(:t, :N, group = :replicate)),
-        (@df popsize plot(:t, :M, group = :replicate)),
-        #(@df sim_ibm plot(:t, :S, group = :replicate .* :id)), 
-        #(@df sim_ibm plot(:t, :f_X, group = :replicate .* :id)), 
-        leg = false
-    )
-
+    #popsize = combine(
+    #    groupby(sim_ibm.spc, [:t, :replicate]), 
+    #    x -> (N = nrow(x), M = sum(x.S) + sum(x.R))
+    #    )
+#
+    #plot(
+    #    (@df popsize plot(:t, :N, group = :replicate)),
+    #    (@df popsize plot(:t, :M, group = :replicate)),
+    #    #(@df sim_ibm plot(:t, :S, group = :replicate .* :id)), 
+    #    #(@df sim_ibm plot(:t, :f_X, group = :replicate .* :id)), 
+    #    leg = false
+    #)
+#
 end
+
+
+
+
+
+# try
+
 
 @df sim_ibm plot(
     plot(:t, :S, group = :id), 

@@ -85,17 +85,13 @@ C_Wmat = [ # simulating a ray design
     1.5 1.5;
 ]
 
-@time sim = exposure(p->DEB.ODE_simulator(p, alg=RK4()), p, C_Wmat);
+sim = exposure(p->DEB.ODE_simulator(p), p, C_Wmat);
 
 @df sim plot(
     plot(:t, :S, group = :treatment_id, leg = true),
     plot(:t, :R, group = :treatment_id)
 )
 
-
-p.spc.k_D_z
-
-DEB.constrmmat(p.spc.k_D_z)
 
 DEB.ODE_simulator(p)
 
@@ -109,10 +105,7 @@ p.spc.k_D_z = [
     0. 0. 0. 1.
     ]
 
-
-C_Wmat
-
-sim = exposure(DEB.simulator, p, C_Wmat);
+sim = exposure(DEB.ODE_simulator, p, C_Wmat);
 
 @df sim plot(
     plot(:t, :S, group = :treatment_id, leg = true),

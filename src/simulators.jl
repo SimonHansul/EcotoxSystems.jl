@@ -56,35 +56,6 @@ function ODE_simulator(
     error("returntype $returntype not implemented")
 end
 
-
-"""
-    @replicates(simcall::Expr, nreps::Int64) 
-
-Perform replicated runs of `simcall`, where `simcall` is a call to a simulator function. 
-
-Example:
-
-```Julia
-    spc = SpeciesParams(Z = Truncated(Normal(1, 0.1), 0, Inf)) # initialize default parameters with variable zoom factor
-    sim = @replicates MechanisticEffectModels.simulator(Params(spc = spc))) 10 # execute replicated runs to simulator
-```
-
-In this case, `sim` will contain the output of 10 replicated simulations. For each replicate, the zoom factor is sampled from a truncated Normal distribution. 
-`sim` contains an additional column `replicate`.
-"""
-macro replicates(simcall::Expr, nreps::Int)
-    quote
-        sim = DataFrame()
-
-        for replicate in 1:$nreps
-            sim_i = $(esc(simcall))
-            sim_i[!,:replicate] .= replicate
-            append!(sim, sim_i)
-        end
-        sim
-    end
-end
-
 """
     IBM_simulator(
         p::ComponentVector; 
@@ -143,14 +114,11 @@ function IBM_simulator(
         model_step!(m)
     end
 
-    return m #global_record_to_df(m), individual_record_to_df(m)
+    return (glb = global_record_to_df(m), spc = individual_record_to_df(m))
 end
 
 
-function global_record_to_df(m::AbstractDEBIBM)::DataFrame
-    return DataFrame()
-end
-
+global_record_to_df(m::AbstractDEBIBM)::DataFrame = DataFrame(hcat(m.global_record...)', getcolnames(m))
 
 function individual_record_to_df(
     m::AbstractDEBIBM; 
@@ -168,6 +136,55 @@ end
 
 
 
+combine_outputs(outputs::Vector{DataFrame}; idcol = :replicate) = begin
+
+    out = DataFrame()
+
+    for (i,df) in enumerate(outputs)
+        df[!,idcol] .= i 
+        append!(out, df)
+    end
+
+    return out
+end
+
+combine_outputs(outputs::Vector{N}; idcol = :replicate) where N <: NamedTuple = begin
+
+    out = [combine_outputs([out[1] for out in outputs]) for i in 1:length(outputs[1])]
+
+    return NamedTuple(zip(keys(outputs[1]), out))
+end
+
+
+
+"""
+    @replicates(simcall::Expr, nreps::Int64) 
+
+Perform replicated runs of `simcall`, where `simcall` is a call to a simulator function. 
+
+Example:
+
+```Julia
+    spc = SpeciesParams(Z = Truncated(Normal(1, 0.1), 0, Inf)) # initialize default parameters with variable zoom factor
+    sim = @replicates MechanisticEffectModels.simulator(Params(spc = spc))) 10 # execute replicated runs to simulator
+```
+
+In this case, `sim` will contain the output of 10 replicated simulations. For each replicate, the zoom factor is sampled from a truncated Normal distribution. 
+`sim` contains an additional column `replicate`.
+"""
+macro replicates(simcall::Expr, nreps::Int)
+    quote
+        sim = []
+
+        for replicate in 1:$nreps
+            sim_i = $(esc(simcall))
+            push!(sim, sim_i)
+        end
+        combine_outputs(Vector{typeof(sim[1])}(sim))
+    end
+end
+
+
 """
     replicates(simulator::Function, defaultparams::ComponentVector, nreps::Int64; kwargs...)
 
@@ -175,15 +192,14 @@ Perform replicated runs of `simulator` with parameters `defaultparams` (`simulat
 Analogous to `@replicates`, but a bit more flexible.
 """
 function replicates(simulator::Function, defaultparams::ComponentVector, nreps::Int64; kwargs...)
-    sim = DataFrame()
+    sim = []
 
     for replicate in 1:nreps
         sim_i = simulator(defaultparams; kwargs...)
-        sim_i[!,:replicate] .= replicate
-        append!(sim, sim_i)
+        push!(sim, sim_i)
     end
     
-    sim
+    combine_outputs(s)
 end
 
 """
@@ -217,21 +233,60 @@ function treplicates(
 
     @threads for replicate in 1:nreps
         sim_i = simulator(defaultparams; kwargs...)
-        sim_i[!,:replicate] .= replicate
         sim[replicate] = sim_i
     end
     
-    return vcat(sim...)
+    return combine_outputs(sim)
 end
 
 set_vecval(C_W::Real) = [C_W]
 set_vecval(C_W::AbstractVector) = C_W
 
+function add_idcol(df::DataFrame, col::Symbol, val::Any)
+    df = df[!,col] .= val 
+    return df
+end
+
+function add_idcol(nt::NT, col::Symbol, val::Any) where NT <: NamedTuple
+    for df in nt
+        df[!,col] .= val
+    end
+    return nt
+end
 
 """
-    exposure(simcall::Expr, C_Wvec::Vector{Float64}; kwargs...)
+    exposure(
+        simulator::Function, 
+        p::ComponentVector, 
+        C_Wmat::Matrix{R}
+    ) where R <: Real
 
-Simulate exposure to a single stressor over a Vector of constant exposure concentrations `C_Wvec`. 
+Simulate exposure to an arbitrary number of stressors over a Matrix of constant exposure concentrations `C_Wmat`. 
+
+The exposure matrix columns are stressors, the rows are treatments. 
+That means, to simulate a single-stressor experiment, do 
+
+```Julia 
+C_Wmat = [0.; 1.; 2;]
+```
+
+, creating a n x 1 matrix with exposure concentrations 0, 1 and 2. 
+
+In contrast, a single treatment with multiple stressors would be defined as 
+
+```Julia
+C_Wmat = [0 1 2;]
+```
+
+, creating a 1 x n matrix. Here, we would have three stressors with the simultaneous exposure concentrations 0,1,2. <br>
+
+Thus, defining four treatments for two stressors looks like this:
+
+```Julia
+C_Wmat = [0.0 0.0; 0.0 0.5; 1.0 0.0; 0.5 1.0]
+```
+
+This exposure matrix corresponds to a ray design with constant exposure ratios.
 """
 function exposure(
     simulator::Function, 
@@ -245,7 +300,8 @@ function exposure(
         for (i,C_W) in enumerate(eachrow(C_Wmat))
             p.glb.C_W = C_W
             sim_i = simulator(p)
-            sim_i[!,:treatment_id] .= i
+            sim_i = add_idcol(sim_i, :C_W, C_W)
+            sim_i = add_idcol(sim_i, :treatment_id, i)
             append!(sim, sim_i)
         end
         
@@ -254,7 +310,6 @@ function exposure(
         return sim
     end
 end
-
 
 
 """
