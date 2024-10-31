@@ -242,15 +242,19 @@ end
 set_vecval(C_W::Real) = [C_W]
 set_vecval(C_W::AbstractVector) = C_W
 
-function add_idcol(df::DataFrame, col::Symbol, val::Any)
-    df = df[!,col] .= val 
+function add_idcol(df::DataFrame, col::Symbol, val::Any)::DataFrame
+    
+    df[!,col] .= val 
+
     return df
 end
 
 function add_idcol(nt::NT, col::Symbol, val::Any) where NT <: NamedTuple
+
     for df in nt
         df[!,col] .= val
     end
+
     return nt
 end
 
@@ -295,19 +299,19 @@ function exposure(
     ) where R <: Real
     
     let C_W_int = p.glb.C_W # we will modify this value and then reset to the initial value
-        sim = DataFrame()
+        sim = []
 
         for (i,C_W) in enumerate(eachrow(C_Wmat))
             p.glb.C_W = C_W
             sim_i = simulator(p)
-            sim_i = add_idcol(sim_i, :C_W, C_W)
+            typeof(C_W) <: Number ? sim_i = add_idcol(sim_i, :C_W, C_W) : nothing
             sim_i = add_idcol(sim_i, :treatment_id, i)
-            append!(sim, sim_i)
+            push!(sim, sim_i)
         end
         
         p.glb.C_W = C_W_int 
 
-        return sim
+        return combine_outputs(Vector{typeof(sim[1])}(sim); idcol = :treatment_id)
     end
 end
 

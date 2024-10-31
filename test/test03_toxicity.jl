@@ -63,4 +63,3 @@ import EcotoxSystems: exposure, relative_response
         @test unique(rankcor.r .<= 0.9) == [true]
     end
 end
-

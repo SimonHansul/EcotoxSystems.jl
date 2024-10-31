@@ -1,6 +1,6 @@
-using Pkg; Pkg.activate("test")
-using Plots, StatsPlots
-using Revise
+#using Pkg; Pkg.activate("test")
+#using Plots, StatsPlots
+#using Revise
 @time using EcotoxSystems
 @time import EcotoxSystems: params, ODE_simulator, IBM_simulator 
 @time import EcotoxSystems: @replicates, DEBIndividual, treplicates
@@ -34,7 +34,7 @@ begin
 
 
     sim_ode = ODE_simulator(p);
-    sim_ibm = IBM_simulator(p, dt = 1/2400) 
+    @time sim_ibm = IBM_simulator(p, dt = 1/24, showinfo = 7) 
 end
 
 # TODO: convert comparison between ODE and IBM simulator to a proper test
@@ -51,7 +51,7 @@ end
 @df sim_ibm.glb plot!(:t, :X, label = "IBM simulator")
 
 
-begin
+@testset "Running IBM" begin
     # FIXME: lots of memory allocs in the ODE part
     # probably a whoopsie in how I used broadcasting in the TKTD model
     # (cf https://discourse.julialang.org/t/can-i-avoid-allocations-when-broadcasting-over-slices/102501/2)

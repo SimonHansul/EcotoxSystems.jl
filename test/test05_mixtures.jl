@@ -2,17 +2,9 @@
 Simulate single stressors with different PMoAs
 =#
 
-
 using DataFramesMeta
 import EcotoxSystems: exposure, relative_response
 
-p = DEB.params()
-p.spc.k_D_z .= 0
-
-p.glb.t_max = 42.
-
-p.spc.e_z .= 1.
-p.spc.b_z .= 0.1
 
 # changing the number of stressors is curently a bit clunky
 # we cannot do it dynamically, because ComponentArrays does not allow us to resize a Vector which is a field of a CA
@@ -85,6 +77,10 @@ C_Wmat = [ # simulating a ray design
     1.5 1.5;
 ]
 
+p.spc.k_D_z 
+p.spc.e_z
+p.spc.b_z
+
 sim = exposure(p->DEB.ODE_simulator(p), p, C_Wmat);
 
 @df sim plot(
@@ -92,12 +88,7 @@ sim = exposure(p->DEB.ODE_simulator(p), p, C_Wmat);
     plot(:t, :R, group = :treatment_id)
 )
 
-
-DEB.ODE_simulator(p)
-
 # simulating stressors with identical PMoAs
-
-
 p.glb.C_W
 
 p.spc.k_D_z = [

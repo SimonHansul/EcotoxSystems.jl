@@ -1,7 +1,7 @@
 using Plots.Measures
 using StatsBase
 
-@testset begin # effect of food input
+@testset"food availability" begin 
     norm(x) = x ./ sum(x)
     # prepare the plot
     plt = plot(

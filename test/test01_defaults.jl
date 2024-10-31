@@ -1,6 +1,6 @@
 import EcotoxSystems as DEB
 
-@testset begin  
+@testset "Default parameters" begin  
 
 
     p = DEB.params()
@@ -21,7 +21,7 @@ Basic test of @replicates macro
 import EcotoxSystems: @replicates
 using Chain
 
-@testset begin
+@testset "@replicates macro" begin
     p = DEB.params()
     p.spc.Z = Truncated(Normal(1., 0.1), 0, Inf)
     sim = @replicates DEB.ODE_simulator(p) 10
