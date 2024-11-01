@@ -58,7 +58,6 @@ cb_adult = ContinuousCallback(condition_adult, effect_adult!)
 
 DEBODE_callbacks = CallbackSet(cb_juvenile, cb_adult)
 
-
 @inline function DEBODE_global!(du, u, p, t)::Nothing
 
     du.glb.X = p.glb.dX_in - p.glb.k_V * u.glb.X  

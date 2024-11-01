@@ -80,10 +80,11 @@ If a parameter entry is a distribution, a random sample is taken.
 
 This also works for Vectors of distributions.
 """
-generate_individual_params(p::ComponentVector) = begin
+generate_individual_params(p::ComponentVector; kwargs...) = begin
     ind = getval.(p.spc) |> propagate_zoom
     return ComponentVector(
         glb = p.glb, 
-        ind = ind
+        ind = ind;
+        kwargs...
     )
 end
