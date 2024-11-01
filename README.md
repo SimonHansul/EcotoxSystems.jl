@@ -33,7 +33,7 @@ to define parameters and state variables for each component. Components are furt
 While `EcotoxSystems.jl` is not registered, install directly from github:
 
 ```Julia
-using Pkg; Pkg.add("https://github.com/simonhansul/eotoxsystems.jl")
+using Pkg; Pkg.add("https://github.com/simonhansul/ecotoxsystems.jl")
 ```
 
 
