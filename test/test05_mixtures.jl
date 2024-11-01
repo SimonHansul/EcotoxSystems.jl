@@ -1,5 +1,5 @@
 #=
-Simulate single stressors with different PMoAs
+Simulate mixtures with different PMoAs
 =#
 
 using DataFramesMeta
