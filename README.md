@@ -96,8 +96,3 @@ In essence, the idea that is at the heart of this package is that even the most 
 The default model is a DEB-TKTD model, 
 but the application of this pacakge is by no means limited to DEB-TKTD models.
 
-## Notes on performance
-
-I suspect that there is some performance trade-off that comes with passing model functions as arguments instead of hard-coding them. In my experience though, the penalty is so far small enough that it doesn't hinder me in any modelling tasks that I did so far with this system (e.g. Bayesian parameter inference, global sensitivity analysis). <br><br>
-In the default model, most of the memory allocations and computation times are a.t.m. spent on the TKTD submodel, specifically the broadcasting operations that are needed to allow for an arbitrary number of stressors. A quick performance boost can be achieved by replacing this with a single-stressor TKTD model, hard-coding the number of stressors or eliminiating the TKTD part altogether if it is not needed. <br>
-

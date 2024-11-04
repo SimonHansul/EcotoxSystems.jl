@@ -86,6 +86,7 @@ kwargs
 function IBM_simulator(
     p::ComponentVector; 
     global_ode! = DEBODE_global!,
+    global_rules! = default_global_rules!,
     individual_ode! = DEBODE_individual!,
     individual_rules! = default_individual_rules!,
     dt = 1/24, 
@@ -99,6 +100,7 @@ function IBM_simulator(
     m = IndividualBasedModel(
         p; 
         global_ode! = global_ode!, 
+        global_rules! = global_rules!,
         individual_ode! = individual_ode!,
         individual_rules! = individual_rules!,
         dt = dt, 
