@@ -53,7 +53,9 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
     # and so related to the survival curve we expect if an individual is depleted from food
     # by calling sig(), we express this if/else statement as a continuous function
 
-    # this is a crude 
+    # this is a crude rule, but can serve as a starting point
+
+    #FIXME: this function somehow takes the most computation time of all in the individual step
 
     s_f = sig(
         ind.f_X, p.ind.f_Xthr, 

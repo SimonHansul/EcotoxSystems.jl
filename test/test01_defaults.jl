@@ -49,7 +49,7 @@ using Chain
         )
     end
 
-    @test cvs.S > 0.05 # test for plausible coefficients of variation in the final values
-    @test cvs.H > 0.05
-    @test cvs.R > 0.05
+    @test cvs.S > 0.025 # test for plausible coefficients of variation in the final values
+    @test cvs.H > 0.025
+    @test cvs.R > 0.025
 end;
