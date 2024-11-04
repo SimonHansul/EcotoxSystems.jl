@@ -57,7 +57,7 @@ end
     # (cf https://discourse.julialang.org/t/can-i-avoid-allocations-when-broadcasting-over-slices/102501/2)
     # keyword "broadcast fusion" https://bkamins.github.io/julialang/2023/03/31/broadcast.html
 
-    # we can play a little with the parameters here, bu
+    # we can play a little with the parameters here, but we are not looking for a "correct" prediction!
 
     p.glb.dX_in = 30_000 #2e4 * 0.66 * 0.5
     p.glb.k_V = 0.1
