@@ -39,4 +39,7 @@ export ODE_simulator, IBM_simulator, @replicates, replicates, treplicates, expos
 
 include("traits.jl")
 
+include("plotrecipes.jl")
+export lineplot, groupedlineplot, rugplot
+
 end # module EcotoxSystems

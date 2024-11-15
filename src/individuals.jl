@@ -65,7 +65,6 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
         ind.cause_of_death = 2.
     end
 
-
     # reproduction, assuming a constant reproduction period
     
     # reproduction only occurs if the reproduction period has been exceeded

@@ -48,8 +48,8 @@ This is a Dynamic Energy Budget Toxicokinetic-Toxicodynamic (DEB-TKTD) model bas
 Inspect `default_derivatives.jl` to see how this default model is defined. 
 
 ```Julia
-from EcotoxSystems import params, ODE_simulator
-sim = ODE_simulator(params)
+from EcotoxSystems import defaultparams, ODE_simulator
+sim = ODE_simulator(defaultparams)
 ```
 
 The ODE system to simulate is a keyword-argument to `ODE_simulator`, and is defined to work with `DifferentialEquations.jl`. <br>
@@ -65,9 +65,9 @@ The function that converts `spc` to `ind` is also a keyword argument of `ODE_sim
 There are some convenience functions, e.g. to run replicated simulations:
 
 ```Julia
-from EcotoxSystems import params, ODE_simulator, @replicates
+from EcotoxSystems import defaultparams, ODE_simulator, @replicates
 p.spc.Z = Truncated(Normal(1,0.1), 0, Inf) # introduce individual variability through the mass-based zoom factor
-sim = @replicates ODE_simulator(params) 10 # simulate 10 times, each time sampling from Z
+sim = @replicates ODE_simulator(defaultparams) 10 # simulate 10 times, each time sampling from Z
 ```
 
 This is interesting if one of the parameters is subject to individual variability, 
