@@ -10,10 +10,9 @@ using Plots.Measures
 using Revise
 @time using EcotoxSystems
 import EcotoxSystems: defaultparams, IBM_simulator
-import EcotoxSystems: DEBkiss!, default_global_rules!
+import EcotoxSystems: DEBkiss!, default_global_rules!, default_individual_rules!
 
 default(leg = false, thickness_scaling = 1.2)
-
 
 #=
 The rules for individuals are extended 
@@ -27,6 +26,7 @@ function juvenile_removal!(a, m)
         a.u.ind.cause_of_death = 3.
     end
 end
+
 
 #=
 
@@ -259,3 +259,160 @@ begin
 
     savefig(plot(plt, dpi = 300), "repro_demo4.png")
 end
+
+import EcotoxSystems: lineplot, groupedlineplot
+
+
+begin
+    p = copy(defaultparams)
+
+    p.glb.dX_in = 1e7
+    p.glb.k_V = 0.1
+    p.glb.V_patch = 1
+    p.glb.N0 = 1
+    p.glb.t_max = 21
+    
+    p.spc.Z = 1. #Truncated(Normal(1, 0.05), 0, Inf)
+    p.spc.tau_R = Inf #Truncated(Normal(2., 0.2), 0, Inf)
+    p.spc.eta_IA = 0.33
+    p.spc.f_Xthr = 0.9
+    p.spc.s_min = 1
+    p.spc.H_p = 100.
+    p.spc.a_max = 60.
+    p.spc.kappa = 0.8
+    p.spc.K_X = 1000
+
+    sim = DataFrame()
+
+    for dX_in in [1e7, 1e6, 1e5, 1e4, 1e3]
+
+        p.glb.dX_in = dX_in
+
+        @time sim_ibm = IBM_simulator(
+            p,
+            dt = 1/24, 
+            saveat = 1/24,
+            showinfo = 7,
+            individual_rules! = juvenile_removal!
+            )
+
+        append!(sim, @transform(sim_ibm.spc, :dX_in = dX_in))
+    end
+
+    plt = @df sim plot(
+        plot(:t, :S, group = :dX_in, leg = false, xlabel = "Time (d)", ylabel = "Scaled dry weight"), 
+        plot(:t, :R, group = :dX_in, leg = false, xlabel = "Time (d)", ylabel = "R (μg C)"), 
+        size = (600,600), bottommargin = 5mm, leftmargin = 5mm, layout = (2,1)
+    )
+
+    #annotate!(subplots = 1, 7.5, 0.75, Plots.text("Mother individual", :blue))
+    #annotate!(subplots = 1, 15, 0.3, Plots.text("Offspring \n (removed in discrete intervals)", :green, 12))
+
+    display(plt)
+
+    savefig(plot(plt, dpi = 300), "repro_demo5.png")
+end
+
+
+begin
+    p = copy(defaultparams)
+
+    p.glb.dX_in = 1e7
+    p.glb.k_V = 0.1
+    p.glb.V_patch = 1
+    p.glb.N0 = 1
+    p.glb.t_max = 21
+    
+    p.spc.Z = 1. #Truncated(Normal(1, 0.05), 0, Inf)
+    p.spc.tau_R = Inf #Truncated(Normal(2., 0.2), 0, Inf)
+    p.spc.eta_IA = 0.33
+    p.spc.f_Xthr = 0.9
+    p.spc.s_min = 1
+    p.spc.H_p = 100.
+    p.spc.a_max = 60.
+    p.spc.kappa = 0.8
+    p.spc.K_X = 1000
+
+    @time sim_ibm = IBM_simulator(
+        p,
+        dt = 1/24, 
+        saveat = 1/24,
+        showinfo = 7,
+        individual_rules! = juvenile_removal!
+        )
+
+    sim = sim_ibm.spc
+
+    plt = @df sim plot(
+        plot(:t, :S, leg = false, xlabel = "Time (d)", ylabel = "Scaled dry weight"), 
+        plot(:t, vcat(0, diff(:R)), leg = false, xlabel = "Time (d)", ylabel = "dR (μg C/d)"), 
+        size = (600,600), bottommargin = 5mm, leftmargin = 5mm, layout = (2,1)
+    )
+
+    #annotate!(subplots = 1, 7.5, 0.75, Plots.text("Mother individual", :blue))
+    #annotate!(subplots = 1, 15, 0.3, Plots.text("Offspring \n (removed in discrete intervals)", :green, 12))
+
+    display(plt)
+
+    savefig(plot(plt, dpi = 300), "repro_demo6.png")
+end
+
+
+begin
+    p = copy(defaultparams)
+
+    p.glb.dX_in = 1e7
+    p.glb.k_V = 0.1
+    p.glb.V_patch = 1
+    p.glb.N0 = 1
+    p.glb.t_max = 21
+    
+    p.spc.Z = 1. #Truncated(Normal(1, 0.05), 0, Inf)
+    p.spc.tau_R = 2.5 #Truncated(Normal(2., 0.2), 0, Inf)
+    p.spc.eta_IA = 0.33
+    p.spc.f_Xthr = 0.9
+    p.spc.s_min = 1
+    p.spc.H_p = 100.
+    p.spc.a_max = 60.
+    p.spc.kappa = 0.8
+    p.spc.K_X = 1000
+
+    @time sim_ibm = IBM_simulator(
+        p,
+        dt = 1/24, 
+        saveat = 1/24,
+        showinfo = 7,
+        individual_rules! = juvenile_removal!
+        )
+
+    sim = sim_ibm.spc
+
+    plt = @df @subset(sim, :id .== 1) plot(
+        plot(:t, :S, leg = false, xlabel = "Time (d)", ylabel = "Scaled dry weight"), 
+        plot(:t, :cum_repro, leg = false, xlabel = "Time (d)", ylabel = "cR (#)"), 
+        size = (600,600), bottommargin = 5mm, leftmargin = 5mm, layout = (2,1)
+    )
+
+    #annotate!(subplots = 1, 7.5, 0.75, Plots.text("Mother individual", :blue))
+    #annotate!(subplots = 1, 15, 0.3, Plots.text("Offspring \n (removed in discrete intervals)", :green, 12))
+
+    display(plt)
+
+    @chain sim begin
+        @subset(:id .== 1)
+        @transform(:dcR = vcat(0, diff(:cum_repro)))
+        @subset(:dcR .> 0)
+        @aside begin
+            plt = plot(
+                bar(_.dcR, xlabel = "Breeding event", ylabel = "Brood size"),
+                bar(_.t, xlabel = "Breeding event", ylabel = "Age at breeding event"), 
+                size = (500,600), bottommargin = 5mm, layout = (2,1)
+                )
+    
+            display(plt)
+            savefig(plot(plt, dpi = 300), "repro_demo7")
+        end
+    end
+end
+
+

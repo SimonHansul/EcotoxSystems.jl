@@ -46,7 +46,7 @@ function initialize_individual_statevars(
         age = 0,
         cause_of_death = 0,
         time_since_last_repro = 0,
-        cum_offspring = 0,
+        cum_repro = 0,
     )
 end
 

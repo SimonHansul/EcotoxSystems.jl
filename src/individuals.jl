@@ -84,6 +84,7 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
                     )
                 )
                 ind.R -= p.ind.X_emb_int # decrease reproduction buffer
+                ind.cum_repro += 1
             end
             ind.time_since_last_repro = 0. # reset reproduction period
         end

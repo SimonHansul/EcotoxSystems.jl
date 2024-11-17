@@ -1,4 +1,4 @@
-@testset begin # effect of food input
+@testset "Temperature" begin # effect of food input
     norm(x) = x ./ sum(x)
     # prepare the plot
     plt = plot(

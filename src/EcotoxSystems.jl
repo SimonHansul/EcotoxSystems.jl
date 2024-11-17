@@ -11,6 +11,8 @@ using StatsBase
 using Random
 using Base.Threads
 
+using RecipesBase
+
 abstract type AbstractDEBIBM end
 
 include("utils.jl")
