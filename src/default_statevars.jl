@@ -1,8 +1,8 @@
 const X_EMB_INT_REL = 0.001 
 
-constrmvec(x::AbstractMatrix) = MVector{size(x)[1],Float64}(zeros(size(x)[1]))
-constrmvec(x::AbstractVector) = MVector{length(x),Float64}(zeros(length(x)))
-constrmmat(x::AbstractMatrix) = MMatrix{size(x)...,Float64}(zeros(size(x)))
+constrmvec(x::AbstractMatrix, fillval = 0) = MVector{size(x)[1],Float64}(fill(fillval, size(x)[1]))
+constrmvec(x::AbstractVector, fillval = 0) = MVector{length(x),Float64}(fill(fillval, length(x)))
+constrmmat(x::AbstractMatrix, fillval = 0) = MMatrix{size(x)...,Float64}(fill(fillval, size(x)))
 
 function initialize_individual_statevars(
     p::ComponentVector; 

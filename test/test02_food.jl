@@ -1,6 +1,8 @@
 using Plots.Measures
 using StatsBase
 
+import EcotoxSystems as DEB
+
 @testset"food availability" begin 
     norm(x) = x ./ sum(x)
     # prepare the plot
