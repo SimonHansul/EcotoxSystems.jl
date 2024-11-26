@@ -113,7 +113,7 @@ function DEBkiss!(du, u, p, t)::Nothing
 
     # calculation of resource uptake for embryos vs hatched individuals
     
-    dI_emb = ind.embryo * (Complex(ind.S)^(2/3)).re * p.ind.Idot_max_rel_emb * ind.y_T
+    dI_emb = ind.embryo * (Complex(ind.S)^(2/3)).re * p.ind.dI_max_emb * ind.y_T
     dI = (1-ind.embryo) * ind.f_X * p.ind.dI_max * (Complex(ind.S)^(2/3)).re * ind.y_T
 
     # ingestion rate is the sum of both (dI_emb and dI are mutually exclusive)

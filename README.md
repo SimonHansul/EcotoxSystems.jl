@@ -48,7 +48,7 @@ This is a Dynamic Energy Budget Toxicokinetic-Toxicodynamic (DEB-TKTD) model bas
 Inspect `default_derivatives.jl` to see how this default model is defined. 
 
 ```Julia
-from EcotoxSystems import defaultparams, ODE_simulator
+import EcotoxSystems: import defaultparams, ODE_simulator
 sim = ODE_simulator(defaultparams)
 ```
 
