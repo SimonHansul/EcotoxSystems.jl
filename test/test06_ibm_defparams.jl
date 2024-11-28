@@ -1,12 +1,7 @@
 using Pkg; Pkg.activate("test")
 #using Plots, StatsPlots
 
-@time using DataFrames, DataFramesMeta
-
-using DrWatson
-using PackageCompiler
-
-@time using Plots
+using Plots
 default(leg = false)
 
 using Distributions
