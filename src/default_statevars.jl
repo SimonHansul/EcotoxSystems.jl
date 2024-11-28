@@ -16,7 +16,6 @@ function initialize_individual_statevars(
 
         X_emb = p.ind.X_emb_int, # initial mass of vitellus
         S = p.ind.X_emb_int * X_EMB_INT_REL, # initial structure is a small fraction of initial reserve // mass of vitellus
-        S_max_hist = p.ind.X_emb_int * X_EMB_INT_REL, # initial reference structure
         H = 0, # maturity
         R = 0, # reproduction buffer
         f_X = 1, # scaled functional response 
@@ -26,7 +25,7 @@ function initialize_individual_statevars(
         A = 0, # assimilation
         M = 0, # somatic maintenance
         J = 0, # maturity maintenance 
-
+        
         D_z = constrmmat(p.ind.k_D_z), # sublethal damage per stressor and PMoA
         D_h = constrmvec(p.ind.k_D_h), # lethal damage per stressor
 
@@ -40,7 +39,7 @@ function initialize_individual_statevars(
         # these are curently only needed in the IBM version, 
         # but may find application in the pure-ODE implementation 
 
-        h_fX = 0., # starvation-induced hazard rate
+        S_max_hist = p.ind.X_emb_int * X_EMB_INT_REL, # initial reference structure
         id = id, 
         cohort = cohort,
         age = 0,

@@ -1,5 +1,10 @@
 import EcotoxSystems as DEB
 
+import EcotoxSystems: defaultparams
+
+
+defaultparams.spc.propagate_zoom
+
 @testset "Default parameters" begin  
 
 

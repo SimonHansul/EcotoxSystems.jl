@@ -53,8 +53,8 @@ end
 # putting the conditions together into a callback set
 
 
-cb_juvenile = ContinuousCallback(condition_juvenile, effect_juvenile!)
-cb_adult = ContinuousCallback(condition_adult, effect_adult!)
+cb_juvenile = ContinuousCallback(condition_juvenile, effect_juvenile!, save_positions = (false,false))
+cb_adult = ContinuousCallback(condition_adult, effect_adult!, save_positions = (false,false))
 
 DEBODE_callbacks = CallbackSet(cb_juvenile, cb_adult)
 

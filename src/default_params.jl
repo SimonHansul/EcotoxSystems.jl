@@ -17,7 +17,7 @@ species_params = ComponentVector(
     Z = Dirac(1.0), # individual variability through zoom factor
     propagate_zoom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
         dI_max = 1/3, 
-        Idot_max_rel_emb = 1/3,
+        dI_max_emb = 1/3,
         X_emb_int = 1,
         H_p = 1, 
         K_X = 1
@@ -44,8 +44,8 @@ species_params = ComponentVector(
     b_h = [0;], # slope parameter for GUTS-SD module 
     # these are curently only used in an individual-based context, but could find application in the pure-ODE implementation 
     # for example by triggering emptying of the reproduction buffer through callbacks
-    f_Xthr = 0.5,  # functional response threshold for starvation mortality
-    s_min = 0.25,  # daily survival mortality at complete food deprivation
+    S_rel_crit = 0.66,  # relative amount of structure which can be lost before hazard rate kicks in
+    h_S = 0.7, # starvation hazard rate caused be shrinking below S_rel_crit
     a_max = Truncated(Normal(60, 6), 0, Inf), # maximum life span 
     tau_R = 2.0 # reproduction interval
 )

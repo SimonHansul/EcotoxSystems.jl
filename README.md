@@ -100,11 +100,16 @@ but the application of this pacakge is by no means limited to DEB-TKTD models.
 
 ## Changelog 
 
-# v0.1.0
+### v0.1.0
 
 Initial version.
 
-# v0.1.1 
+### v0.1.1 
 
 - Added the link_params! function, and link_params as argument of ODE_simulator
 - Fixed a typo which caused tests to fail
+
+### v0.1.2 
+
+- Changed the default individual rules to use `S_rel_hist` and `S_rel_crit`: If structural mass decreases by a critical relative amount, constant hazard rate kicks in.
+- Default callbacks use `save_positions = (false,false)` => time-points of callbacks will not be additionaly saved

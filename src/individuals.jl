@@ -57,11 +57,9 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
 
     #FIXME: this function somehow takes the most computation time of all in the individual step
 
-    s_f = sig(
-        ind.f_X, p.ind.f_Xthr, 
-        (1 - p.ind.s_min) * ind.f_X / p.ind.f_Xthr + p.ind.s_min,1.)^m.dt
-    
-    if rand() > s_f
+    ind.S_max_hist = max(ind.S, ind.S_max_hist)
+
+    if ((ind.S/ind.S_max_hist) < p.ind.S_rel_crit) && (rand() <= exp(-p.ind.h_S * m.dt))
         ind.cause_of_death = 2.
     end
 

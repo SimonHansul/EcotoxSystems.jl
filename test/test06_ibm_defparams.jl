@@ -1,9 +1,5 @@
-#using Pkg; Pkg.activate("test")
+using Pkg; Pkg.activate("test")
 #using Plots, StatsPlots
-#using Revise
-@time using EcotoxSystems
-@time import EcotoxSystems: params, ODE_simulator, IBM_simulator 
-@time import EcotoxSystems: @replicates, DEBIndividual, treplicates
 
 @time using DataFrames, DataFramesMeta
 
@@ -17,39 +13,39 @@ using Distributions
 using DataFramesMeta
 using DataFrames
 
+using Revise
+@time using EcotoxSystems
+@time import EcotoxSystems: params, ODE_simulator, IBM_simulator 
+@time import EcotoxSystems: @replicates, DEBIndividual, treplicates
+
+
+using Plots, StatsPlots
 begin
     p = params()
 
-    p.glb.dX_in = 1e3
+    p.glb.dX_in = 1e4
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.05
     p.glb.N0 = 1.
-    p.glb.t_max = 21
+    p.glb.t_max = 56
 
-    p.spc.Z = Truncated(Normal(1, 0.05), 0, Inf)
-    p.spc.tau_R = Inf # don't simulate reproduction
-    p.spc.f_Xthr = 0.9
+    p.spc.Z = Dirac(1) # Truncated(Normal(1, 0.05), 0, Inf)
+    p.spc.tau_R = Inf # don't simulate reproduction for now
+
     p.spc.H_p = 100.
     p.spc.a_max = Inf
 
+    @time sim_ode = ODE_simulator(p, saveat = 1);
+    @time sim_ibm = IBM_simulator(p, dt = 1/24, showinfo = Inf);
 
-    sim_ode = ODE_simulator(p);
-    @time sim_ibm = IBM_simulator(p, dt = 1/24, showinfo = 7) 
+    @df sim_ode plot(:t, :S, xlabel = "t", ylabel = "S", leg = true, label = "ODE simulator")
+    @df sim_ibm.spc plot!(:t, :S, label = "IBM simulator")
 end
 
 # TODO: convert comparison between ODE and IBM simulator to a proper test
-# there is some divergence but it looks o.k.
 
-@df sim_ode plot(:t, :S, xlabel = "t", ylabel = "Resource abundance", leg = true, label = "ODE simulator")
-@df sim_ibm.spc plot!(:t, :S, label = "IBM simulator")
 
-@df sim_ode plot(
-    :t, :X, 
-    xlabel = "t", ylabel = "Resource abundance", 
-    leg = true, label = "ODE simulator"
-    )
-@df sim_ibm.glb plot!(:t, :X, label = "IBM simulator")
-
+using Test
 
 @testset "Running IBM" begin
     # FIXME: lots of memory allocs in the ODE part
@@ -59,7 +55,7 @@ end
 
     # we can play a little with the parameters here, but we are not looking for a "correct" prediction!
 
-    p.glb.dX_in = 30_000 #2e4 * 0.66 * 0.5
+    p.glb.dX_in = 100_000 #30_000
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.5
     p.glb.N0 = 10
@@ -69,49 +65,42 @@ end
     p.spc.tau_R = 2.
     p.spc.eta_IA = 0.33
     
-    p.spc.f_Xthr = 0.75
-    p.spc.s_min = 0.25
 
-    @time sim_ibm = treplicates(x -> IBM_simulator(p, saveat = 1, showinfo = 7), p, 4)
+    @time sim_ibm = treplicates(x -> IBM_simulator(p, saveat = 1, showinfo = 7), p, 8)
     
    
-    plot(
+    plt = plot(
         (@df sim_ibm.glb plot(:t, :N, group = :replicate)),
         #(@df sim_ibm.spc plot(:t, :S, group = :replicate .* :id)), 
         #(@df sim_ibm.spc plot(:t, :S, group = :replicate .* :id)), 
-        (@df sim_ibm.spc plot(:t, :f_X, group = :replicate .* :id)), 
+        (@df sim_ibm.spc groupedlineplot(:t, :f_X, :replicate)), 
         leg = false
     )
+
+    display(plt)
 end
 
 
-# trying the simulation without TKTD to compare exec time
-
-function simple!(du, u, p, t) 
-    # turning off all possible toxic effects
-
-    u.ind.y_j .= 1
-    u.ind.h_z = 0.
-
-    EcotoxSystems.DEBkiss!(du, u, p, t)
-end
-
-p.glb.t_max = 56.
-
-@time sim_ibm = IBM_simulator(p, individual_ode! = simple!, showinfo = 7);
-VSCodeServer.@profview IBM_simulator(p, individual_ode! = simple!)
-
-popsize = combine(
-    groupby(sim_ibm.spc, [:t]), 
-    x -> (N = nrow(x), M = sum(x.S) + sum(x.R))
-    )
-
-@df popsize plot(:t, :N)
-
-@df sim_ibm.spc plot(
-    plot(:t, :I, group = :id),
-    plot(:t, :S, group = :id), 
-    plot(:t, :f_X, group = :id),
-    leg = false
-)
+## trying the simulation without TKTD to compare exec time
+#
+#function simple!(du, u, p, t) 
+#    # turning off all possible toxic effects
+#
+#    u.ind.y_j .= 1
+#    u.ind.h_z = 0.
+#
+#    EcotoxSystems.DEBkiss!(du, u, p, t)
+#end
+#
+#p.glb.t_max = 56.
+#
+#@time sim_ibm = IBM_simulator(p, individual_ode! = simple!, showinfo = 7);
+#VSCodeServer.@profview_allocs IBM_simulator(p, individual_ode! = simple!)
+#
+#popsize = combine(
+#    groupby(sim_ibm.spc, [:t]), 
+#    x -> (N = nrow(x), M = sum(x.S) + sum(x.R))
+#    )
+#
+#@df popsize plot(:t, :N)
 
