@@ -3,19 +3,20 @@
 @enum ReturnType odesol dataframe
 
 """
-    simulator(
+    ODE_simulator(
         p::ComponentVector; 
         alg = Tsit5(),
         saveat = 1,
         reltol = 1e-6,
         model = DEBODE!,
+        statevars_init = initialize_statevars,
+        ind_params_init = generate_individual_params,
+        param_links::Union{Nothing,NamedTuple} = nothing,  
         callbacks = DEBODE_callbacks,
         returntype::ReturnType = dataframe,
         kwargs...
-    )::DataFrame
-
+    )
 Run the model as ODE system. 
-
 
 **Example**: 
 
@@ -34,15 +35,18 @@ function ODE_simulator(
     model = DEBODE!,
     statevars_init = initialize_statevars,
     ind_params_init = generate_individual_params,
+    param_links::Union{Nothing,NamedTuple} = nothing,  
     callbacks = DEBODE_callbacks,
     returntype::ReturnType = dataframe,
     kwargs...
     )
 
-    individual_params = ind_params_init(p)
-    u = statevars_init(individual_params)
+    p_ind = ind_params_init(p) # converts spc component to ind component
+    link_params!(p_ind, param_links) # apply parameter 
 
-    prob = ODEProblem(model, u, (0, p.glb.t_max), individual_params) # define the problem
+    u = statevars_init(p_ind)
+
+    prob = ODEProblem(model, u, (0, p.glb.t_max), p_ind) # define the problem
     sol = solve(prob, alg; callback = callbacks, saveat = saveat, reltol = reltol, kwargs...) # get solution to the IVP
 
     if returntype == odesol # directly return the ODE solution object

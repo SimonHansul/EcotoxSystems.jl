@@ -1,10 +1,5 @@
 using Pkg; Pkg.activate("test")
-
 import EcotoxSystems: defaultparams, ODE_simulator
-using 
-sim = ODE_simulator(defaultparams)
-
-
 
 using Test
 using Distributions

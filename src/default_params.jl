@@ -88,3 +88,51 @@ generate_individual_params(p::ComponentVector; kwargs...) = begin
         kwargs...
     )
 end
+
+
+
+"""
+    link_params!(p::ComponentVector, links::NamedTuple = (spc = linkfun,))::Nothing 
+
+Apply functions to link parameters. <br>
+
+- `p`: ComponentVector containing parameters
+- `links`: Component-specific functions to define links between parameters. 
+
+## Examples 
+
+We can apply the link before running a simulation, in which case the link is applied to the `spc` component 
+(species-level parameters).-
+
+```Julia 
+
+
+link_ind_params!(p) = begin
+    p.k_J_emb = (1-p.kappa_emb)/p.kappa_emb * p.k_M_emb
+end
+
+p = deepcopy(defaultparams)
+link_params!(p, (spc = link_ind_params!,) # apply link ahead of simulation 
+```
+
+Alternatively, we provide the links as a keyword argument to `ODE_simulator`, 
+in which case the link is applied to the `ind` component. <br>
+This is useful if one of the parameters involved in the link is subject to individual variability, 
+and we need to update the link for each simulated individual. <br>
+
+```Julia
+
+sim = ODE_simulator(p, param_links = (ind = link_ind_params!,))
+```
+"""
+link_params!(p::ComponentVector, links::NamedTuple = (spc = link_ind_params!,))::Nothing = begin
+
+    for (component,linkfun!) in pairs(links)
+        linkfun!(p[component])
+    end
+
+    return nothing
+end
+
+link_params!(p::ComponentVector, links::Nothing)::Nothing = nothing
+

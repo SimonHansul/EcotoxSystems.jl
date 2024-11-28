@@ -97,3 +97,14 @@ In essence, the idea that is at the heart of this package is that even the most 
 The default model is a DEB-TKTD model, 
 but the application of this pacakge is by no means limited to DEB-TKTD models.
 
+
+## Changelog 
+
+# v0.1.0
+
+Initial version.
+
+# v0.1.1 
+
+- Added the link_params! function, and link_params as argument of ODE_simulator
+- Fixed a typo which caused tests to fail
