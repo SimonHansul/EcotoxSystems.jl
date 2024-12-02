@@ -1,7 +1,7 @@
 name = "EcotoxSystems"
 uuid = "a070e96f-54e2-4e3c-8571-6208d1dd8981"
 authors = ["SimonHansul <simonhansul@gmail.com>"]
-version = "0.1.2"
+version = "0.1.3"
 
 [deps]
 ComponentArrays = "b0b7db55-cfe3-40fc-9ded-d10e2dbeff66"

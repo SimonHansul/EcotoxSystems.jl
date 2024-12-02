@@ -2,6 +2,7 @@
 mutable struct IndividualBasedModel <: AbstractDEBIBM
     global_ode!::Function
     global_rules!::Function
+    init_global_statevars::Function
     individuals::Vector{DEBIndividual}
     du::ComponentVector
     u::ComponentVector
@@ -20,8 +21,10 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
             p::ComponentVector; 
             global_ode! = DEBODE_global!,
             global_rules! = default_global_rules!,
+            init_global_statevars = initialize_global_statevars,
             individual_ode! = DEBODE_individual!,
             individual_rules! = default_individual_rules!,
+            init_individual_statevars = initialize_individual_statevars,
             dt = 1/24, 
             saveat = 1, 
             record_individuals::Bool = true
@@ -39,8 +42,10 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
         p::ComponentVector; 
         global_ode! = DEBODE_global!,
         global_rules! = default_global_rules!,
+        init_global_statevars = initialize_global_statevars,
         individual_ode! = DEBODE_individual!,
         individual_rules! = default_individual_rules!,
+        init_individual_statevars = initialize_individual_statevars,
         dt = 1/24, 
         saveat = 1, 
         record_individuals::Bool = true
@@ -66,6 +71,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
         m.individual_record = ComponentVector[]
 
         # initialize individuals
+
         for i in 1:Int(p.glb.N0)
             m.idcount += 1
             m.individuals[i] = DEBIndividual(
@@ -73,17 +79,10 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
                 m.u.glb;
                 individual_ode! = individual_ode!,
                 individual_rules! = individual_rules!,
+                init_individual_statevars = init_individual_statevars,
                 id = m.idcount
                 )
         end
-
-        #m.individual_statevar_names = Symbol[keys(initialize_individual_statevars(m.individuals[1].p))...]
-        #
-        #if p.glb.N0 > 0
-        #    m.individual_statevar_indices = findall(x -> x in m.individual_statevar_names, keys(m.individuals[1].u))
-        #else
-        #    m.individual_statevar_indices = Int64[]
-        #end
 
         return m
     end

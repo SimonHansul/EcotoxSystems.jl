@@ -113,3 +113,7 @@ Initial version.
 
 - Changed the default individual rules to use `S_rel_hist` and `S_rel_crit`: If structural mass decreases by a critical relative amount, constant hazard rate kicks in.
 - Default callbacks use `save_positions = (false,false)` => time-points of callbacks will not be additionaly saved
+
+### v0.1.3
+
+- `init_global_statevars` and `init_individual_statevars` are now a keyword argument to `IBM_simulator` - necessary to implement modified models with additional states

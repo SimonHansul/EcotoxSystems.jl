@@ -47,16 +47,8 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
         ind.cause_of_death = 1
     end
     
-    # for starvation mortality, we assume that mortality can occur as soon as the scaled functional response falls below a threshold value f_Xthr
-    # below that threshold value, survival probability s_f decreases 
-    # s_min is the intercept of s_f vs f_X, 
-    # and so related to the survival curve we expect if an individual is depleted from food
-    # by calling sig(), we express this if/else statement as a continuous function
-
-    # this is a crude rule, but can serve as a starting point
-
-    #FIXME: this function somehow takes the most computation time of all in the individual step
-
+    # for starvation mortality, currently only a limit is set on the amount of mass that can be lost
+    # this is basically only a sanity check, and the actual starvation rules should be assessed on a species-by-species basis
     ind.S_max_hist = max(ind.S, ind.S_max_hist)
 
     if ((ind.S/ind.S_max_hist) < p.ind.S_rel_crit) && (rand() <= exp(-p.ind.h_S * m.dt))
@@ -78,11 +70,12 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
                     id = m.idcount, 
                     cohort = Int(ind.cohort + 1),
                     individual_ode! = a.individual_ode!,
-                    individual_rules! = a.individual_rules!
+                    individual_rules! = a.individual_rules!,
+                    init_individual_statevars = a.init_individual_statevars
                     )
                 )
                 ind.R -= p.ind.X_emb_int # decrease reproduction buffer
-                ind.cum_repro += 1
+                ind.cum_repro += 1 # keep track of cumulative reproduction of the mother individual
             end
             ind.time_since_last_repro = 0. # reset reproduction period
         end
@@ -103,7 +96,7 @@ end
 
     individual_ode!::Function
     individual_rules!::Function
-    statevar_init::Function
+    init_individual_statevars::Function
 
     function DEBIndividual(
         p::ComponentVector, 
@@ -112,7 +105,7 @@ end
         cohort::Int = 0,
         individual_ode! = DEBODE_individual!,
         individual_rules! = default_individual_rules,
-        statevar_init = initialize_individual_statevars
+        init_individual_statevars = initialize_individual_statevars,
         )
         
         a = new() 
@@ -120,11 +113,13 @@ end
         a.p = generate_individual_params(p)
         a.individual_ode! = individual_ode!
         a.individual_rules! = individual_rules!
+        a.init_individual_statevars = init_individual_statevars
         
+        # individual stores a reference to global states + copy of own states
         a.u = ComponentVector(
-            glb = global_statevars,
-            ind = ComponentVector(
-                statevar_init(a.p, id = id, cohort = cohort);
+            glb = global_statevars, # global states
+            ind = ComponentVector( # own states
+                a.init_individual_statevars(a.p, id = id, cohort = cohort);
             )
         )
 
