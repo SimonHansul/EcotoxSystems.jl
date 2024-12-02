@@ -107,10 +107,10 @@ function IBM_simulator(
         p; 
         global_ode! = global_ode!, 
         global_rules! = global_rules!,
-        init_global_statevars = initialize_global_statevars,
+        init_global_statevars = init_global_statevars,
         individual_ode! = individual_ode!,
         individual_rules! = individual_rules!,
-        init_individual_statevars = initialize_individual_statevars,
+        init_individual_statevars = init_individual_statevars,
         dt = dt, 
         saveat = saveat,
         record_individuals = record_individuals
