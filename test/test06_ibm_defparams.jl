@@ -74,28 +74,3 @@ using Test
 
     display(plt)
 end
-
-
-## trying the simulation without TKTD to compare exec time
-#
-#function simple!(du, u, p, t) 
-#    # turning off all possible toxic effects
-#
-#    u.ind.y_j .= 1
-#    u.ind.h_z = 0.
-#
-#    EcotoxSystems.DEBkiss!(du, u, p, t)
-#end
-#
-#p.glb.t_max = 56.
-#
-#@time sim_ibm = IBM_simulator(p, individual_ode! = simple!, showinfo = 7);
-#VSCodeServer.@profview_allocs IBM_simulator(p, individual_ode! = simple!)
-#
-#popsize = combine(
-#    groupby(sim_ibm.spc, [:t]), 
-#    x -> (N = nrow(x), M = sum(x.S) + sum(x.R))
-#    )
-#
-#@df popsize plot(:t, :N)
-
