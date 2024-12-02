@@ -7,6 +7,8 @@ default(leg = false)
 using Distributions
 using DataFramesMeta
 using DataFrames
+using Test
+
 
 using Revise
 @time using EcotoxSystems
@@ -38,39 +40,37 @@ begin
 end
 
 # TODO: convert comparison between ODE and IBM simulator to a proper test
+# TODO: why do we not get damped oscillations?
 
-
-using Test
 
 @testset "Running IBM" begin
     # FIXME: lots of memory allocs in the ODE part
-    # probably a whoopsie in how I used broadcasting in the TKTD model
+    # maybe a problem in how I used broadcasting in the TKTD model, although removing TKTD part does not change so much
     # (cf https://discourse.julialang.org/t/can-i-avoid-allocations-when-broadcasting-over-slices/102501/2)
     # keyword "broadcast fusion" https://bkamins.github.io/julialang/2023/03/31/broadcast.html
 
-    # we can play a little with the parameters here, but we are not looking for a "correct" prediction!
+    # we can play a little with the parameters here, but we are not looking for a "correct" prediction here!
+    # the IBM_simulator just provides the infrastructure to combine the necessary components
 
-    p.glb.dX_in = 100_000 #30_000
+    p.glb.dX_in = 50_000 #100_000
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.5
     p.glb.N0 = 10
-    p.glb.t_max = 56
+    p.glb.t_max = 365
 
-    p.spc.Z = Truncated(Normal(1, 0.05), 0, Inf)
-    p.spc.tau_R = 2.
-    p.spc.eta_IA = 0.33
-    
+    p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
+    p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
 
-    @time sim_ibm = treplicates(x -> IBM_simulator(p, saveat = 1, showinfo = 7), p, 8)
+    @time global sim_ibm = treplicates(x -> IBM_sim(p, saveat = 1, showinfo = 14), p, 1)
     
-   
     plt = plot(
-        (@df sim_ibm.glb plot(:t, :N, group = :replicate)),
-        #(@df sim_ibm.spc plot(:t, :S, group = :replicate .* :id)), 
-        #(@df sim_ibm.spc plot(:t, :S, group = :replicate .* :id)), 
-        (@df sim_ibm.spc groupedlineplot(:t, :f_X, :replicate)), 
+        (@df sim_ibm.glb plot(:t, :N, group = :replicate, ylabel = "N")),
+        (@df sim_ibm.spc groupedlineplot(:t, :S, :cohort, ylabel = "S")), 
+        (@df sim_ibm.spc groupedlineplot(:t, :H, :cohort, ylabel = "H")), 
         leg = false
     )
 
     display(plt)
 end
+
+
