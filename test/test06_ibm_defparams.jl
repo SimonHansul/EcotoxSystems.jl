@@ -61,7 +61,7 @@ end
     p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
     p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
 
-    @time global sim_ibm = treplicates(x -> IBM_sim(p, saveat = 1, showinfo = 14), p, 1)
+    @time global sim_ibm = treplicates(x -> IBM_simulator(p, saveat = 1, showinfo = 14), p, 1)
     
     plt = plot(
         (@df sim_ibm.glb plot(:t, :N, group = :replicate, ylabel = "N")),
