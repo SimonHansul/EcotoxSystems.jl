@@ -34,7 +34,7 @@ include("ibmschedules.jl")
 # functions to simulate models
 
 include("simulators.jl")
-export ODE_simulator, IBM_simulator, @replicates, replicates, treplicates, exposure
+export @replicates, replicates, treplicates, exposure
 
 # inferring traits from simulations - this is probably misplaced here and should go live somewhere else
 # atm we sill need it
