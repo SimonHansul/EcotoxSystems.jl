@@ -1,4 +1,4 @@
-abstract type AbstractDEBIndividual end
+abstract type AbstractIndividual end
 
 CAUSE_OF_DEATH = Dict(
     0 => "none",
@@ -7,7 +7,7 @@ CAUSE_OF_DEATH = Dict(
 
 
 """
-    default_individual_rules(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
+    default_individual_rules(a::AbstractIndividual, m::AbstractDEBIBM)::Nothing
 
 Defines the default rule-based portion for DEBIndividuals. <br>
 
@@ -17,7 +17,7 @@ A crude rule for starvation mortality is implemented, applying a dependency betw
 
 Reproduction is assumed to occur in fixed time intervals, according to `spc.tau_R`.
 """
-function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
+function default_individual_rules!(a::AbstractIndividual, m::AbstractDEBIBM)::Nothing
     
     @unpack glb,ind = a.u
     du = a.du
@@ -64,7 +64,7 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
         let num_offspring = trunc(ind.R / p.ind.X_emb_int)
             for _ in 1:num_offspring
                 m.idcount += 1 # increment individual counter
-                push!(m.individuals, DEBIndividual( # create new individual and push to individuals vector
+                push!(m.individuals, Individual( # create new individual and push to individuals vector
                     m.p, 
                     m.u.glb; 
                     id = m.idcount, 
@@ -88,7 +88,7 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
 end
 
 
-@with_kw mutable struct DEBIndividual <: AbstractDEBIndividual
+@with_kw mutable struct Individual <: AbstractIndividual
 
     du::ComponentVector
     u::ComponentVector
@@ -98,7 +98,51 @@ end
     individual_rules!::Function
     init_individual_statevars::Function
 
-    function DEBIndividual(
+    function Individual(
+        p::ComponentVector, 
+        global_statevars::ComponentVector;
+        id::Int = 1,
+        cohort::Int = 0,
+        individual_ode! = DEBODE_individual!,
+        individual_rules! = default_individual_rules,
+        init_individual_statevars = initialize_individual_statevars,
+        )
+        
+        a = new() 
+
+        a.p = generate_individual_params(p)
+        a.individual_ode! = individual_ode!
+        a.individual_rules! = individual_rules!
+        a.init_individual_statevars = init_individual_statevars
+        
+        # individual stores a reference to global states + copy of own states
+        a.u = ComponentVector(
+            glb = global_statevars, # global states
+            ind = ComponentVector( # own states
+                a.init_individual_statevars(a.p, id = id, cohort = cohort);
+            )
+        )
+
+        a.du = similar(a.u)
+        a.du .= 0.
+        
+        return a
+    end
+end
+
+
+@with_kw mutable struct SuperIndividual <: AbstractIndividual
+
+    du::ComponentVector
+    u::ComponentVector
+    p::ComponentVector
+    n::Int64
+
+    individual_ode!::Function
+    individual_rules!::Function
+    init_individual_statevars::Function
+
+    function Individual(
         p::ComponentVector, 
         global_statevars::ComponentVector;
         id::Int = 1,

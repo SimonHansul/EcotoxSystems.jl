@@ -3,7 +3,7 @@
 get_recorded_individual_var_indices(m::AbstractDEBIBM) = map(x -> x in m.recorded_individual_vars,  keys(ind)) |> BitVector
 
 
-function get_global_statevars!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
+function get_global_statevars!(a::AbstractIndividual, m::AbstractDEBIBM)::Nothing
     
     a.du.glb = m.du.glb
     a.u.glb = m.u.glb
@@ -11,7 +11,7 @@ function get_global_statevars!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Not
     return nothing
 end
 
-function set_global_statevars!(m::AbstractDEBIBM, a::AbstractDEBIndividual)::Nothing
+function set_global_statevars!(m::AbstractDEBIBM, a::AbstractIndividual)::Nothing
 
     m.du.glb = a.du.glb 
     m.u.glb = a.u.glb
@@ -32,7 +32,7 @@ At the minimum, this will include life stage transitions, reproduction and death
 For a spatially explicit model, movement should also most likely be part of the rule-based portion, 
 as well as functions which require direct information exchange between individuals.
 """
-function individual_step!(a::AbstractDEBIndividual, m::AbstractDEBIBM)
+function individual_step!(a::AbstractIndividual, m::AbstractDEBIBM)
     
     get_global_statevars!(a, m) # update reference to global states
 
@@ -50,7 +50,7 @@ function Euler!(u::ComponentVector, du::ComponentVector, dt::Real)::Nothing
     return nothing
 end
 
-function record_individual!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
+function record_individual!(a::AbstractIndividual, m::AbstractDEBIBM)::Nothing
 
     if m.record_individuals && isapprox(m.t % m.saveat, 0, atol = m.dt)
         push!(

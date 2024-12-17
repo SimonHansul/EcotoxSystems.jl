@@ -3,7 +3,7 @@ using Distributions
 
 # Global parameters with ComponentVector
 global_params = ComponentVector(
-    N0 = 1,                    # initial number of individuals [#]
+    N0 = 1.,                    # initial number of individuals [#]
     t_max = 21.0,              # maximum simulation time [days]
     dX_in = 1200.0,          # nutrient influx [μg C d-1]
     k_V = 0.0,                 # chemostat dilution rate [d-1]
@@ -18,9 +18,9 @@ species_params = ComponentVector(
     propagate_zoom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
         dI_max = 1/3, 
         dI_max_emb = 1/3,
-        X_emb_int = 1,
-        H_p = 1, 
-        K_X = 1
+        X_emb_int = 1.,
+        H_p = 1., 
+        K_X = 1.
     ),
     T_A = 8000.0,    # Arrhenius temperature [K]
     T_ref = 293.15,  # reference temperature [K]
@@ -36,12 +36,12 @@ species_params = ComponentVector(
     k_M = 0.59,     # somatic maintenance rate constant [d^-1]
     k_J = 0.504,    # maturity maintenance rate constant [d^-1]
     H_p = 100,    # maturity at puberty [μgC]
-    k_D_z = [0 0 0 .38;], # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
-    b_z = [0 0 0 0.93;], # slope parameters
-    e_z = [0 0 0 167;], # sensitivity parameters (thresholds)
-    k_D_h = [0;], # k_D - value for GUTS-Sd module (1 row = 1 stressor)
-    e_h = [0;], # sensitivity parameter (threshold) for GUTS-SD module
-    b_h = [0;], # slope parameter for GUTS-SD module 
+    k_D_z = [0. 0. 0. .38;], # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
+    b_z = [0. 0. 0. 0.93;], # slope parameters
+    e_z = [0. 0. 0. 167;], # sensitivity parameters (thresholds)
+    k_D_h = [0.;], # k_D - value for GUTS-Sd module (1 row = 1 stressor)
+    e_h = [0.;], # sensitivity parameter (threshold) for GUTS-SD module
+    b_h = [0.;], # slope parameter for GUTS-SD module 
     # these are curently only used in an individual-based context, but could find application in the pure-ODE implementation 
     # for example by triggering emptying of the reproduction buffer through callbacks
     S_rel_crit = 0.66,  # relative amount of structure which can be lost before hazard rate kicks in
@@ -67,6 +67,9 @@ getval(x::Any) = x
 #getval(x::Vector{Distribution}) = rand.(x)
 
 propagate_zoom(ind::ComponentVector) = begin
+    # keys(ind.propagate_zoom) selects the indices which are subject to the zoom f<actor
+    #  .* ind.Z .^ ind.propagate_zoom multplies these with a transform of the zoom factor, where ind.propagate_zoom is the exponent of the transformation
+    # the order of parameters in ind.propagate_zoom does not matter. ComponentArrays automatically matches the parameters correctly with their zoomed transform
     zprop = ind[keys(ind.propagate_zoom)] .* ind.Z .^ ind.propagate_zoom
     ind = ComponentVector(
         ind;
