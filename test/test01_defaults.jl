@@ -1,12 +1,9 @@
 import EcotoxSystems as EctSys
 import EcotoxSystems: defaultparams
 
-defaultparams.spc.propagate_zoom
-
 @testset "Default parameters" begin  
 
-
-    p = EctSys.params()
+    p = defaultparams
     p.glb.t_max = 56.
     p.spc.Z = Dirac(1.)
     global sim = ODE_simulator(p, reltol = 1e-3)

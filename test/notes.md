@@ -10,7 +10,7 @@
     - wait...profiler still shows mapslices where we should have reduce
     - re-starting session + adjusting
         - ODE: 4.8ms, 1.2 MB
-        - IBM: 20s, 20.8s
+        - IBM: 20s
 - removing h_z = sum(@...)
     - IBM: 17-18sm 3.4 GB
     - So some improvement...
@@ -18,9 +18,7 @@
     - IBM: 20s, 3.4 GB
 - inlining drc functs
     - IBM: 15s, 3.0 GB
-- adding @fastmath to sig
-    - ODE: 3.1 ms, 990kb
-    - IBM: 16s, 3GB
-- clipneg with @inline and @fastmath
-    - ODE: 3.1 ms, 990 kb
+- fastmath f_X
+    -
+- fastmath does not seem to do much good
 - TODO: transpose C_W matrices (column major)

@@ -24,14 +24,14 @@ Used to replace simple if-statements with a continuous function in ODE models.
     beta::Real = 30
     )::Real
 
-    @fastmath return 1 / (1 + exp(-beta*(x - x_thr))) * (y_right - y_left) + y_left
+    return 1 / (1 + exp(-beta*(x - x_thr))) * (y_right - y_left) + y_left
 end
 
 """
 Clip negative values at 0 as a continuous function, using `sig`.
 """
 @inline function clipneg(x::Real)::Real
-    @fastmath return sig(x, 0., 0., x)
+    return sig(x, 0., 0., x)
 end
 
 # definition of the conditions for life stage transitions
@@ -77,10 +77,15 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
 
     # scaled damage dynamics based on the minimal model
 
-    @. du.ind.D_z .= (1 - ind.embryo) * p.ind.k_D_z * (glb.C_W - ind.D_z)
-    @. du.ind.D_h .= (1 - ind.embryo) * p.ind.k_D_h * (glb.C_W - ind.D_h)
-    
-    @. ind.y_z = @. softNEC2neg(ind.D_z, p.ind.e_z, p.ind.b_z) # relative responses per stressor and PMoA
+    #@. du.ind.D_z = (1 - ind.embryo) * p.ind.k_D_z * (glb.C_W - ind.D_z)
+    #@. du.ind.D_h = (1 - ind.embryo) * p.ind.k_D_h * (glb.C_W - ind.D_h)
+
+    for z in eachindex(glb.C_W)
+        #@. du.ind.D_z[:,z] = (1 - ind.embryo) * @view(p.ind.k_D_z[:,z]) * (glb.C_W[z] - @view(ind.D_z[:,z]))
+        du.ind.D_h[z] = (1 - ind.embryo) * p.ind.k_D_h[z] * (glb.C_W[z] - ind.D_h[z])
+    end
+
+    @. ind.y_z = softNEC2neg(ind.D_z, p.ind.e_z, p.ind.b_z) # relative responses per stressor and PMoA
     
     ind.y_j .= reduce(*, ind.y_z; dims=1) # relative responses per PMoA are obtained as the product over all chemical stressors
     #ind.y_j = reduce(*, ind.y_z; dims = 1) # TODO: does this reduce allocations?
@@ -112,11 +117,11 @@ function DEBkiss!(du, u, p, t)::Nothing
 
     @unpack glb, ind = u
 
-    ind.y_T = exp((p.ind.T_A / p.ind.T_ref) - (p.ind.T_A / p.glb.T)) # temperature correction
+    ind.y_T = @fastmath exp((p.ind.T_A / p.ind.T_ref) - (p.ind.T_A / p.glb.T)) # temperature correction
 
     # ingestion rates and feedback with resource pools
 
-    ind.f_X = (glb.X / p.glb.V_patch) / ((glb.X / p.glb.V_patch) + p.ind.K_X)
+    ind.f_X = @fastmath (glb.X / p.glb.V_patch) / ((glb.X / p.glb.V_patch) + p.ind.K_X)
 
     # calculation of resource uptake for embryos vs hatched individuals
     
