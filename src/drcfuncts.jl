@@ -186,7 +186,7 @@ contmax(a, b; beta = 100.) = 1. / (1. + exp(-beta*((a-b) - 0.))) * (y_right - y_
 Linear positive relationship with soft threshold (NEC) and domain (1,Inf).
 """
 @inline softNEC2pos(x::Real, p::NTuple{2,Real}) = 1 + (p[2] *(x - p[1]) * (0.5 + (1 / pi) * atan(1e6 * (x - p[1]))))
-softNEC2pos(x, p1, p2) = softNEC2pos(x, (p1, p2))
+@inline softNEC2pos(x, p1, p2) = softNEC2pos(x, (p1, p2))
 
 
 """
@@ -199,4 +199,4 @@ softNEC2neg(x, p1, p2) = softNEC2neg(x, (p1, p2))
 Transformation of softNECpos for increasing relationships with domain (0,Inf).
 """
 @inline softNEC2GUTS(x::Real, p::NTuple{2,Real}) = p[2] * (x - p[1]) * (0.5 + (1 / pi) * atan(1e6 * (x - p[1])))
-softNEC2GUTS(x, p1, p2) = softNEC2GUTS(x, (p1, p2))
+@inline softNEC2GUTS(x, p1, p2) = p2 * (x - p1) * (0.5 + (1 / pi) * atan(1e6 * (x - p1)))

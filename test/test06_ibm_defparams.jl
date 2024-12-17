@@ -9,12 +9,10 @@ using DataFramesMeta
 using DataFrames
 using Test
 
-
 using Revise
 @time using EcotoxSystems
 @time import EcotoxSystems: params, ODE_simulator, IBM_simulator 
 @time import EcotoxSystems: @replicates, DEBIndividual, treplicates
-
 
 using Plots, StatsPlots
 begin
@@ -40,8 +38,6 @@ begin
 end
 
 # TODO: convert comparison between ODE and IBM simulator to a proper test
-# TODO: why do we not get damped oscillations?
-
 
 @testset "Running IBM" begin
     # FIXME: lots of memory allocs in the ODE part
@@ -56,12 +52,13 @@ end
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.5
     p.glb.N0 = 10
-    p.glb.t_max = 365
+    p.glb.t_max = 56 #365
 
     p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
     p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
 
-    @time global sim_ibm = treplicates(x -> IBM_simulator(p, saveat = 1, showinfo = 14), p, 1)
+    @time sim_ibm = treplicates(x -> IBM_simulator(p, saveat = 1, showinfo = 14), p, 1)
+    #VSCodeServer.@profview_allocs global sim_ibm = treplicates(x -> IBM_simulator(p, saveat = 1, showinfo = 14), p, 1)
     
     plt = plot(
         (@df sim_ibm.glb plot(:t, :N, group = :replicate, ylabel = "N")),
@@ -72,5 +69,4 @@ end
 
     display(plt)
 end
-
 

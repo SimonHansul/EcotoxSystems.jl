@@ -1,22 +1,27 @@
-import EcotoxSystems as DEB
-
+import EcotoxSystems as EctSys
 import EcotoxSystems: defaultparams
-
 
 defaultparams.spc.propagate_zoom
 
 @testset "Default parameters" begin  
 
 
-    p = DEB.params()
+    p = EctSys.params()
     p.glb.t_max = 56.
     p.spc.Z = Dirac(1.)
-    global sim = DEB.ODE_simulator(p, reltol = 1e-3)
+    global sim = ODE_simulator(p, reltol = 1e-3)
 
 
     @test isapprox(maximum(sim.H), p.spc.H_p, rtol = 0.1) 
-    @test isapprox(maximum(sim.S), DEB.calc_S_max(p.spc), rtol = 0.1)
+    @test isapprox(maximum(sim.S), EctSys.calc_S_max(p.spc), rtol = 0.1)
 end;
+
+@time EcotoxSystems.ODE_simulator(EcotoxSystems.defaultparams);
+
+using BenchmarkTools
+@benchmark EctSys.ODE_simulator(EctSys.defaultparams)
+
+VSCodeServer.@profview_allocs [EctSys.ODE_simulator(EctSys.defaultparams) for _ in 1:100]
 
 
 #=
@@ -27,9 +32,9 @@ import EcotoxSystems: @replicates
 using Chain
 
 @testset "@replicates macro" begin
-    p = DEB.params()
+    p = EctSys.params()
     p.spc.Z = Truncated(Normal(1., 0.1), 0, Inf)
-    sim = @replicates DEB.ODE_simulator(p) 10
+    sim = @replicates EctSys.ODE_simulator(p) 10
 
     plt = @df sim plot(
         plot(:t, :S, group = :replicate, color = 1),

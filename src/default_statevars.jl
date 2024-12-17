@@ -1,38 +1,40 @@
 const X_EMB_INT_REL = 0.001 
 
-constrmvec(x::AbstractMatrix, fillval = 0) = MVector{size(x)[1],Float64}(fill(fillval, size(x)[1]))
-constrmvec(x::AbstractVector, fillval = 0) = MVector{length(x),Float64}(fill(fillval, length(x)))
-constrmmat(x::AbstractMatrix, fillval = 0) = MMatrix{size(x)...,Float64}(fill(fillval, size(x)))
+constrmvec(x::AbstractMatrix; fillval::Float64 = 0.) = MVector{size(x)[1],Float64}(fill(fillval, size(x)[1]))
+constrmvec(x::AbstractVector; fillval::Float64 = 0.) = MVector{length(x),Float64}(fill(fillval, length(x)))
+constrmmat(x::AbstractMatrix; fillval::Float64 = 0.) = MMatrix{size(x)...,Float64}(fill(fillval, size(x)))
+constrmmat(x::AbstractMatrix, dims::Int64; fillval::Float64 = 0.) = MMatrix{size(x)[dims],1,Float64}(fill(fillval, size(x)[dims]))
 
 function initialize_individual_statevars(
     p::ComponentVector; 
-    id = 1, 
-    cohort = 0)::ComponentVector
+    id = 1., 
+    cohort = 0.)::ComponentVector
     
     ComponentVector(
-        embryo = 1,
-        juvenile = 0,
-        adult = 0,
+        embryo = 1.,
+        juvenile = 0.,
+        adult = 0.,
 
         X_emb = p.ind.X_emb_int, # initial mass of vitellus
         S = p.ind.X_emb_int * X_EMB_INT_REL, # initial structure is a small fraction of initial reserve // mass of vitellus
-        H = 0, # maturity
-        R = 0, # reproduction buffer
-        f_X = 1, # scaled functional response 
-        I_emb = 0, # ingestion from vitellus
-        I_p = 0, # ingestion from external food resource
-        I = 0, # total ingestion
-        A = 0, # assimilation
-        M = 0, # somatic maintenance
-        J = 0, # maturity maintenance 
+        H = 0., # maturity
+        R = 0., # reproduction buffer
+        f_X = 1., # scaled functional response 
+        I_emb = 0., # ingestion from vitellus
+        I_p = 0., # ingestion from external food resource
+        I = 0., # total ingestion
+        A = 0., # assimilation
+        M = 0., # somatic maintenance
+        J = 0., # maturity maintenance 
         
         D_z = constrmmat(p.ind.k_D_z), # sublethal damage per stressor and PMoA
         D_h = constrmvec(p.ind.k_D_h), # lethal damage per stressor
 
+        y_T = 1.,
+
         y_z = constrmmat(p.ind.k_D_z), # relative response per stressor and pmoa
-        y_j = constrmvec(p.ind.k_D_z[1,:]), # relative response per pmoa
-        
-        y_T = 1., # relative response to temperature
+        #y_j = constrmmat(p.ind.k_D_z, 2, fillval = 1), # relative response per pmoa
+        y_j = [0. 0. 0. 0.],
         h_z = 0., # hazard rate caused by chemical stressors
         S_z = 1., # chemical-related survival probability
 
@@ -42,10 +44,10 @@ function initialize_individual_statevars(
         S_max_hist = p.ind.X_emb_int * X_EMB_INT_REL, # initial reference structure
         id = id, 
         cohort = cohort,
-        age = 0,
-        cause_of_death = 0,
-        time_since_last_repro = 0,
-        cum_repro = 0,
+        age = 0.,
+        cause_of_death = 0.,
+        time_since_last_repro = 0.,
+        cum_repro = 0.,
     )
 end
 
@@ -63,7 +65,7 @@ end
 For initialization of ODE simulator, initialize the component vector of state variables, `u`, based on common oaraeter collection `p`.
 """
 function initialize_statevars(p::ComponentVector)::ComponentVector
-    return ComponentVector(
+    return ComponentVector(     
         glb = initialize_global_statevars(p),
         ind = initialize_individual_statevars(p)
     )

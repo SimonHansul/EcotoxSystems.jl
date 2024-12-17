@@ -103,7 +103,7 @@ function IBM_simulator(
 
     showinfo < Inf ? @info("Running IndividualBasedModel simulation with t_max=$(p.glb.t_max)") : nothing
     
-    m = IndividualBasedModel(
+    global m = IndividualBasedModel(
         p; 
         global_ode! = global_ode!, 
         global_rules! = global_rules!,
@@ -118,11 +118,12 @@ function IBM_simulator(
 
     while !(m.t > m.p.glb.t_max)
         if showinfo < Inf && isapprox(m.t % showinfo, 0, atol = m.dt)
-            @info("t=$(m.t), N = $(m.u.glb.N)")
+            @info("t=$(m.t), N = $(m.u.glb.N), mem = $(Base.summarysize(m))")
         end
 
         model_step!(m)
     end
+
 
     return (glb = global_record_to_df(m), spc = individual_record_to_df(m))
 end

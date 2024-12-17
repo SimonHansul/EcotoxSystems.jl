@@ -24,14 +24,14 @@ Used to replace simple if-statements with a continuous function in ODE models.
     beta::Real = 30
     )::Real
 
-    return 1 / (1 + exp(-beta*(x - x_thr))) * (y_right - y_left) + y_left
+    @fastmath return 1 / (1 + exp(-beta*(x - x_thr))) * (y_right - y_left) + y_left
 end
 
 """
 Clip negative values at 0 as a continuous function, using `sig`.
 """
-function clipneg(x::Real)::Real
-    return sig(x, 0., 0., x)
+@inline function clipneg(x::Real)::Real
+    @fastmath return sig(x, 0., 0., x)
 end
 
 # definition of the conditions for life stage transitions
@@ -81,10 +81,17 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
     @. du.ind.D_h .= (1 - ind.embryo) * p.ind.k_D_h * (glb.C_W - ind.D_h)
     
     @. ind.y_z = @. softNEC2neg(ind.D_z, p.ind.e_z, p.ind.b_z) # relative responses per stressor and PMoA
-    ind.y_j = mapslices(prod, ind.y_z; dims=1) # relative responses per PMoA are obtained as the product over all chemical stressors
+    
+    ind.y_j .= reduce(*, ind.y_z; dims=1) # relative responses per PMoA are obtained as the product over all chemical stressors
+    #ind.y_j = reduce(*, ind.y_z; dims = 1) # TODO: does this reduce allocations?
     ind.y_j[2] /= ind.y_j[2]^2 # for pmoas with increasing responses (M), the relative response has to be inverted  (x/x^2 == 1/x) 
 
-    ind.h_z = sum(@. softNEC2GUTS(ind.D_h, p.ind.e_h, p.ind.b_h)) # hazard rate according to GUTS-RED-SD
+    #ind.h_z = sum(@. softNEC2GUTS(ind.D_h, p.ind.e_h, p.ind.b_h)) # hazard rate according to GUTS-RED-SD
+    ind.h_z = 0 
+    @inbounds for z in eachindex(ind.D_h)
+        ind.h_z += softNEC2GUTS(ind.D_h[z], p.ind.e_h[z], p.ind.b_h[z])
+    end
+    
     du.ind.S_z = -ind.h_z * ind.S_z # survival probability according to GUTS-RED-SD
     
     return nothing
