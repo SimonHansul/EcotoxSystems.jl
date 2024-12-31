@@ -1,4 +1,4 @@
-#derivatives.jl
+# derivatives.jl
 # derivatives of the default model(s)
 
 """
@@ -151,8 +151,6 @@ function DEBkiss!(du, u, p, t)::Nothing
     return nothing
 end
 
-
-
 """
 Individual-level part of the DEB-ODE model with arbitrary number of stressors, assuming IA to compute combined effects.
 """
@@ -171,4 +169,3 @@ function DEBODE!(du, u, p, t)
     DEBODE_global!(du, u, p, t)
     DEBODE_individual!(du, u, p, t)
 end
-

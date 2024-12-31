@@ -1,3 +1,7 @@
+# individualbasedmodels.jl
+# defines a generic composite type for IBMs
+# this type should be generic enough for most applications, 
+# but if extensions are required, it is best to make use of the associated AbstractIBM type
 
 mutable struct IndividualBasedModel <: AbstractDEBIBM
     global_ode!::Function

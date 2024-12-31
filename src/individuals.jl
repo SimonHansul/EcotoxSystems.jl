@@ -1,10 +1,14 @@
+# individuals.jl 
+# definition of the default individual and default individual rules
+# the mutabe struct for individuals should be generic enough for most applications, 
+# the default_individual_rules should be viewed as a starting point for speicifc applications
+
 abstract type AbstractDEBIndividual end
 
 CAUSE_OF_DEATH = Dict(
     0 => "none",
     1 => "age"
 )
-
 
 """
     default_individual_rules(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
@@ -86,7 +90,6 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
 
     return nothing
 end
-
 
 @with_kw mutable struct DEBIndividual <: AbstractDEBIndividual
 

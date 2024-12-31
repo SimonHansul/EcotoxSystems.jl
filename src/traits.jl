@@ -1,3 +1,6 @@
+# traits.jl
+# functions to infer organism traits from raw simulation output and parameters
+
 """
     calc_SL_max(spc::ComponentVector)::Float64
 Calculate maximum structural length slmax [m^(1/3)]

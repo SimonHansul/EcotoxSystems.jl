@@ -1,3 +1,6 @@
+# plotrecipes.jl
+# Plots.jl recipess, useful for visualizing output dynamic ecotox models
+# the lineplot and groupedlineplot recipes provide a functionality which is similar to seaborn.lineplot, but with differnt defaults and arguments.
 
 @userplot RugPlot
 @recipe function f(h::RugPlot)

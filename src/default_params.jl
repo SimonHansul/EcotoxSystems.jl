@@ -1,5 +1,7 @@
-using ComponentArrays
-using Distributions
+# defaultparams.jl 
+# default parameter sets for the default model
+# the default parameters are a plausible starting point for *Daphnia* with model currency μgC, 
+# but their main purpose is to serve as a reference during development and testing (including extensions of the base model)
 
 # Global parameters with ComponentVector
 global_params = ComponentVector(
@@ -50,7 +52,6 @@ species_params = ComponentVector(
     tau_R = 2.0 # reproduction interval
 )
 
-
 """
 Default parameter object
 """
@@ -59,13 +60,39 @@ defaultparams = ComponentVector(
     spc = species_params     
 )
 
-Params() = deepcopy(defaultparams) # for backward compat with old struct-based implementation
-params() = deepcopy(defaultparams)
+Params(;kwargs...) = ComponentVector(defaultparams; kwargs...) # for backward compat with old struct-based implementation
 
+"""
+    params(;kwargs...) = ComponentVector(defaultparams; kwargs...)
+
+Initialize the default parameter set, modifying and/or adding parameter with kwargs. 
+
+## Examples 
+
+```Julia
+
+# simulate the default parameters
+p = params()
+sim = ODE_simulator(p)  
+
+# simulate the default parameters, but modify kappa
+p = params(kappa = 0.5) 
+sim = ODE_simulator
+
+# simulate the default parameters with individual variabilty in kappa
+p = params(kappa = truncated(Normal(0.5, 0.1), 0, 1))
+sim = @replicates ODE_simulator(p) 10
+``` 
+
+"""
+params(;kwargs...) = ComponentVector(defaultparams; kwargs...)
+
+# the getval function makes it possible that any parameter can also be a distribution
+# package users shouldn't have to diretly interact with this
 getval(x::Distribution) = rand(x) 
 getval(x::Any) = x
-#getval(x::Vector{Distribution}) = rand.(x)
 
+# propagate_zoom applies the zoomfactor to the parameters which are indicated in propagate_zoom, with the appropriate scaling factor
 propagate_zoom(ind::ComponentVector) = begin
     zprop = ind[keys(ind.propagate_zoom)] .* ind.Z .^ ind.propagate_zoom
     ind = ComponentVector(
@@ -75,10 +102,13 @@ propagate_zoom(ind::ComponentVector) = begin
 end
 
 """
-Generate individual-specific parameter set from species-specific parameter set. 
+    generate_individual_params(p::ComponentVector; kwargs...)
+
+    Generate individual-specific parameter set from species-specific parameter set. 
 If a parameter entry is a distribution, a random sample is taken. 
 
-This also works for Vectors of distributions.
+This also works for Vectors of distributions. 
+The kwargs need to be supplemented with additional components if there are more than just a global and an individual-level component.
 """
 generate_individual_params(p::ComponentVector; kwargs...) = begin
     ind = getval.(p.spc) |> propagate_zoom
@@ -88,8 +118,6 @@ generate_individual_params(p::ComponentVector; kwargs...) = begin
         kwargs...
     )
 end
-
-
 
 """
     link_params!(p::ComponentVector, links::NamedTuple = (spc = linkfun,))::Nothing 
@@ -135,4 +163,3 @@ link_params!(p::ComponentVector, links::NamedTuple = (spc = link_ind_params!,)):
 end
 
 link_params!(p::ComponentVector, links::Nothing)::Nothing = nothing
-

@@ -1,4 +1,5 @@
-#schedules.jl
+# ibmschedules.jl
+# generic scheduling for individuals
 
 get_recorded_individual_var_indices(m::AbstractDEBIBM) = map(x -> x in m.recorded_individual_vars,  keys(ind)) |> BitVector
 

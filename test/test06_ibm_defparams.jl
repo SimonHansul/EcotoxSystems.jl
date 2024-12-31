@@ -15,26 +15,56 @@ using Revise
 @time import EcotoxSystems: @replicates, DEBIndividual, treplicates
 
 using Plots, StatsPlots
-begin
+@testset begin
+    # FIXME: comparison fails for low K_X??
+    # - X is identical, but f(X) is different
+    # - so something has to be wrong in the calculation of f(X)
+    # - things to try:
+    #       - alg = Euler()
+    #       - remove @fastmath
+
     p = params()
 
-    p.glb.dX_in = 1e4
+    p.glb.dX_in = 1e2
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.05
     p.glb.N0 = 1.
     p.glb.t_max = 56
 
-    p.spc.Z = Dirac(1) # Truncated(Normal(1, 0.05), 0, Inf)
-    p.spc.tau_R = Inf # don't simulate reproduction for now
+    p.spc.Z = Dirac(1) # don't simulate individual variability
+    p.spc.tau_R = Inf # don't simulate reproduction for now - just tracking repro buffer
 
     p.spc.H_p = 100.
     p.spc.a_max = Inf
+    p.spc.K_X = 10
 
     @time sim_ode = ODE_simulator(p, saveat = 1);
-    @time sim_ibm = IBM_simulator(p, dt = 1/24, showinfo = Inf);
+    @time sim_ibm = IBM_simulator(p, dt = 1/24, showinfo = 14);
 
-    @df sim_ode plot(:t, :S, xlabel = "t", ylabel = "S", leg = true, label = "ODE simulator")
-    @df sim_ibm.spc plot!(:t, :S, label = "IBM simulator")
+    plt = @df sim_ode plot(
+        plot(:t, :X, xlabel = "t", ylabel = "X", leg = true, label = "ODE simulator"),
+        plot(:t, :S, xlabel = "t", ylabel = "S", leg = true, label = "ODE simulator"),
+        plot(:t, :H, xlabel = "t", ylabel = "H", leg = true, label = "ODE simulator"),
+        plot(:t, :R, xlabel = "t", ylabel = "R", leg = true, label = "ODE simulator"),
+        plot(:t, :f_X, xlabel = "t", ylabel = "f(X)", leg = true, label = "ODE simulator")
+        )
+    
+    @df sim_ibm.glb plot!(:t, :X, label = "IBM simulator", subplot = 1)
+    @df sim_ibm.spc plot!(:t, :S, label = "IBM simulator", subplot = 2)
+    @df sim_ibm.spc plot!(:t, :H, label = "IBM simulator", subplot = 3)
+    @df sim_ibm.spc plot!(:t, :R, label = "IBM simulator", subplot = 4)
+    @df sim_ibm.spc plot!(:t, :f_X, label = "IBM simulator", subplot = 5)
+    display(plt)
+
+    eval_df = leftjoin(sim_ibm.spc, sim_ode, on = :t, makeunique = true) |> EcotoxSystems.dropmissing
+
+    dS = eval_df.S .- eval_df.S_1
+    dH = eval_df.H .- eval_df.H_1
+    dR = eval_df.R .- eval_df.R_1
+
+    @test sum(.!isapprox.(0, dS, rtol = 1e-3)) .== 0
+    @test sum(.!isapprox.(0, dH, rtol = 1e-3)) .== 0
+    @test sum(.!isapprox.(0, dR, rtol = 1e-3)) .== 0
 end
 
 # TODO: convert comparison between ODE and IBM simulator to a proper test

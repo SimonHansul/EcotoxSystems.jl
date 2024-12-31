@@ -1,4 +1,6 @@
-
+# simulators.jl
+# these functions are central to easily run simulations from parameters
+# central functions are ODE_simulator and IBM_simulator 
 
 @enum ReturnType odesol dataframe
 
@@ -145,8 +147,6 @@ function individual_record_to_df(
     x -> DataFrame(x, cols)
 end
 
-
-
 combine_outputs(outputs::Vector{DataFrame}; idcol = :replicate) = begin
 
     out = DataFrame()
@@ -210,7 +210,7 @@ function replicates(simulator::Function, defaultparams::ComponentVector, nreps::
         push!(sim, sim_i)
     end
     
-    combine_outputs(s)
+    return combine_outputs(Vector{typeof(sim[1])}(sim))
 end
 
 """
@@ -244,7 +244,6 @@ function treplicates(
 
     @threads for replicate in 1:nreps
         sim_i = simulator(defaultparams; kwargs...)
-        sim[replicate] = sim_i
     end
     
     return combine_outputs(Vector{typeof(sim[1])}(sim))
@@ -254,9 +253,7 @@ set_vecval(C_W::Real) = [C_W]
 set_vecval(C_W::AbstractVector) = C_W
 
 function add_idcol(df::DataFrame, col::Symbol, val::Any)::DataFrame
-    
     df[!,col] .= val 
-
     return df
 end
 
@@ -350,5 +347,3 @@ function texposure(
         return sim
     end
 end
-
-

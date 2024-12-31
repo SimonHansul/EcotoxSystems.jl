@@ -1,4 +1,12 @@
-const X_EMB_INT_REL = 0.001 
+# default_statevars.jl 
+# functions to generate default state variables as ComponentArrays
+# state variables are differentiated into global and individual-level
+# this differentiation is essential for the functionality of the generic IBM schedule, 
+# and to allow for extensions with mulitple types of agents
+
+const X_EMB_INT_REL = 0.001 # for the default DEB model, this global constant determines the initial structural mass, relative to the mass of an egg
+
+# some helper functions to construct mutable static vectors and matrices
 
 constrmvec(x::AbstractMatrix; fillval::Float64 = 0.) = MVector{size(x)[1],Float64}(fill(fillval, size(x)[1]))
 constrmvec(x::AbstractVector; fillval::Float64 = 0.) = MVector{length(x),Float64}(fill(fillval, length(x)))

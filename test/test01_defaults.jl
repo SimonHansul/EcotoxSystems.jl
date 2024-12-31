@@ -13,14 +13,6 @@ import EcotoxSystems: defaultparams
     @test isapprox(maximum(sim.S), EctSys.calc_S_max(p.spc), rtol = 0.1)
 end;
 
-@time EcotoxSystems.ODE_simulator(EcotoxSystems.defaultparams);
-
-using BenchmarkTools
-@benchmark EctSys.ODE_simulator(EctSys.defaultparams)
-
-VSCodeServer.@profview_allocs [EctSys.ODE_simulator(EctSys.defaultparams) for _ in 1:100]
-
-
 #=
 Basic test of @replicates macro
 =#
