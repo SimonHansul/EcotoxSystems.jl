@@ -166,8 +166,6 @@ combine_outputs(outputs::Vector{N}; idcol = :replicate) where N <: NamedTuple = 
     return NamedTuple(zip(keys(outputs[1]), out))
 end
 
-
-
 """
     @replicates(simcall::Expr, nreps::Int64) 
 
