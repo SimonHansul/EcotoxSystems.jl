@@ -91,12 +91,14 @@ kwargs
 """
 function IBM_simulator(
     p::ComponentVector; 
+    init_global_statevars = initialize_global_statevars,
     global_ode! = DEBODE_global!,
     global_rules! = default_global_rules!,
-    init_global_statevars = initialize_global_statevars,
+    
     individual_ode! = DEBODE_individual!,
     individual_rules! = default_individual_rules!,
     init_individual_statevars = initialize_individual_statevars,
+    
     dt = 1/24, 
     saveat = 1,
     record_individuals = true,
@@ -107,12 +109,16 @@ function IBM_simulator(
     
     global m = IndividualBasedModel(
         p; 
+
+        init_global_statevars = init_global_statevars,
         global_ode! = global_ode!, 
         global_rules! = global_rules!,
-        init_global_statevars = init_global_statevars,
+        
         individual_ode! = individual_ode!,
         individual_rules! = individual_rules!,
         init_individual_statevars = init_individual_statevars,
+        
+        
         dt = dt, 
         saveat = saveat,
         record_individuals = record_individuals
