@@ -85,7 +85,7 @@ end
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.5
     p.glb.N0 = 10
-    p.glb.t_max = 56 #365
+    p.glb.t_max = 365
 
     p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
     p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
