@@ -8,7 +8,7 @@ import EcotoxSystems: exposure, relative_response
 
 # changing the number of stressors is curently a bit clunky
 # we cannot do it dynamically, because ComponentArrays does not allow us to resize a Vector which is a field of a CA
-# so the only solution currently is to manually reconstruct the CA
+# so the only solution currently is to manually reconstruct the CV
 
 p = ComponentVector( 
     glb = ComponentVector(
@@ -81,7 +81,10 @@ p.spc.k_D_z
 p.spc.e_z
 p.spc.b_z
 
-sim = exposure(p->DEB.ODE_simulator(p), p, C_Wmat);
+sim = exposure(p->EcotoxSystems.ODE_simulator(p), p, C_Wmat);
+
+@time ODE_simulator(p);
+
 
 @df sim plot(
     plot(:t, :S, group = :treatment_id, leg = true),
@@ -89,6 +92,10 @@ sim = exposure(p->DEB.ODE_simulator(p), p, C_Wmat);
 )
 
 # simulating stressors with identical PMoAs
+# we chose both stressors to act via PMoA R, 
+# so there should be no effects on growth in any of the treatments, 
+# but every treatment should affect 
+
 p.glb.C_W
 
 p.spc.k_D_z = [
@@ -96,7 +103,7 @@ p.spc.k_D_z = [
     0. 0. 0. 1.
     ]
 
-sim = exposure(DEB.ODE_simulator, p, C_Wmat);
+sim = exposure(ODE_simulator, p, C_Wmat);
 
 @df sim plot(
     plot(:t, :S, group = :treatment_id, leg = true),

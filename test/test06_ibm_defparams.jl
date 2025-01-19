@@ -15,11 +15,15 @@ using Revise
 @time import EcotoxSystems: @replicates, DEBIndividual, treplicates
 
 using Plots, StatsPlots
+
+# the output for a single individual from the IBM is compared with the pure-ODE solution 
+# this is done for a case with food limitation, since that is where there are most likely to be discrepancies
+# (it is curently not possible to handle feedback with external food abundance in exactly the same way in both variants)
 @testset "IBM vs ODE" begin
 
     p = params()
 
-    p.glb.dX_in = 1e2
+    p.glb.dX_in = 1e10 #1e2
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.05
     p.glb.N0 = 1.
@@ -32,7 +36,7 @@ using Plots, StatsPlots
     p.spc.a_max = Inf
     p.spc.K_X = 10
 
-    @time global sim_ode = ODE_simulator(p, saveat = 1, alg = EcotoxSystems.Euler(), dt = 1/240);
+    @time global sim_ode = ODE_simulator(p, saveat = 1);
     @time global sim_ibm = IBM_simulator(p, dt = 1/240, showinfo = 14);
 
     plt = @df sim_ode plot(
@@ -65,7 +69,6 @@ using Plots, StatsPlots
     @test sum(dR .> 2) == 0
 end
 
-# TODO: convert comparison between ODE and IBM simulator to a proper test
 
 @testset "Running IBM" begin
     # FIXME: lots of memory allocs in the ODE part

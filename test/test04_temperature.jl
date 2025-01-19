@@ -10,14 +10,14 @@
         xlabel = "Time (d)"
         )
 
-    p = DEB.params()
+    p = EcotoxSystems.params()
     p.glb.T = 293.15
     p.glb.t_max = 56.
     p.spc.K_X = 12e3
     
     sim = DataFrame()
 
-    p = DEB.params()
+    p = EcotoxSystems.params()
     p.glb.t_max = 56.
     p.spc.K_X = 12e3
 
@@ -29,7 +29,7 @@
             p.glb.T = T_C + 273.15
   
             # generate the predidction
-            sim_i = DEB.ODE_simulator(p)
+            sim_i = EcotoxSystems.ODE_simulator(p)
 
             # plot the trajectories
             @df sim_i plot!(plt, :t, :S, ylabel = "S", subplot = 1, leg = :outertopleft, label = "T = $(T_C)") 
@@ -43,7 +43,7 @@
         end
         hline!(
             plt, 
-            [DEB.calc_S_max(p.spc)], 
+            [EcotoxSystems.calc_S_max(p.spc)], 
             linestyle = :dash, 
             color = "gray", 
             subplot = 1, 
