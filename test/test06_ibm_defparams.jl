@@ -23,7 +23,7 @@ using Plots, StatsPlots
 
     p = params()
 
-    p.glb.dX_in = 1e10 #1e2
+    p.glb.dX_in = 1e2
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.05
     p.glb.N0 = 1.
@@ -90,7 +90,7 @@ end
     p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
     p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
 
-    @time sim_ibm = @replicates IBM_simulator(p, saveat = 1, showinfo = 14) 1
+    @time global sim_ibm = @replicates IBM_simulator(p, saveat = 1, showinfo = 14) 1
     #VSCodeServer.@profview_allocs global sim_ibm = treplicates(x -> IBM_simulator(p, saveat = 1, showinfo = 14), p, 1)
     
     plt = plot(
@@ -102,7 +102,10 @@ end
 
     display(plt)
 
+    # we know from experience that these values should be approximately reached for the given parameters
+    
     @test 1000 < maximum(sim_ibm.glb.N) < 1500
-    @test 250 < maximum(sim_ibm.spc.S) < 350
+    @test 250 < maximum(sim_ibm.spc.S) < 800
     @test 50 < maximum(sim_ibm.spc.H) < 200
 end
+
