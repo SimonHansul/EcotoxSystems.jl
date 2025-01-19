@@ -1,8 +1,6 @@
 using Plots.Measures
 using StatsBase
 
-import EcotoxSystems as DEB
-
 @testset"food availability" begin 
     norm(x) = x ./ sum(x)
     # prepare the plot
@@ -16,7 +14,7 @@ import EcotoxSystems as DEB
         )
     
     sim = DataFrame()
-    p = DEB.params()
+    p = EcotoxSystems.params()
     # iterate over nutrient input concentrations
     let dX_in = 4800.
         for i in 1:5
@@ -25,7 +23,7 @@ import EcotoxSystems as DEB
             p.glb.dX_in = dX_in
             p.glb.t_max = 56.
             p.spc.K_X = 12e3
-            sim_i = DEB.ODE_simulator(p, reltol = 1e-10)
+            sim_i = EcotoxSystems.ODE_simulator(p, reltol = 1e-10)
 
             # plot the trajectories
             @df sim_i plot!(plt, :t, :S, ylabel = "S", subplot = 1, leg = :outertopleft, label = "dX_in = $(dX_in)") 
@@ -37,7 +35,7 @@ import EcotoxSystems as DEB
             sim_i[!,:dX_in] .= dX_in 
             append!(sim, sim_i)
         end
-        hline!(plt, [DEB.calc_S_max(p.spc)], linestyle = :dash, color = "gray", subplot = 1, label = "S_max")
+        hline!(plt, [EcotoxSystems.calc_S_max(p.spc)], linestyle = :dash, color = "gray", subplot = 1, label = "S_max")
         display(plt)
     end
 

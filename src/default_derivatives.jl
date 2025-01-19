@@ -81,7 +81,7 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
     #@. du.ind.D_h = (1 - ind.embryo) * p.ind.k_D_h * (glb.C_W - ind.D_h)
 
     for z in eachindex(glb.C_W)
-        #@. du.ind.D_z[:,z] = (1 - ind.embryo) * @view(p.ind.k_D_z[:,z]) * (glb.C_W[z] - @view(ind.D_z[:,z]))
+            @. du.ind.D_z[:,z] = (1 - ind.embryo) * @view(p.ind.k_D_z[:,z]) * (glb.C_W[z] - @view(ind.D_z[:,z]))
         du.ind.D_h[z] = (1 - ind.embryo) * p.ind.k_D_h[z] * (glb.C_W[z] - ind.D_h[z])
     end
 

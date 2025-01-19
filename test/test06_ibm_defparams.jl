@@ -15,7 +15,7 @@ using Revise
 @time import EcotoxSystems: @replicates, DEBIndividual, treplicates
 
 using Plots, StatsPlots
-@testset begin
+@testset "IBM vs ODE" begin
 
     p = params()
 
@@ -51,7 +51,7 @@ using Plots, StatsPlots
     display(plt)
     
     sim_ibm.spc.t = round.(sim_ibm.spc.t)
-
+    
     eval_df = leftjoin(sim_ibm.spc, sim_ode, on = :t, makeunique = true) |> 
     x -> select(x, [:S, :S_1, :H, :H_1, :R, :R_1]) |> 
     x -> EcotoxSystems.dropmissing(x)
@@ -64,8 +64,6 @@ using Plots, StatsPlots
     @test sum(dH .> 2) == 0
     @test sum(dR .> 2) == 0
 end
-
-
 
 # TODO: convert comparison between ODE and IBM simulator to a proper test
 

@@ -5,7 +5,7 @@ using Distributions
 
 using OrdinaryDiffEq
 using DataFrames, ComponentArrays
-using Plots, StatsPlots
+using Plots, StatsPlots, Plots.Measures
 default(leg = false)
 using StatsBase
 
