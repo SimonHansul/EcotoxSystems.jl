@@ -1,7 +1,3 @@
-using Plots.Measures
-using StatsBase
-
-# FIXME: why is growth in the highest food level slightly lower...?
 @testset"food availability" begin 
     norm(x) = x ./ sum(x)
     # prepare the plot

@@ -85,7 +85,10 @@ sim = @replicates ODE_simulator(p) 10
 ``` 
 
 """
-params(;kwargs...) = ComponentVector(defaultparams; kwargs...)
+function params(;kwargs...)
+    defparams = deepcopy(defaultparams)
+    return ComponentVector(defparams; kwargs...)
+end
 
 # the getval function makes it possible that any parameter can also be a distribution
 # package users shouldn't have to diretly interact with this

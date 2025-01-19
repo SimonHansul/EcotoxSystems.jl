@@ -5,13 +5,14 @@ Simulate single stressors with different PMoAs
 using DataFramesMeta
 import EcotoxSystems: exposure, relative_response
 
-#@testset "Single-stressor toxicity" begin
 begin
     p = EcotoxSystems.params()
-    p.spc.k_D_z .= 0
-
+    
     p.glb.t_max = 42.
+    p.glb.dX_in = 2400.
+    p.glb.k_V = 0.
 
+    p.spc.k_D_z .= 0
     p.spc.e_z .= 1.
     p.spc.b_z .= 0.1
 
@@ -63,4 +64,3 @@ begin
         @test minimum(sims.y_R) .< 0.5
     end
 end
-

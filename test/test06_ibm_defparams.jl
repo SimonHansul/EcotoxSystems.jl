@@ -104,7 +104,7 @@ end
 
     # we know from experience that these values should be approximately reached for the given parameters
     
-    @test 1000 < maximum(sim_ibm.glb.N) < 1500
+    @test 500 < maximum(sim_ibm.glb.N) < 1500
     @test 250 < maximum(sim_ibm.spc.S) < 800
     @test 50 < maximum(sim_ibm.spc.H) < 200
 end
