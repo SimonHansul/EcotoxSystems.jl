@@ -1,19 +1,20 @@
 using Plots.Measures
 using StatsBase
 
+# FIXME: why is growth in the highest food level slightly lower...?
 @testset"food availability" begin 
     norm(x) = x ./ sum(x)
     # prepare the plot
     plt = plot(
-        layout = grid(1,3, widths = norm([2, 1, 1])),
+        layout = grid(1,4, widths = norm([2, 1, 1, 1])),
         leg = false, 
-        title = ["Growth" "Reproduction" "Food density"], 
+        title = ["Growth" "Reproduction" "Food density" "Functional response"], 
         leftmargin = 5mm, bottommargin = 6mm, 
-        size = (1200,350), 
+        size = (1500,350), 
         xlabel = "Time (d)"
         )
     
-    sim = DataFrame()
+    global sim = DataFrame()
     p = EcotoxSystems.params()
     # iterate over nutrient input concentrations
     let dX_in = 4800.
@@ -31,6 +32,7 @@ using StatsBase
             @df sim_i plot!(plt, :t, :X ./ p.glb.V_patch, ylabel = "[X]", subplot = 3, 
                 yscale = :log10
                 )
+            @df sim_i plot!(plt, :t, :f_X, ylabel = "f", subplot = 4)
 
             sim_i[!,:dX_in] .= dX_in 
             append!(sim, sim_i)
