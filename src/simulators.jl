@@ -12,7 +12,7 @@
         reltol = 1e-6,
         model = DEBODE!,
         statevars_init = initialize_statevars,
-        ind_params_init = generate_individual_params,
+        gen_ind_params = generate_individual_params,
         param_links::Union{Nothing,NamedTuple} = nothing,  
         callbacks = DEBODE_callbacks,
         returntype::ReturnType = dataframe,
@@ -39,7 +39,7 @@ The following kwargs are used internally by `OrdinaryDiffEq.solve`. See `Ordinar
 In addition we have some kwargs that are used to further process inputs and outputs: 
 
 - `statevars_init`: Function that defines initial state variables as component vector. Components typically match those in the parameter vector. 
-- `ind_params_init: Function that converts species-level parameters to individual-level parameters, for example by replacing parameters which are given as distributions with a random sample from the distribution. The inputs and outputs of this function should contain all components. 
+- `gen_ind_params: Function that converts species-level parameters to individual-level parameters, for example by replacing parameters which are given as distributions with a random sample from the distribution. The inputs and outputs of this function should contain all components. 
 - `returntype`: Indicating of how to return the result. Currently allowed are `dataframe` (complete solution converted to a `DataFrame`) and `odesol` (the ODE solution object as returned by `OrdinaryDiffEq`). Default is `dataframe`.
 
 **Example**: 
@@ -58,14 +58,14 @@ function ODE_simulator(
     reltol = 1e-6,
     model = DEBODE!,
     statevars_init = initialize_statevars,
-    ind_params_init = generate_individual_params,
+    gen_ind_params = generate_individual_params,
     param_links::Union{Nothing,NamedTuple} = nothing,  
     callbacks = DEBODE_callbacks,
     returntype::ReturnType = dataframe,
     kwargs...
     )
 
-    p_ind = ind_params_init(p) # converts spc component to ind component
+    p_ind = gen_ind_params(p) # converts spc component to ind component
     link_params!(p_ind, param_links) # apply parameter 
 
     u = statevars_init(p_ind)
@@ -120,6 +120,7 @@ function IBM_simulator(
     individual_ode! = DEBODE_individual!,
     individual_rules! = default_individual_rules!,
     init_individual_statevars = initialize_individual_statevars,
+    gen_ind_params = generate_individual_params,
     
     dt = 1/24, 
     saveat = 1,
@@ -139,7 +140,7 @@ function IBM_simulator(
         individual_ode! = individual_ode!,
         individual_rules! = individual_rules!,
         init_individual_statevars = init_individual_statevars,
-        
+        gen_ind_params = gen_ind_params,
         
         dt = dt, 
         saveat = saveat,

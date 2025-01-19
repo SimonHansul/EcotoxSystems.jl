@@ -110,7 +110,7 @@ If a parameter entry is a distribution, a random sample is taken.
 This also works for Vectors of distributions. 
 The kwargs need to be supplemented with additional components if there are more than just a global and an individual-level component.
 """
-generate_individual_params(p::ComponentVector; kwargs...) = begin
+function generate_individual_params(p::ComponentVector; kwargs...) 
     ind = getval.(p.spc) |> propagate_zoom
     return ComponentVector(
         glb = p.glb, 

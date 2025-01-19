@@ -75,7 +75,8 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
                     cohort = Int(ind.cohort + 1),
                     individual_ode! = a.individual_ode!,
                     individual_rules! = a.individual_rules!,
-                    init_individual_statevars = a.init_individual_statevars
+                    init_individual_statevars = a.init_individual_statevars,
+                    gen_ind_params = a.generate_individual_params,
                     )
                 )
                 ind.R -= p.ind.X_emb_int # decrease reproduction buffer
@@ -110,7 +111,7 @@ end
         individual_ode! = DEBODE_individual!,
         individual_rules! = default_individual_rules,
         init_individual_statevars = initialize_individual_statevars,
-        gen_individual_params = generate_individual_params
+        gen_ind_params = generate_individual_params
         )
         
         a = new() 
@@ -118,8 +119,8 @@ end
         a.individual_ode! = individual_ode!
         a.individual_rules! = individual_rules!
         a.init_individual_statevars = init_individual_statevars
-        a.generate_individual_params = gen_individual_params
-        a.p = gen_individual_params(p)
+        a.generate_individual_params = gen_ind_params
+        a.p = a.generate_individual_params(p)
         
         # individual stores a reference to global states + copy of own states
         a.u = ComponentVector(

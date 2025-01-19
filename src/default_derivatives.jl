@@ -52,6 +52,7 @@ end
 
 # putting the conditions together into a callback set
 
+
 cb_juvenile = ContinuousCallback(condition_juvenile, effect_juvenile!, save_positions = (false,false))
 cb_adult = ContinuousCallback(condition_adult, effect_adult!, save_positions = (false,false))
 
@@ -63,6 +64,7 @@ DEBODE_callbacks = CallbackSet(cb_juvenile, cb_adult)
 
     return nothing
 end
+
 
 """
     function TKTD_mix_IA!(du, u, p, t)::Nothing
@@ -81,14 +83,13 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
     for z in eachindex(glb.C_W)
         # for sublethal effects, we broadcost over all PMoAs
         @. du.ind.D_z[z,:] = (1 - ind.embryo) * @view(p.ind.k_D_z[z,:]) * (glb.C_W[z] - @view(ind.D_z[z,:]))
-        # for lethal effects, we have only one value per 
+        # for lethal effects, we have only one value per stressor
         du.ind.D_h[z] = (1 - ind.embryo) * p.ind.k_D_h[z] * (glb.C_W[z] - ind.D_h[z])
     end
 
     @. ind.y_z = softNEC2neg(ind.D_z, p.ind.e_z, p.ind.b_z) # relative responses per stressor and PMoA
     
     ind.y_j .= reduce(*, ind.y_z; dims=1) # relative responses per PMoA are obtained as the product over all chemical stressors
-    #ind.y_j = reduce(*, ind.y_z; dims = 1) # TODO: does this reduce allocations?
     ind.y_j[2] /= ind.y_j[2]^2 # for pmoas with increasing responses (M), the relative response has to be inverted  (x/x^2 == 1/x) 
 
     #ind.h_z = sum(@. softNEC2GUTS(ind.D_h, p.ind.e_h, p.ind.b_h)) # hazard rate according to GUTS-RED-SD
