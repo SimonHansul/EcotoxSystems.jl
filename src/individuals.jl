@@ -16,8 +16,8 @@ CAUSE_OF_DEATH = Dict(
 Defines the default rule-based portion for DEBIndividuals. <br>
 
 The event functions which are used as callbacks during ODE solving are here re-used to apply rules for life stage transitions.
-A crude rule for starvation mortality is implemented, applying a dependency between 
-    starvation mortality and the scaled functional response.
+
+A crude rule for starvation mortality is implemented, applying a constant hazard rate of a certain relative amount of structural mass is lost.
 
 Reproduction is assumed to occur in fixed time intervals, according to `spc.tau_R`.
 """
@@ -48,14 +48,14 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
     # individuals die when they exceed their maximum age a_max
     # a_max is subject to individual variability
     if ind.age >= a.p.ind.a_max
-        ind.cause_of_death = 1
+        ind.cause_of_death = 1.
     end
     
     # for starvation mortality, currently only a limit is set on the amount of mass that can be lost
     # this is basically only a sanity check, and the actual starvation rules should be assessed on a species-by-species basis
     ind.S_max_hist = max(ind.S, ind.S_max_hist)
 
-    if ((ind.S/ind.S_max_hist) < p.ind.S_rel_crit) && (rand() <= exp(-p.ind.h_S * m.dt))
+    if ((ind.S/ind.S_max_hist) < p.ind.S_rel_crit) && (rand() > exp(-p.ind.h_S * m.dt))
         ind.cause_of_death = 2.
     end
 
@@ -91,16 +91,33 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
     return nothing
 end
 
+
 @with_kw mutable struct DEBIndividual <: AbstractDEBIndividual
 
     du::ComponentVector
     u::ComponentVector
     p::ComponentVector
-
+    
     individual_ode!::Function
     individual_rules!::Function
     init_individual_statevars::Function
 
+    """
+    DEBIndividual(
+            p::ComponentVector, 
+            global_statevars::ComponentVector;
+            id::Int = 1,
+            cohort::Int = 0,
+            individual_ode! = DEBODE_individual!,
+            individual_rules! = default_individual_rules,
+            init_individual_statevars = initialize_individual_statevars,
+            )::AbstractDEBIndividual
+
+    Initialization of an individual based on parameters `p` 
+    and global state `global_statevars`. 
+
+    Keyword arguments are used to assure that rules and equations for individual behaviour are inherited correctly.
+    """
     function DEBIndividual(
         p::ComponentVector, 
         global_statevars::ComponentVector;
@@ -109,7 +126,7 @@ end
         individual_ode! = DEBODE_individual!,
         individual_rules! = default_individual_rules,
         init_individual_statevars = initialize_individual_statevars,
-        )
+        )::AbstractDEBIndividual
         
         a = new() 
 

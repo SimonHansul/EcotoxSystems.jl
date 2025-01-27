@@ -3,7 +3,11 @@
 
 get_recorded_individual_var_indices(m::AbstractDEBIBM) = map(x -> x in m.recorded_individual_vars,  keys(ind)) |> BitVector
 
+"""
+    get_global_statevars!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
 
+Retrieve global state variables and derivatives for use in the individual-level model step.
+"""
 function get_global_statevars!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
     
     a.du.glb = m.du.glb
@@ -12,6 +16,11 @@ function get_global_statevars!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Not
     return nothing
 end
 
+"""
+    set_global_statevars!(m::AbstractDEBIBM, a::AbstractDEBIndividual)::Nothing
+
+Update global state variables and derivatives based on individual-level model step.
+"""
 function set_global_statevars!(m::AbstractDEBIBM, a::AbstractDEBIndividual)::Nothing
 
     m.du.glb = a.du.glb 
@@ -23,7 +32,7 @@ end
 """
     individual_step!(a::Agent, m::Model)::Nothing
 
-The individual step follows a generic pattern:
+The individual-level model step follows a generic pattern:
 
 First the ODE-portion of the model is executed, and the corresponding state variables are updated using the Euler scheme. 
 
@@ -46,11 +55,22 @@ function individual_step!(a::AbstractDEBIndividual, m::AbstractDEBIBM)
     return nothing
 end
 
+"""
+    Euler!(u::ComponentVector, du::ComponentVector, dt::Real)::Nothing
+
+Apply Euler scheme to state variables.
+"""
 function Euler!(u::ComponentVector, du::ComponentVector, dt::Real)::Nothing
     u .+= du .* dt
     return nothing
 end
 
+
+"""
+    record_individual!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
+
+Store individual-level state variables in `m.individual_record`.
+"""
 function record_individual!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
 
     if m.record_individuals && isapprox(m.t % m.saveat, 0, atol = m.dt)
@@ -63,6 +83,12 @@ function record_individual!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothin
     return nothing
 end
 
+
+"""
+    record_global!(m::AbstractDEBIBM)::Nothing
+
+Store global state variables in `m.global_record`.
+"""
 function record_global!(m::AbstractDEBIBM)::Nothing
 
     if isapprox(m.t % m.saveat, 0, atol = m.dt)
@@ -72,6 +98,14 @@ function record_global!(m::AbstractDEBIBM)::Nothing
     return nothing
 end
 
+
+"""
+    filter_individuals!(m::AbstractDEBIBM)
+
+Remove individuals which have been flagged to die after the current time-step. 
+
+Individuals for which the condition `u.ind.cause_of_death == 0` applies are retained.
+"""
 filter_individuals!(m::AbstractDEBIBM) = m.individuals = filter(x -> x.u.ind.cause_of_death == 0, m.individuals)
 
 function step_all_individuals!(m::AbstractDEBIBM)::Nothing
@@ -91,10 +125,22 @@ function step_all_individuals!(m::AbstractDEBIBM)::Nothing
     return nothing
 end
 
+
+"""
+    default_global_rules!(m)
+
+Global rule-based portion of the default model. 
+"""
 function default_global_rules!(m)
     m.u.glb.N = length(m.individuals) # tracking population size
 end
 
+
+"""
+    model_step!(m::AbstractDEBIBM)::Nothing
+
+Generic definition of an individual-based model step.
+"""
 function model_step!(m::AbstractDEBIBM)::Nothing
     # calculate global derivatives
     # change in resource abundance, chemical stressor exposure etc.

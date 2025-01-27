@@ -18,14 +18,12 @@
         returntype::ReturnType = dataframe,
         kwargs...
     )
-Run the model as ODE system. 
 
-**Example**: 
+Run a model as purely ODE-based system: 
 
 ```Julia
-import EcotoxSystems as DEB
-p = DEB.params() # loads the default parameters
-sim = DEB.ODE_simulator(p)
+using EcotoxSystems
+sim = DEB.ODE_simulator(EcotoxSystems.defaultparams(p))
 ```
 
 """
@@ -65,28 +63,26 @@ end
 """
     IBM_simulator(
         p::ComponentVector; 
+        global_ode! = DEBODE_global!,
+        global_rules! = default_global_rules!,
+        init_global_statevars = initialize_global_statevars,
+        individual_ode! = DEBODE_individual!,
+        individual_rules! = default_individual_rules!,
+        init_individual_statevars = initialize_individual_statevars,
         dt = 1/24, 
         saveat = 1,
+        record_individuals = true,
         showinfo::Number = Inf
-        )::DataFrame
-
+    )
 Simulate the individual-based version of the default model. 
 
 ```
-import EcotoxSystems as DEB
+using EcotoxSystems
 p = DEB.params()
 sim = DEB.IBMsimulator(p)
 ```
 
-args
-
-- `p`: The parameter collection with defined global and species parameters.
-
-kwargs
-
-- `dt`: Length of a timestep in the model (unit according to chosen unit of rate parameters)
-- `saveat`: Time interval at which to record output
-- `showinfo`: Time interval at which to print an update. Nothing will be printed if `showinfo == Inf` (the default).
+For explanation of arguments, see `IndividualBasedModel`.
 
 """
 function IBM_simulator(

@@ -38,9 +38,19 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
     
     args
         - `p`: A compatible parameter collection (`ABMParamCollection` or correspondingly structured named tuple)
+        
+    kwargs: 
+        - `global_ode!`: Global ODE-based portion of the model
+        - `global_rules!`: Glboal rule-based portion of the model
+        - `init_global_statevars`: Function that initializes global state variables as `ComponentVector`
+
+        - `individual_ode!`: Individual-level ODE-based portion of the model 
+        - `individual_rules!`: Individual-level rule-based portion of the model 
+        - `init_individual_statevars`: Function that initializes individual-level state variables as `ComponentVector`
     
-    kwargs
         - `dt`: Model time step [t]
+        - `saveat`: Time interavals at which to save output
+        - `record_individuals`: Whether to record states of each individual 
     """
     function IndividualBasedModel(
         p::ComponentVector; 
@@ -62,7 +72,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
         
         # setting up global states and individuals
         
-        m.u = ComponentVector(glb = initialize_global_statevars(p))
+        m.u = ComponentVector(glb = init_global_statevars(p))
         m.du = similar(m.u) 
         m.p = p
         m.t = 0

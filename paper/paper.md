@@ -86,26 +86,26 @@ Upon initialization of a parameter structure, `agn` has the value `nothing`. Use
 To run the base model, one can start by initializing the default parameters. <br>
 
 ```Julia
-using MechanisticEffectModels.DEBODE
-p = Params()
-sim = DEBODE.simulator(p)
+using EcotoxSystems
+p = deepcopy(EcotoxSystems.defaultparams)
+p.glb.t_max = 21.
+sim = EcotoxSystems.ODE_simulator(p)
 ```
 
 This returns a data frame with all state variables over time. <br>
-To simulate different environmental scenarios, the `p.glb` is modified. 
-The code snippet below simulates five nutrient input rates (`Xdot_in`) and stores all results 
+To simulate different environmental scenarios, the component `p.glb` is modified. 
+The code snippet below simulates three temperatures `T` and stores all results 
 in a single data frame.
 
 ``` Julia
-using MechanisticEffectModels.DEBODE, DataFrames
-p = Params() #
+using DataFrames
 sim = DataFrame()
 let Tvec = [17.5, 20., 22.5] # simulate three ambient temperatures
     for T in Tvec
         p.glb.T = 273.15 + T # succesively lower the food input rate
-        sim_i = DEBODE.simulator(p) # generate the predidction
+        sim_i = EcotoxSystems.ODE_simulator(p) # generate the predidction
         sim_i[!,:T] .= T
-        append!(sim, sim_i) #
+        append!(sim, sim_i) 
     end
 end
 ```
@@ -115,14 +115,16 @@ The output is visualized in Figure 1.
 ![fig1](fig1.png)
 **Figure 1: Example simulation of the ODE system. Growth and reproduction are simulated at three temperatures for a hypothetical organism, using the default parameters and code provided in the main text.**
  
-### Example simulations of the ABM
+### Example simulations of the individual-based model
 
-To take this to the population-level, in principle only need to change the simulator. 
-Instead of `DEBODE.simulator`, we call `DEBABM.simulator`. <br>
+To take this to the population-level, in principle we only need to change the simulator. 
+Instead of `ODE_simulator`, we call `IBM_simulator`. <br>
 
-For simulations of population dynamics we will tpyically want to include individual variability, which is done through the zoom factor `Z` (see model description for details). <br>
-In addition, we might want to adjust some global parameters (longer simulation timespan and higher food input rate), by modify the `glb`-entries. <br>
-Since the ABM is always stochastic, it is also a good idea to run repeated simulations. This can be done by manually writing a for loop, or with the `@replicates` macro.
+For simulations of population dynamics we will tpyically want to include individual variability. 
+For this purpose, any species-level parameter can also be provided as a distribution. 
+By default, we provide individual variability through the zoom factor `Z` (see model description for details). <br>
+In addition, we might want to adjust some global parameters (longer simulation timespan and higher food input rate), by modifying the `glb`-entries. <br>
+Since the ABM is always stochastic, it is also a good idea to run repeated simulations. This can be done by manually writing a loop, or with the `@replicates` macro.
 
 ```
 using MechanisticEffectModels.DEBABM, DataFrames, Distributions

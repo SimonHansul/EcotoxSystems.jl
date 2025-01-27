@@ -14,6 +14,15 @@
     end
 end
 
+"""
+    lineplot(x, y, q; estimator)
+
+Plot aggregated values of `y` over `x`. Similar to `seaborn.lineplot`.
+By default, the arithmetic mean of `y` for every value of `x` is plotted, 
+with 5th to 95th percentiles as ribbon. 
+The plotted percentile range can be controlled via the positional argument `q`, which is a two-element Tuple.
+The arithmetic mean can be replaced with another function via the `estimator` argument. 
+"""
 @userplot LinePlot
 @recipe function f(h::LinePlot; estimator = mean)
     let x, y, q, mask
@@ -50,6 +59,11 @@ end
     end
 end
 
+"""
+    groupedlineplot(x, y, g, q; estimator)
+
+Version of lineplot with additional grouping variable `g`.
+"""
 @userplot GroupedLinePlot
 @recipe function f(h::GroupedLinePlot; estimator = mean)
     let x, y, group, q, mask
