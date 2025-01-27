@@ -85,7 +85,6 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
     @. ind.y_z = softNEC2neg(ind.D_z, p.ind.e_z, p.ind.b_z) # relative responses per stressor and PMoA
     
     ind.y_j .= reduce(*, ind.y_z; dims=1) # relative responses per PMoA are obtained as the product over all chemical stressors
-    #ind.y_j = reduce(*, ind.y_z; dims = 1) # TODO: does this reduce allocations?
     ind.y_j[2] /= ind.y_j[2]^2 # for pmoas with increasing responses (M), the relative response has to be inverted  (x/x^2 == 1/x) 
 
     #ind.h_z = sum(@. softNEC2GUTS(ind.D_h, p.ind.e_h, p.ind.b_h)) # hazard rate according to GUTS-RED-SD

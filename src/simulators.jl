@@ -12,12 +12,35 @@
         reltol = 1e-6,
         model = DEBODE!,
         statevars_init = initialize_statevars,
-        ind_params_init = generate_individual_params,
+        gen_ind_params = generate_individual_params,
         param_links::Union{Nothing,NamedTuple} = nothing,  
         callbacks = DEBODE_callbacks,
         returntype::ReturnType = dataframe,
         kwargs...
     )
+
+Run the model as ODE system. 
+This function is essentially a wrapper around `OrdinaryDiffEq.solve` with additional input and output processing.
+
+args:
+
+- `p`: Parameters, given as component vector. Typically at least two components are given: `glb` for global parameters, `spc` for species-level parameters.
+
+kwargs
+
+The following kwargs are used internally by `OrdinaryDiffEq.solve`. See `OrdinaryDiffEq` documentation for more information.
+
+- `alg`: ODE solving algorithm to use.. 
+- `saveat`: Interval or time-points at which to save the solution. Default is 1.
+- `reltol`: Relative tolerance of ODE solution, default is 1e-6.
+- `model`: ODE system to solve. 
+- `callbacks`: A callback set, i.e. pairs of conditions and events. Used to handle discontinuities.  
+
+In addition we have some kwargs that are used to further process inputs and outputs: 
+
+- `statevars_init`: Function that defines initial state variables as component vector. Components typically match those in the parameter vector. 
+- `gen_ind_params: Function that converts species-level parameters to individual-level parameters, for example by replacing parameters which are given as distributions with a random sample from the distribution. The inputs and outputs of this function should contain all components. 
+- `returntype`: Indicating of how to return the result. Currently allowed are `dataframe` (complete solution converted to a `DataFrame`) and `odesol` (the ODE solution object as returned by `OrdinaryDiffEq`). Default is `dataframe`.
 
 Run a model as purely ODE-based system: 
 
@@ -34,14 +57,14 @@ function ODE_simulator(
     reltol = 1e-6,
     model = DEBODE!,
     statevars_init = initialize_statevars,
-    ind_params_init = generate_individual_params,
+    gen_ind_params = generate_individual_params,
     param_links::Union{Nothing,NamedTuple} = nothing,  
     callbacks = DEBODE_callbacks,
     returntype::ReturnType = dataframe,
     kwargs...
     )
 
-    p_ind = ind_params_init(p) # converts spc component to ind component
+    p_ind = gen_ind_params(p) # converts spc component to ind component
     link_params!(p_ind, param_links) # apply parameter 
 
     u = statevars_init(p_ind)
@@ -87,12 +110,15 @@ For explanation of arguments, see `IndividualBasedModel`.
 """
 function IBM_simulator(
     p::ComponentVector; 
+    init_global_statevars = initialize_global_statevars,
     global_ode! = DEBODE_global!,
     global_rules! = default_global_rules!,
-    init_global_statevars = initialize_global_statevars,
+    
     individual_ode! = DEBODE_individual!,
     individual_rules! = default_individual_rules!,
     init_individual_statevars = initialize_individual_statevars,
+    gen_ind_params = generate_individual_params,
+    
     dt = 1/24, 
     saveat = 1,
     record_individuals = true,
@@ -103,12 +129,16 @@ function IBM_simulator(
     
     global m = IndividualBasedModel(
         p; 
+
+        init_global_statevars = init_global_statevars,
         global_ode! = global_ode!, 
         global_rules! = global_rules!,
-        init_global_statevars = init_global_statevars,
+        
         individual_ode! = individual_ode!,
         individual_rules! = individual_rules!,
         init_individual_statevars = init_individual_statevars,
+        gen_ind_params = gen_ind_params,
+        
         dt = dt, 
         saveat = saveat,
         record_individuals = record_individuals

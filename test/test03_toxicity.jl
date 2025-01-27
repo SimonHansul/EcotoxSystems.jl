@@ -2,20 +2,19 @@
 Simulate single stressors with different PMoAs
 =#
 
-
 using DataFramesMeta
 import EcotoxSystems: exposure, relative_response
 
-@testset "Single-stressor toxicity" begin
-
-    p = DEB.params()
-    p.spc.k_D_z .= 0
-
+begin
+    p = EcotoxSystems.params()
+    
     p.glb.t_max = 42.
+    p.glb.dX_in = 2400.
+    p.glb.k_V = 0.
 
+    p.spc.k_D_z .= 0
     p.spc.e_z .= 1.
     p.spc.b_z .= 0.1
-
 
     let C_Wvec =  hcat([0], round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2)...)' |> Matrix
         global sims = DataFrame()
@@ -23,15 +22,16 @@ import EcotoxSystems: exposure, relative_response
         for (j,pmoa) in enumerate(pmoas)
 
             p.spc.k_D_z .= 0.
-            p.spc.k_D_z[1,j] = 1
+            p.spc.k_D_z[1,j] = 1.
+            p.spc.k_D_h[1] = 1.
 
             # using the exposure function to iterate over treatments
-            sim_j = exposure(DEB.ODE_simulator, p, C_Wvec)
+            sim_j = exposure(EcotoxSystems.ODE_simulator, p, C_Wvec)
             sim_j[!,:pmoa] .= pmoa
             append!(sims, sim_j)
         end 
         
-        sims = relative_response(sims, [:S, :R], :C_W_1; groupby_vars = [:t, :pmoa])
+        global sims = relative_response(sims, [:S, :R], :C_W_1; groupby_vars = [:t, :pmoa])
 
         sort!(sims, :t)
         
@@ -61,5 +61,6 @@ import EcotoxSystems: exposure, relative_response
         
         display(plt)
         @test unique(rankcor.r .<= 0.9) == [true]
+        @test minimum(sims.y_R) .< 0.5
     end
 end

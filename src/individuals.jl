@@ -56,6 +56,7 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
     ind.S_max_hist = max(ind.S, ind.S_max_hist)
 
     if ((ind.S/ind.S_max_hist) < p.ind.S_rel_crit) && (rand() > exp(-p.ind.h_S * m.dt))
+    if ((ind.S/ind.S_max_hist) < p.ind.S_rel_crit) && (rand() > exp(-p.ind.h_S * m.dt))
         ind.cause_of_death = 2.
     end
 
@@ -75,7 +76,8 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
                     cohort = Int(ind.cohort + 1),
                     individual_ode! = a.individual_ode!,
                     individual_rules! = a.individual_rules!,
-                    init_individual_statevars = a.init_individual_statevars
+                    init_individual_statevars = a.init_individual_statevars,
+                    gen_ind_params = a.generate_individual_params,
                     )
                 )
                 ind.R -= p.ind.X_emb_int # decrease reproduction buffer
@@ -97,10 +99,11 @@ end
     du::ComponentVector
     u::ComponentVector
     p::ComponentVector
-    
-    individual_ode!::Function
-    individual_rules!::Function
-    init_individual_statevars::Function
+
+    individual_ode!::Function # equation-based portion of the individual step
+    individual_rules!::Function # rule-based portion of the individual step
+    init_individual_statevars::Function # function to initialize individual state variables
+    generate_individual_params::Function # function to initialize individual parameters
 
     """
     DEBIndividual(
@@ -126,14 +129,16 @@ end
         individual_ode! = DEBODE_individual!,
         individual_rules! = default_individual_rules,
         init_individual_statevars = initialize_individual_statevars,
-        )::AbstractDEBIndividual
+        gen_ind_params = generate_individual_params
+        )
         
         a = new() 
 
-        a.p = generate_individual_params(p)
         a.individual_ode! = individual_ode!
         a.individual_rules! = individual_rules!
         a.init_individual_statevars = init_individual_statevars
+        a.generate_individual_params = gen_ind_params
+        a.p = a.generate_individual_params(p)
         
         # individual stores a reference to global states + copy of own states
         a.u = ComponentVector(

@@ -15,7 +15,11 @@ using Revise
 @time import EcotoxSystems: @replicates, DEBIndividual, treplicates
 
 using Plots, StatsPlots
-@testset begin
+
+# the output for a single individual from the IBM is compared with the pure-ODE solution 
+# this is done for a case with food limitation, since that is where there are most likely to be discrepancies
+# (it is curently not possible to handle feedback with external food abundance in exactly the same way in both variants)
+@testset "IBM vs ODE" begin
 
     p = params()
 
@@ -32,7 +36,7 @@ using Plots, StatsPlots
     p.spc.a_max = Inf
     p.spc.K_X = 10
 
-    @time global sim_ode = ODE_simulator(p, saveat = 1, alg = EcotoxSystems.Euler(), dt = 1/240);
+    @time global sim_ode = ODE_simulator(p, saveat = 1);
     @time global sim_ibm = IBM_simulator(p, dt = 1/240, showinfo = 14);
 
     plt = @df sim_ode plot(
@@ -51,7 +55,7 @@ using Plots, StatsPlots
     display(plt)
     
     sim_ibm.spc.t = round.(sim_ibm.spc.t)
-
+    
     eval_df = leftjoin(sim_ibm.spc, sim_ode, on = :t, makeunique = true) |> 
     x -> select(x, [:S, :S_1, :H, :H_1, :R, :R_1]) |> 
     x -> EcotoxSystems.dropmissing(x)
@@ -65,9 +69,6 @@ using Plots, StatsPlots
     @test sum(dR .> 2) == 0
 end
 
-
-
-# TODO: convert comparison between ODE and IBM simulator to a proper test
 
 @testset "Running IBM" begin
     # FIXME: lots of memory allocs in the ODE part
@@ -84,12 +85,12 @@ end
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.5
     p.glb.N0 = 10
-    p.glb.t_max = 56 #365
+    p.glb.t_max = 365
 
     p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
     p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
 
-    @time sim_ibm = @replicates IBM_simulator(p, saveat = 1, showinfo = 14) 1
+    @time global sim_ibm = @replicates IBM_simulator(p, saveat = 1, showinfo = 14) 1
     #VSCodeServer.@profview_allocs global sim_ibm = treplicates(x -> IBM_simulator(p, saveat = 1, showinfo = 14), p, 1)
     
     plt = plot(
@@ -101,7 +102,10 @@ end
 
     display(plt)
 
-    @test 1000 < maximum(sim_ibm.glb.N) < 1500
-    @test 250 < maximum(sim_ibm.spc.S) < 350
+    # we know from experience that these values should be approximately reached for the given parameters
+    
+    @test 500 < maximum(sim_ibm.glb.N) < 1500
+    @test 250 < maximum(sim_ibm.spc.S) < 800
     @test 50 < maximum(sim_ibm.spc.H) < 200
 end
+

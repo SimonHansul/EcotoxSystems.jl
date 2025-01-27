@@ -5,7 +5,7 @@ using Distributions
 
 using OrdinaryDiffEq
 using DataFrames, ComponentArrays
-using Plots, StatsPlots
+using Plots, StatsPlots, Plots.Measures
 default(leg = false)
 using StatsBase
 
@@ -21,5 +21,6 @@ include("test03_toxicity.jl") # simulates single stressors
 include("test04_temperature.jl") # simulates temperature effects
 include("test05_mixtures.jl") # simulates chemical mixtures
 include("test06_ibm_defparams.jl")
+include("test07_alternative_ind_params.jl")
 
 include("Aqua.jl")

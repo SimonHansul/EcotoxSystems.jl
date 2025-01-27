@@ -54,12 +54,15 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
     """
     function IndividualBasedModel(
         p::ComponentVector; 
+        init_global_statevars = initialize_global_statevars,
         global_ode! = DEBODE_global!,
         global_rules! = default_global_rules!,
-        init_global_statevars = initialize_global_statevars,
+
         individual_ode! = DEBODE_individual!,
         individual_rules! = default_individual_rules!,
         init_individual_statevars = initialize_individual_statevars,
+        gen_ind_params = generate_individual_params,
+
         dt = 1/24, 
         saveat = 1, 
         record_individuals::Bool = true
@@ -91,9 +94,12 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
             m.individuals[i] = DEBIndividual(
                 p, 
                 m.u.glb;
+
                 individual_ode! = individual_ode!,
                 individual_rules! = individual_rules!,
                 init_individual_statevars = init_individual_statevars,
+                gen_ind_params = gen_ind_params,
+                
                 id = m.idcount
                 )
         end
