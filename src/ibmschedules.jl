@@ -133,6 +133,7 @@ Global rule-based portion of the default model.
 """
 function default_global_rules!(m)
     m.u.glb.N = length(m.individuals) # tracking population size
+    m.u.glb.X = max.(0, m.u.glb.X) # HOTFIX : negative resource abundances can cause chaos
 end
 
 
@@ -152,7 +153,6 @@ function model_step!(m::AbstractDEBIBM)::Nothing
     
     # global statevars are updated after individual derivatives are calculated
     # this is important because individuals affect global states using mutating operators
-    m.u.glb.X = max(0, m.u.glb.X) # HOTFIX : negative resource abundances can cause chaos
     m.t += m.dt
 
     record_global!(m)

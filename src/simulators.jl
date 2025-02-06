@@ -306,15 +306,15 @@ That means, to simulate a single-stressor experiment, do
 C_Wmat = [0.; 1.; 2;]
 ```
 
-, creating a n x 1 matrix with exposure concentrations 0, 1 and 2. 
+, creating a 1 x 3 matrix with exposure concentrations 0, 1 and 2. 
 
-In contrast, a single treatment with multiple stressors would be defined as 
+A single treatment with multiple stressors can be defined as 
 
 ```Julia
 C_Wmat = [0 1 2;]
 ```
 
-, creating a 1 x n matrix. Here, we would have three stressors with the simultaneous exposure concentrations 0,1,2. <br>
+, creating a 1 x 3 matrix. Here, we would have three stressors with the simultaneous exposure concentrations 0,1,2. <br>
 
 Thus, defining four treatments for two stressors looks like this:
 
