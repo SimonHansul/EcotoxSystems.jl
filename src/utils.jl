@@ -42,7 +42,7 @@ robustmin(x) = length(x)>0 ? minimum(x) : Inf
 ismin(x::AbstractVector) = x .== minimum(x)
 
 
-function rr(x::R, x_ref::R)::Float64 where R <: Real
+function rr(x::Real, x_ref::Real)::Real #::Float64 where R <: Real
     if x_ref == 0.
         return 1.
     else

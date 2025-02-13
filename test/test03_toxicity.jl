@@ -5,7 +5,7 @@ Simulate single stressors with different PMoAs
 using DataFramesMeta
 import EcotoxSystems: exposure, relative_response
 
-begin
+@testset begin
     p = EcotoxSystems.params()
     
     p.glb.t_max = 42.

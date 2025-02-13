@@ -118,6 +118,7 @@ Initial version.
 
 - `init_global_statevars` and `init_individual_statevars` are now a keyword argument to `IBM_simulator` - necessary to implement modified models with additional states
 
-### v0.1.4
+### v0.1.4-0.1.6
 
 - small bugfixes in IBM_simulator
+- small improvements on utils
