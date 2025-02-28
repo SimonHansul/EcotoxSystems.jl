@@ -24,9 +24,12 @@ This function is essentially a wrapper around `OrdinaryDiffEq.solve` with additi
 
 args:
 
-- `p`: Parameters, given as component vector. Typically at least two components are given: `glb` for global parameters, `spc` for species-level parameters.
+- `p`: Parameters, given as component vector. 
+At least two components are given: `glb` for global parameters, 
+`spc` for species-level parameters. `glb` as to contain an entry `t_max` for the maximum simulation time. 
+`spc` has to contain entries `Z` and `propagate_zoom` for the zoom factor and the parameters which are affected by the zoom factor.
 
-kwargs
+kwargs:
 
 The following kwargs are used internally by `OrdinaryDiffEq.solve`. See `OrdinaryDiffEq` documentation for more information.
 

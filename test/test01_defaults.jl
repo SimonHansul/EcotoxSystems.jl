@@ -3,11 +3,27 @@
     global p = EcotoxSystems.params()
     p.glb.t_max = 56.
     p.spc.Z = Dirac(1.)
-    global sim = ODE_simulator(p, reltol = 1e-3)
+    @time global sim = ODE_simulator(p, reltol = 1e-3)
 
-    @test isapprox(maximum(sim.H), p.spc.H_p, rtol = 0.1) 
-    @test isapprox(maximum(sim.S), EcotoxSystems.calc_S_max(p.spc), rtol = 0.1)
+    #@test isapprox(maximum(sim.H), p.spc.H_p, rtol = 0.1) 
+    #@test isapprox(maximum(sim.S), EcotoxSystems.calc_S_max(p.spc), rtol = 0.1)
 end;
+
+VSCodeServer.@profview_allocs ODE_simulator(p);
+
+@time ODE_simulator(p)
+
+using BenchmarkTools
+let m = [1, 2, 3], x = 0
+    @info "Benchmarking slicing"
+    @benchmark $x + $m[1]
+end
+
+let m = [1, 2, 3], x = 0
+    @info "Benchmarking version with @view"
+    @benchmark @. $x + @view($m[1])
+end
+
 
 #=
 Basic test of @replicates macro

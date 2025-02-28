@@ -27,7 +27,7 @@ Transformation of softNECpos for increasing relationships with domain (0,Inf).
 #    return (1 / (1 + Complex(x / p[1]) ^ p[2])).re
 #end
 #
-#LL2(x, p1, p2) = LL2(x, (p1, p2))
+LL2(x, p1, p2) = LL2(x, (p1, p2))
 #
 #
 ##Cumulative hazard function of the log-logistic distribution. Mainly used for application in GUTS.

@@ -76,18 +76,20 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
     # scaled damage dynamics based on the minimal model
 
     for z in eachindex(glb.C_W)
+        for j in eachindex(p.ind.k_D_z, ind.D_z, du.ind.D_z)  # Loop over second dimension
+            du.ind.D_z[z, j] = (1 - ind.embryo) * p.ind.k_D_z[z, j] * (glb.C_W[z] - ind.D_z[z, j])
+        end
         # for sublethal effects, we broadcost over all PMoAs
-        @. du.ind.D_z[z,:] = (1 - ind.embryo) * @view(p.ind.k_D_z[z,:]) * (glb.C_W[z] - @view(ind.D_z[z,:]))
+        #@. du.ind.D_z[z,:] .= (1 - ind.embryo) * @view(p.ind.k_D_z[z,:]) * (glb.C_W[z] - @view(ind.D_z[z,:]))
         # for lethal effects, we have only one value per stressor
         du.ind.D_h[z] = (1 - ind.embryo) * p.ind.k_D_h[z] * (glb.C_W[z] - ind.D_h[z])
     end
 
-    @. ind.y_z = softNEC2neg(ind.D_z, p.ind.e_z, p.ind.b_z) # relative responses per stressor and PMoA
+    @. ind.y_z .= softNEC2neg(ind.D_z, p.ind.e_z, p.ind.b_z) # relative responses per stressor and PMoA
     
     ind.y_j .= reduce(*, ind.y_z; dims=1) # relative responses per PMoA are obtained as the product over all chemical stressors
     ind.y_j[2] /= ind.y_j[2]^2 # for pmoas with increasing responses (M), the relative response has to be inverted  (x/x^2 == 1/x) 
-
-    #ind.h_z = sum(@. softNEC2GUTS(ind.D_h, p.ind.e_h, p.ind.b_h)) # hazard rate according to GUTS-RED-SD
+    
     ind.h_z = 0 
     @inbounds for z in eachindex(ind.D_h)
         ind.h_z += softNEC2GUTS(ind.D_h[z], p.ind.e_h[z], p.ind.b_h[z])
