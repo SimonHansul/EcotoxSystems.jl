@@ -77,12 +77,12 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
 
     for z in eachindex(glb.C_W)
         # for sublethal effects, we broadcost over all PMoAs
-        @. du.ind.D_z[z,:] = (1 - ind.embryo) * @view(p.ind.k_D_z[z,:]) * (glb.C_W[z] - @view(ind.D_z[z,:]))
+        @. du.ind.D_j[z,:] = (1 - ind.embryo) * @view(p.ind.k_D_j[z,:]) * (glb.C_W[z] - @view(ind.D_j[z,:]))
         # for lethal effects, we have only one value per stressor
         du.ind.D_h[z] = (1 - ind.embryo) * p.ind.k_D_h[z] * (glb.C_W[z] - ind.D_h[z])
     end
 
-    @. ind.y_z = softNEC2neg(ind.D_z, p.ind.e_z, p.ind.b_z) # relative responses per stressor and PMoA
+    @. ind.y_z = softNEC2neg(ind.D_j, p.ind.e_z, p.ind.b_z) # relative responses per stressor and PMoA
     
     ind.y_j .= reduce(*, ind.y_z; dims=1) # relative responses per PMoA are obtained as the product over all chemical stressors
     ind.y_j[2] /= ind.y_j[2]^2 # for pmoas with increasing responses (M), the relative response has to be inverted  (x/x^2 == 1/x) 

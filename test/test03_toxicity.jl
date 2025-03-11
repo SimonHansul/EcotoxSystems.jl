@@ -12,7 +12,7 @@ import EcotoxSystems: exposure, relative_response
     p.glb.dX_in = 2400.
     p.glb.k_V = 0.
 
-    p.spc.k_D_z .= 0
+    p.spc.k_D_j .= 0
     p.spc.e_z .= 1.
     p.spc.b_z .= 0.1
 
@@ -21,8 +21,8 @@ import EcotoxSystems: exposure, relative_response
         pmoas = ["G", "M", "A", "R"]
         for (j,pmoa) in enumerate(pmoas)
 
-            p.spc.k_D_z .= 0.
-            p.spc.k_D_z[1,j] = 1.
+            p.spc.k_D_j .= 0.
+            p.spc.k_D_j[1,j] = 1.
             p.spc.k_D_h[1] = 1.
 
             # using the exposure function to iterate over treatments

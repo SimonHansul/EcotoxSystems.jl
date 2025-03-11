@@ -88,13 +88,13 @@ function initialize_individual_statevars(
         M = 0., # somatic maintenance
         J = 0., # maturity maintenance 
         
-        D_z = constrmmat(p.ind.k_D_z), # sublethal damage per stressor and PMoA
+        D_j = constrmmat(p.ind.k_D_j), # sublethal damage per stressor and PMoA
         D_h = constrmvec(p.ind.k_D_h), # lethal damage per stressor
 
         y_T = 1.,
 
-        y_z = constrmmat(p.ind.k_D_z), # relative response per stressor and pmoa
-        #y_j = constrmmat(p.ind.k_D_z, 2, fillval = 1), # relative response per pmoa
+        y_z = constrmmat(p.ind.k_D_j), # relative response per stressor and pmoa
+        #y_j = constrmmat(p.ind.k_D_j, 2, fillval = 1), # relative response per pmoa
         y_j = [0. 0. 0. 0.],
         h_z = 0., # hazard rate caused by chemical stressors
         S_z = 1., # chemical-related survival probability

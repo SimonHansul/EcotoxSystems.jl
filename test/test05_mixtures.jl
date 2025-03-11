@@ -43,7 +43,7 @@ p = ComponentVector(
         k_M = 0.59,     # somatic maintenance rate constant [d^-1]
         k_J = 0.504,    # maturity maintenance rate constant [d^-1]
         H_p = 1 / 3,    # maturity at puberty [μgC]
-        k_D_z = zeros((2, 4)), # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
+        k_D_j = zeros((2, 4)), # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
         e_z = ones((2, 4)), # sensitivity parameters (thresholds)
         b_z = ones((2,4)), # slope parameters
         k_D_h = zeros((2,1)), # k_D - value for GUTS-Sd module (1 row = 1 stressor)
@@ -61,14 +61,14 @@ p = ComponentVector(
 
 # simulating two stressors with different PMoAs
 
-p.spc.k_D_z = [
+p.spc.k_D_j = [
     1. 0. 0. 0.; # stressor 1 has PMoA G
     0. 0. 0. 1. # stressor 2 has PMoA R
     ]
 
 # setting all dose-response params to the same values
-p.spc.e_z = ones(size(p.spc.k_D_z))
-p.spc.b_z = fill(1, size(p.spc.k_D_z))
+p.spc.e_z = ones(size(p.spc.k_D_j))
+p.spc.b_z = fill(1, size(p.spc.k_D_j))
 
 C_Wmat = [ # simulating a ray design
     0.0 0.0; 
@@ -77,7 +77,7 @@ C_Wmat = [ # simulating a ray design
     1.5 1.5;
 ]
 
-p.spc.k_D_z 
+p.spc.k_D_j 
 p.spc.e_z
 p.spc.b_z
 
@@ -98,7 +98,7 @@ sim = exposure(p->EcotoxSystems.ODE_simulator(p), p, C_Wmat);
 
 p.glb.C_W
 
-p.spc.k_D_z = [
+p.spc.k_D_j = [
     0. 0. 0. 1.; 
     0. 0. 0. 1.
     ]

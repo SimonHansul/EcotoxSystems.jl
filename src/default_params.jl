@@ -38,7 +38,7 @@ species_params = ComponentVector(
     k_M = 0.59,     # somatic maintenance rate constant [d^-1]
     k_J = 0.504,    # maturity maintenance rate constant [d^-1]
     H_p = 100,    # maturity at puberty [μgC]
-    k_D_z = [0 0 0 .38;], # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
+    k_D_j = [0 0 0 .38;], # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
     b_z = [0 0 0 0.93;], # slope parameters
     e_z = [0 0 0 167;], # sensitivity parameters (thresholds)
     k_D_h = [0;], # k_D - value for GUTS-Sd module (1 row = 1 stressor)
