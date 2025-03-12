@@ -26,7 +26,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
             global_ode! = DEBODE_global!,
             global_rules! = default_global_rules!,
             init_global_statevars = initialize_global_statevars,
-            individual_ode! = DEBODE_individual!,
+            individual_ode! = DEBkiss_individual!,
             individual_rules! = default_individual_rules!,
             init_individual_statevars = initialize_individual_statevars,
             dt = 1/24, 
@@ -58,7 +58,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
         global_ode! = DEBODE_global!,
         global_rules! = default_global_rules!,
 
-        individual_ode! = DEBODE_individual!,
+        individual_ode! = DEBkiss_individual!,
         individual_rules! = default_individual_rules!,
         init_individual_statevars = initialize_individual_statevars,
         gen_ind_params = generate_individual_params,
@@ -78,7 +78,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
         m.u = ComponentVector(glb = init_global_statevars(p))
         m.du = similar(m.u) 
         m.p = p
-        m.t = 0
+        m.t = 0.
         m.dt = dt
         m.saveat = saveat
         m.idcount = 0

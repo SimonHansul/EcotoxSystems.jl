@@ -10,6 +10,39 @@ CAUSE_OF_DEATH = Dict(
     1 => "age"
 )
 
+@inline function determine_S_max_hist(
+    S::Float64,
+    S_max_hist::Float64
+    )::Float64
+
+    return max(S, S_max_hist)
+
+end
+
+@inline function death_by_loss_of_structure(
+    S::Float64,
+    S_max_hist::Float64,
+    S_rel_crit::Float64,
+    h_S::Float64,
+    dt::Float64
+    )::Bool
+
+    return ((S/S_max_hist) < S_rel_crit) && (rand() > exp(-h_S * dt))
+
+end
+
+@inline function death_by_aging(
+    age::Float64,
+    a_max::Float64
+    )::Bool
+
+    return age >= a_max
+
+end
+
+@inline function check_reproduction_period(time_since_last_repro::Float64, tau_R::Float64)::Bool
+    return time_since_last_repro >= tau_R 
+end
 """
     default_individual_rules(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
 
@@ -35,34 +68,34 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
     # since "u" is a field of the individual, just like for integrators
 
     # check for transition from embryo to juvenile 
-    if condition_juvenile(a.u, m.t, a) <= 0
-        effect_juvenile!(a)
-    end
-
-    # check for transition from juvenile to adult
-    if condition_adult(a.u, m.t, a) <= 0
-        effect_adult!(a)
-    end
+    #if condition_juvenile(a.u, m.t, a) <= 0
+    #    effect_juvenile!(a)
+    #end
+#
+    ## check for transition from juvenile to adult
+    #if condition_adult(a.u, m.t, a) <= 0
+    #    effect_adult!(a)
+    #end
 
     # aging is implemented in a non-mechanistic manner 
     # individuals die when they exceed their maximum age a_max
     # a_max is subject to individual variability
-    if ind.age >= a.p.ind.a_max
+    if death_by_aging(ind[:age], p.ind[:a_max])
         ind.cause_of_death = 1.
     end
     
     # for starvation mortality, currently only a limit is set on the amount of mass that can be lost
     # this is basically only a sanity check, and the actual starvation rules should be assessed on a species-by-species basis
-    ind.S_max_hist = max(ind.S, ind.S_max_hist)
+    ind.S_max_hist = determine_S_max_hist(ind[:S], ind[:S_max_hist])
 
-    if ((ind.S/ind.S_max_hist) < p.ind.S_rel_crit) && (rand() > exp(-p.ind.h_S * m.dt))
+    if death_by_loss_of_structure(ind[:S], ind[:S_max_hist], p.ind[:S_rel_crit], p.ind[:h_S], m.dt)
         ind.cause_of_death = 2.
     end
 
     # reproduction, assuming a constant reproduction period
     
     # reproduction only occurs if the reproduction period has been exceeded
-    if ind.time_since_last_repro >= p.ind.tau_R 
+    if check_reproduction_period(ind.time_since_last_repro, p.ind.tau_R) 
         # if that is the case, calculate the number of offspring, 
         # based on the reproduction buffer and the dry mass of an egg
         let num_offspring = trunc(ind.R / p.ind.X_emb_int)
@@ -110,7 +143,7 @@ end
             global_statevars::ComponentVector;
             id::Int = 1,
             cohort::Int = 0,
-            individual_ode! = DEBODE_individual!,
+            individual_ode! = DEBkiss_individual!,
             individual_rules! = default_individual_rules,
             init_individual_statevars = initialize_individual_statevars,
             )::AbstractDEBIndividual
@@ -125,7 +158,7 @@ end
         global_statevars::ComponentVector;
         id::Int = 1,
         cohort::Int = 0,
-        individual_ode! = DEBODE_individual!,
+        individual_ode! = DEBkiss_individual!,
         individual_rules! = default_individual_rules,
         init_individual_statevars = initialize_individual_statevars,
         gen_ind_params = generate_individual_params

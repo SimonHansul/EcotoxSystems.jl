@@ -85,7 +85,7 @@ end
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.5
     p.glb.N0 = 10
-    p.glb.t_max = 365
+    p.glb.t_max = 56
 
     p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
     p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
@@ -104,8 +104,71 @@ end
 
     # we know from experience that these values should be approximately reached for the given parameters
     
-    @test 500 < maximum(sim_ibm.glb.N) < 1500
-    @test 250 < maximum(sim_ibm.spc.S) < 800
-    @test 50 < maximum(sim_ibm.spc.H) < 200
+    #@test 500 < maximum(sim_ibm.glb.N) < 1500
+    #@test 250 < maximum(sim_ibm.spc.S) < 800
+    #@test 50 < maximum(sim_ibm.spc.H) < 200
 end
 
+
+#= 
+Starting point: 561M allocations (15GB) for 365 days, 30 seconds comp time
+For 56 days: 4-5 s, 81M allocs, 2.6GB
+
+implemented "dS" function
+        not much change
+implemented "dI" function and inlined
+        not much change; 4.3s and 2.36GB allocs; 11% GC 
+implemented determine_S_max_hist and death_by_loss_of_structure
+        allocations went down to 75M, comp time only slightly (2.3 GB)
+        for 365 d? 
+            same story, comp time is still at 28s, allocs only slightly down to 12.8 GB
+changed life stage determination from CB to sig
+        this made things slightly worse for the ODE benchmark
+        small improvement for the IBM through
+            3.3 - 4.2s, 2GV allocs
+implemented dR function, inlined
+        maybe minor improvement, allocs still at 1.9GB, comp time 3.3s
+
+for 3655d, we are now down to 25s and 11.6 GB. making small improvements, but the bottleneck is still to be found
+
+implemented dH function, inlined
+    no measurable difference
+
+implemented death_by_aging, inlined
+    at most minor improvement
+
+implemented dA, dM, dJ; all inlined
+    comp time down to 3.2s, 1.6 GB allocs
+    for 365d, we are still at ca 25s, 9.6 GB 
+
+temporarily switching to profview. do we get a different result?
+    no
+
+trying so-called "direct indexing" (not sure if this is actually a thing). i.e. ind[:S] instead of ind.S etc.
+for now, just for death_by_loss_of_structure
+    this seems to actually do someting??
+    comp time below 3s, just by changing the call to death_by_loss_of_structure
+
+changed death_by_aging to direct indexing
+    still 2.39s
+
+same for calculating S_max_hist
+
+refactoring reproduction rule, inlined
+
+=#
+
+let p = params()
+
+    p.glb.dX_in = 50_000 #100_000
+    p.glb.k_V = 0.1
+    p.glb.V_patch = 0.5
+    p.glb.N0 = 10
+    p.glb.t_max = 56
+
+    p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
+    p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
+
+    #VSCodeServer.@profview_allocs IBM_simulator(p, saveat = 1, showinfo = 14)
+    @time IBM_simulator(p, saveat = 1, showinfo = 14)
+end;

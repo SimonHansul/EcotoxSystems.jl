@@ -92,7 +92,7 @@ end
         global_ode! = DEBODE_global!,
         global_rules! = default_global_rules!,
         init_global_statevars = initialize_global_statevars,
-        individual_ode! = DEBODE_individual!,
+        individual_ode! = DEBkiss_individual!,
         individual_rules! = default_individual_rules!,
         init_individual_statevars = initialize_individual_statevars,
         dt = 1/24, 
@@ -117,7 +117,7 @@ function IBM_simulator(
     global_ode! = DEBODE_global!,
     global_rules! = default_global_rules!,
     
-    individual_ode! = DEBODE_individual!,
+    individual_ode! = DEBkiss_individual!,
     individual_rules! = default_individual_rules!,
     init_individual_statevars = initialize_individual_statevars,
     gen_ind_params = generate_individual_params,
