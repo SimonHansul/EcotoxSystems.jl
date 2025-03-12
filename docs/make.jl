@@ -8,5 +8,5 @@ makedocs(
     )
 
 deploydocs(
-    repo = "github.com/simonhansul/EcotoxSystems.jl.git",
+    repo = "github.com/SimonHansul/EcotoxSystems.jl.git",
 )
