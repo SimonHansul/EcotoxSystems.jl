@@ -155,7 +155,8 @@ changed death_by_aging to direct indexing
 same for calculating S_max_hist
 
 refactoring reproduction rule, inlined
-
+    no significant improvement
+    for 365d, we are now at ca 22s, 9GB allocs
 =#
 
 let p = params()
@@ -170,5 +171,5 @@ let p = params()
     p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
 
     #VSCodeServer.@profview_allocs IBM_simulator(p, saveat = 1, showinfo = 14)
-    @time IBM_simulator(p, saveat = 1, showinfo = 14)
+    @time IBM_simulator(p, saveat = 1, showinfo = 28)
 end;
