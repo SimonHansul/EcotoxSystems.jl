@@ -108,7 +108,7 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
             # calculate change in damage
             du.ind.D_z[z,j] = minimal_TK(ind.embryo, p.ind.k_D_z[z,j], glb.C_W[z], ind.D_z[z,j]) #(1 - ind.embryo) * p.ind.k_D_z[z, j] * (glb.C_W[z] - ind.D_z[z, j])
             # update relative response with respect to PMoA j
-            ind.y_j *= LL2(ind.D_z[z,j], p.ind.e_z[z,j], p.ind.b_z[z,j])
+            ind.y_j = ind.y_j * LL2(ind.D_z[z,j], p.ind.e_z[z,j], p.ind.b_z[z,j])
         end
         # calculate change in damage for lethal effects
         du.ind.D_h[z] = (1 - ind.embryo) * p.ind.k_D_h[z] * (glb.C_W[z] - ind.D_h[z])

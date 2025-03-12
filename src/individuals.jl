@@ -85,7 +85,7 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
     # aging is implemented in a non-mechanistic manner 
     # individuals die when they exceed their maximum age a_max
     # a_max is subject to individual variability
-    if death_by_aging(ind[:age], p.ind[:a_max])
+    if death_by_aging(ind[:age], p[:ind][:a_max])
         ind.cause_of_death = 1.
     end
     
@@ -93,17 +93,17 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
     # this is basically only a sanity check, and the actual starvation rules should be assessed on a species-by-species basis
     ind.S_max_hist = determine_S_max_hist(ind[:S], ind[:S_max_hist])
 
-    if death_by_loss_of_structure(ind[:S], ind[:S_max_hist], p.ind[:S_rel_crit], p.ind[:h_S], m.dt)
+    if death_by_loss_of_structure(ind[:S], ind[:S_max_hist], p[:ind][:S_rel_crit], p[:ind][:h_S], m.dt)
         ind.cause_of_death = 2.
     end
 
     # reproduction, assuming a constant reproduction period
     
     # reproduction only occurs if the reproduction period has been exceeded
-    if check_reproduction_period(ind.time_since_last_repro, p.ind.tau_R) 
+    if check_reproduction_period(ind[:time_since_last_repro], p[:ind][:tau_R]) 
         # if that is the case, calculate the number of offspring, 
         # based on the reproduction buffer and the dry mass of an egg
-        for _ in 1:calc_num_offspring(ind[:R], p.ind[:X_emb_int])
+        for _ in 1:calc_num_offspring(ind[:R], p[:ind][:X_emb_int])
             m.idcount += 1 # increment individual counter
             push!(m.individuals, DEBIndividual( # create new individual and push to individuals vector
                 m.p, 
@@ -116,7 +116,7 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
                 gen_ind_params = a.generate_individual_params,
                 )
             )
-            ind.R -= p.ind.X_emb_int # decrease reproduction buffer
+            ind.R -= p[:ind][:X_emb_int] # decrease reproduction buffer
             ind.cum_repro += 1 # keep track of cumulative reproduction of the mother individual
         end
         ind.time_since_last_repro = 0. # reset reproduction period
@@ -149,7 +149,7 @@ end
             individual_ode! = DEBkiss_individual!,
             individual_rules! = default_individual_rules,
             init_individual_statevars = initialize_individual_statevars,
-            )::AbstractDEBIndividual
+            )::DEBIndividual
 
     Initialization of an individual based on parameters `p` 
     and global state `global_statevars`. 

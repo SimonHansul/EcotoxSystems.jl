@@ -155,8 +155,10 @@ function IBM_simulator(
         model_step!(m)
     end
 
+    df_spc =  record_individuals ?  individual_record_to_df(m) : DataFrame()
 
-    return (glb = global_record_to_df(m), spc = individual_record_to_df(m))
+
+    return (glb = global_record_to_df(m), df_spc)
 end
 
 

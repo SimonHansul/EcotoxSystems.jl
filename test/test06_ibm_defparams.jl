@@ -157,6 +157,19 @@ same for calculating S_max_hist
 refactoring reproduction rule, inlined
     no significant improvement
     for 365d, we are now at ca 22s, 9GB allocs
+
+added a bit more direct indexing in repro 
+        didn't help
+
+replaced ind.y_j *= with ind.y_j = ind.y_j 
+        no difference 
+
+replaced p.ind with p[:ind]
+        at most minor improvement, but also not many occurrences
+
+changed m.dt to dt, assigning local variable
+        no no no
+
 =#
 
 let p = params()
@@ -170,6 +183,85 @@ let p = params()
     p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
     p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
 
-    #VSCodeServer.@profview_allocs IBM_simulator(p, saveat = 1, showinfo = 14)
-    @time IBM_simulator(p, saveat = 1, showinfo = 28)
+    VSCodeServer.@profview_allocs IBM_simulator(p, saveat = 1, showinfo = 14)
+    #@time IBM_simulator(p, saveat = 1, showinfo = 28)
 end;
+
+
+# comparison with netlogo
+# running generic DEB-IBM with dt = 1/24 for 56d, population density up to ca 900: 33s
+# EcotoxSystems.jl: roughly the same
+
+let p = params()
+
+    p.glb.dX_in = 60_000 #100_000
+    p.glb.k_V = 0.1
+    p.glb.V_patch = 0.5
+    p.glb.N0 = 10
+    p.glb.t_max = 56
+
+    p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
+    p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
+
+    #VSCodeServer.@profview_allocs IBM_simulator(p, saveat = 1, showinfo = 14)
+    @time global sim = IBM_simulator(p, saveat = 1, showinfo = 28, dt = 1/240)
+end;
+
+
+# comparison with netlogo --> increasing population size by an order of magnitude
+# netlogo crashes after day 19
+# EcotoxSystems.jl: 
+#  up to 10k individuals over 8 weeks with 1 time step = 36 s ==> 6 minutes
+#  same with 1 time step = 1h ==> 82 seconds
+ 
+
+let p = params()
+
+    p.glb.dX_in = 600_000 #100_000
+    p.glb.k_V = 0.1
+    p.glb.V_patch = 0.5
+    p.glb.N0 = 10
+    p.glb.t_max = 56
+
+    p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
+    p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
+
+    #VSCodeServer.@profview_allocs IBM_simulator(p, saveat = 1, showinfo = 14)
+    @time global sim = IBM_simulator(p, saveat = 1, showinfo = 1, dt = 1/24)
+end;
+
+@df sim.glb plot(:t, :N)
+
+
+# simulating 10 years with approx 500 individuals peak, 300 individuals at later timepoints
+#   simulation gets slow after 1 year...maybe because individual state vars are recorded?
+#   trying again with record_individuals = false
+#       simulator keeps going at constant speed now
+#       comp time =  few minutes
+#   increasing showinfo from 1 to 14
+#       2 minutes to run 10 years. 90 GB allocations
+#   increasing popsize to peak 1k, 10 years
+#       5 minutes to run 10 years, 224 GB allocations
+
+# comparison wit python, peak popsize approx 400, 10 years:  5 minutes
+#       --> julia is currently ca. 2 times faster 
+
+
+# at popsizes of 40-70k, netlogo takes 1 minute for 1 day 
+# jula?
+
+let p = params()
+
+    p.glb.dX_in = 1_000_000 
+    p.glb.k_V = 0.1
+    p.glb.V_patch = 0.5
+    p.glb.N0 = 10
+    p.glb.t_max = 365 * 1
+
+    p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
+    p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
+
+    #VSCodeServer.@profview_allocs IBM_simulator(p, saveat = 1, showinfo = 14)
+    @time global sim = IBM_simulator(p, saveat = 1, showinfo = 1, dt = 1/24, record_individuals = false)
+end;
+ 
