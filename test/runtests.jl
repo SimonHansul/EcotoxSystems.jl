@@ -11,7 +11,6 @@ using StatsBase
 
 using Revise
 @time using EcotoxSystems
-import EcotoxSystems: defaultparams, ODE_simulator
 
 #TODO: include randomized inputs in each test
 

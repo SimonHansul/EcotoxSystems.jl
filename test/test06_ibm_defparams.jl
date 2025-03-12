@@ -18,7 +18,7 @@ using Plots, StatsPlots
 
 # the output for a single individual from the IBM is compared with the pure-ODE solution 
 # this is done for a case with food limitation, since that is where there are most likely to be discrepancies
-# (it is curently not possible to handle feedback with external food abundance in exactly the same way in both variants)
+# (it is curently not possible to handle feedback with external food abundance in exactly the same way in both variants, and I am not sure it ever will be)
 @testset "IBM vs ODE" begin
 
     p = params()

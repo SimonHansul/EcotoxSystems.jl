@@ -3,10 +3,10 @@
     global p = EcotoxSystems.params()
     p.glb.t_max = 56.
     p.spc.Z = Dirac(1.)
-    @time global sim = ODE_simulator(p, reltol = 1e-3)
+    @time global sim = EcotoxSystems.ODE_simulator(p, reltol = 1e-3)
 
-    #@test isapprox(maximum(sim.H), p.spc.H_p, rtol = 0.1) 
-    #@test isapprox(maximum(sim.S), EcotoxSystems.calc_S_max(p.spc), rtol = 0.1)
+    @test isapprox(maximum(sim.H), p.spc.H_p, rtol = 0.1) 
+    @test isapprox(maximum(sim.S), EcotoxSystems.calc_S_max(p.spc), rtol = 0.1)
 end;
 
 # inital allocations: 50k (>1 mb)
@@ -22,12 +22,8 @@ end;
 #       allocations down to 38k...(little less than 1MB)
 #   changed TKTD_mix_IA to apply product to y_j in inner loop
 
-p = EcotoxSystems.params()
-
-p.spc.e_z
-
-@time ODE_simulator(p);
-VSCodeServer.@profview_allocs ODE_simulator(p);
+@time EcotoxSystems.ODE_simulator(p);
+VSCodeServer.@profview_allocs [EcotoxSystems.ODE_simulator(p) for _ in 1:10];
 
 Base.summarysize(sim)
 
