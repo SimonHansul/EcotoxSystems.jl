@@ -17,12 +17,12 @@ Used to replace simple if-statements with a continuous function in ODE models.
 
 """
 @inline function sig(
-    x::Real, 
-    x_thr::Real,
-    y_left::Real, 
-    y_right::Real; 
-    beta::Real = 30
-    )::Real
+    x::Float64, 
+    x_thr::Float64,
+    y_left::Float64, 
+    y_right::Float64; 
+    beta::Float64 = 30.0
+    )::Float64
 
     return 1 / (1 + exp(-beta*(x - x_thr))) * (y_right - y_left) + y_left
 end
@@ -30,7 +30,7 @@ end
 """
 Clip negative values at 0 as a continuous function, using `sig`.
 """
-@inline function clipneg(x::Real)::Real
+@inline function clipneg(x::Float64)::Float64
     return sig(x, 0., 0., x)
 end
 
@@ -64,6 +64,17 @@ DEBODE_callbacks = CallbackSet(cb_juvenile, cb_adult)
     return nothing
 end
 
+@inline function minimal_TK(
+    embryo::Float64,
+    k_D::Float64, 
+    C_W::Float64,
+    D::Float64
+    )::Float64
+
+    return (1-embryo) * k_D * (C_W - D)
+
+end
+
 """
     function TKTD_mix_IA!(du, u, p, t)::Nothing
 
@@ -74,30 +85,48 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
     @unpack glb, ind = u
 
     # scaled damage dynamics based on the minimal model
+    
+    ind.y_j .= 1.0 # reset relative responses 
+    ind.h_z = 0.0 # reset GUTS-SD hazard rate
 
-    for z in eachindex(glb.C_W)
-        for j in eachindex(p.ind.k_D_z, ind.D_z, du.ind.D_z)  # Loop over second dimension
-            du.ind.D_z[z, j] = (1 - ind.embryo) * p.ind.k_D_z[z, j] * (glb.C_W[z] - ind.D_z[z, j])
+    for z in eachindex(glb.C_W) # for every chemical
+        for j in eachindex(ind.y_j) # for every PMoA
+            # calculate change in damage
+            du.ind.D_z[z,j] = minimal_TK(ind.embryo, p.ind.k_D_z[z,j], glb.C_W[z], ind.D_z[z,j]) #(1 - ind.embryo) * p.ind.k_D_z[z, j] * (glb.C_W[z] - ind.D_z[z, j])
+            # update relative response with respect to PMoA j
+            ind.y_j *= LL2(ind.D_z[z,j], p.ind.e_z[z,j], p.ind.b_z[z,j])
         end
-        # for sublethal effects, we broadcost over all PMoAs
-        #@. du.ind.D_z[z,:] .= (1 - ind.embryo) * @view(p.ind.k_D_z[z,:]) * (glb.C_W[z] - @view(ind.D_z[z,:]))
-        # for lethal effects, we have only one value per stressor
+        # calculate change in damage for lethal effects
         du.ind.D_h[z] = (1 - ind.embryo) * p.ind.k_D_h[z] * (glb.C_W[z] - ind.D_h[z])
+        # update hazard rate
+        ind.h_z += LL2GUTS(ind.D_h[z], p.ind.e_h[z], p.ind.b_h[z])
     end
 
-    @. ind.y_z .= softNEC2neg(ind.D_z, p.ind.e_z, p.ind.b_z) # relative responses per stressor and PMoA
-    
-    ind.y_j .= reduce(*, ind.y_z; dims=1) # relative responses per PMoA are obtained as the product over all chemical stressors
     ind.y_j[2] /= ind.y_j[2]^2 # for pmoas with increasing responses (M), the relative response has to be inverted  (x/x^2 == 1/x) 
-    
-    ind.h_z = 0 
-    @inbounds for z in eachindex(ind.D_h)
-        ind.h_z += softNEC2GUTS(ind.D_h[z], p.ind.e_h[z], p.ind.b_h[z])
-    end
     
     du.ind.S_z = -ind.h_z * ind.S_z # survival probability according to GUTS-RED-SD
     
     return nothing
+end
+
+@inline function y_T(
+    T_A::Float64,
+    T_ref::Float64,
+    T::Float64
+    )::Float64
+
+    return exp((T_A / T_ref) - (T_A / T)) 
+
+end
+
+@inline function f_X(
+    X::Float64,
+    V_patch::Float64,
+    K_X::Float64
+    )::Float64
+
+    return (X / V_patch) / ((X / V_patch) + K_X)
+
 end
 
 """
@@ -115,11 +144,12 @@ function DEBkiss!(du, u, p, t)::Nothing
 
     @unpack glb, ind = u
 
-    ind.y_T = @fastmath exp((p.ind.T_A / p.ind.T_ref) - (p.ind.T_A / p.glb.T)) # temperature correction
+    # temperature correction
+    ind.y_T = y_T(p.ind.T_A, p.ind.T_ref, p.glb.T) # temperature correction
 
     # ingestion rates and feedback with resource pools
 
-    ind.f_X = @fastmath (glb.X / p.glb.V_patch) / ((glb.X / p.glb.V_patch) + p.ind.K_X)
+    ind.f_X = f_X(glb.X, p.glb.V_patch, p.ind.K_X)
 
     # calculation of resource uptake for embryos vs hatched individuals
     

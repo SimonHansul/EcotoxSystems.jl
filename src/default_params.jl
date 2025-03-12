@@ -38,12 +38,12 @@ species_params = ComponentVector(
     k_M = 0.59,     # somatic maintenance rate constant [d^-1]
     k_J = 0.504,    # maturity maintenance rate constant [d^-1]
     H_p = 100,    # maturity at puberty [μgC]
-    k_D_z = [0 0 0 .38;], # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
-    b_z = [0 0 0 0.93;], # slope parameters
-    e_z = [0 0 0 167;], # sensitivity parameters (thresholds)
-    k_D_h = [0;], # k_D - value for GUTS-Sd module (1 row = 1 stressor)
-    e_h = [0;], # sensitivity parameter (threshold) for GUTS-SD module
-    b_h = [0;], # slope parameter for GUTS-SD module 
+    k_D_z = Float64[0. 0. 0. .38;], # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
+    b_z = Float64[0. 0. 0. 0.93;], # slope parameters
+    e_z = Float64[0. 0. 0. 167;], # sensitivity parameters (thresholds)
+    k_D_h = Float64[0.;], # k_D - value for GUTS-Sd module (1 row = 1 stressor)
+    e_h = Float64[0.;], # sensitivity parameter (threshold) for GUTS-SD module
+    b_h = Float64[0.;], # slope parameter for GUTS-SD module 
     # these are curently only used in an individual-based context, but could find application in the pure-ODE implementation 
     # for example by triggering emptying of the reproduction buffer through callbacks
     S_rel_crit = 0.66,  # relative amount of structure which can be lost before hazard rate kicks in
