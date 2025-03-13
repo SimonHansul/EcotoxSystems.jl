@@ -16,7 +16,7 @@
 
     function foo_individual!(du, u, p, t)
         EcotoxSystems.TKTD_mix_IA!(du, u, p, t)
-        EcotoxSystems.DEBkiss!(du, u, p, t)
+        EcotoxSystems.DEBkiss_physiology!(du, u, p, t)
         du.ind.S *= p.foo.x
     end
 
@@ -28,7 +28,7 @@
     gen_ind_params(p) = EcotoxSystems.generate_individual_params(p;foo = p.foo)
 
     # FIXME: why is this much slower than running the default model?
-    @time sim = ODE_simulator(
+    @time sim = EcotoxSystems.ODE_simulator(
         p;
         model = foo!,
         gen_ind_params = gen_ind_params
@@ -55,11 +55,11 @@ end
 
     function foo_individual!(du, u, p, t)
         EcotoxSystems.TKTD_mix_IA!(du, u, p, t)
-        EcotoxSystems.DEBkiss!(du, u, p, t)
+        EcotoxSystems.DEBkiss_physiology!(du, u, p, t)
         du.ind.S *= p.foo.x
     end
 
-    gen_ind_params(p) = EcotoxSystems.generate_individual_params(p;foo = p.foo)
+    gen_ind_params(p) = EcotoxSystems.generate_individual_params(p; foo = p.foo)
 
     @time sim = EcotoxSystems.IBM_simulator(
         p;

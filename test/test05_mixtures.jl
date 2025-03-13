@@ -22,7 +22,7 @@ p = ComponentVector(
     ),
     spc = ComponentVector(
         Z = Dirac(1.0), # individual variability through zoom factor
-        propagate_joom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
+        propagate_zoom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
             dI_max = 1/3, 
             dI_max_emb = 1/3,
             X_emb_int = 1,

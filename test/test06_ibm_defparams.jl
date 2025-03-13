@@ -59,7 +59,7 @@ using Plots, StatsPlots
     eval_df = leftjoin(sim_ibm.spc, sim_ode, on = :t, makeunique = true) |> 
     x -> select(x, [:S, :S_1, :H, :H_1, :R, :R_1]) |> 
     x -> EcotoxSystems.dropmissing(x)
-
+    
     dS = eval_df.S .- eval_df.S_1
     dH = eval_df.H .- eval_df.H_1
     dR = eval_df.R .- eval_df.R_1

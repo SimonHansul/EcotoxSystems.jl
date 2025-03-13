@@ -17,7 +17,7 @@ global_params = ComponentVector(
 # Species-level DEB and TKTD parameters with ComponentVector
 species_params = ComponentVector(
     Z = Dirac(1.0), # individual variability through zoom factor
-    propagate_joom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
+    propagate_zoom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
         dI_max = 1/3, 
         dI_max_emb = 1/3,
         X_emb_int = 1,
@@ -95,9 +95,9 @@ end
 getval(x::Distribution) = rand(x) 
 getval(x::Any) = x
 
-# propagate_joom applies the zoomfactor to the parameters which are indicated in propagate_joom, with the appropriate scaling factor
-propagate_joom(ind::ComponentVector) = begin
-    zprop = ind[keys(ind.propagate_joom)] .* ind.Z .^ ind.propagate_joom
+# propagate_zoom applies the zoomfactor to the parameters which are indicated in propagate_zoom, with the appropriate scaling factor
+propagate_zoom(ind::ComponentVector) = begin
+    zprop = ind[keys(ind.propagate_zoom)] .* ind.Z .^ ind.propagate_zoom
     ind = ComponentVector(
         ind;
         zprop...
@@ -114,7 +114,7 @@ This also works for Vectors of distributions.
 The kwargs need to be supplemented with additional components if there are more than just a global and an individual-level component.
 """
 function generate_individual_params(p::ComponentVector; kwargs...)::ComponentVector
-    ind = getval.(p.spc) |> propagate_joom
+    ind = getval.(p.spc) |> propagate_zoom
     return ComponentVector(
         glb = p.glb, 
         ind = ind;
