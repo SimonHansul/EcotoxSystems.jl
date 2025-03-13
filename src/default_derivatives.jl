@@ -82,11 +82,11 @@ end
 
 @inline function minimal_TK(
     embryo::Float64,
-    k_D::Float64, 
+    KD::Float64, 
     C_W::Float64,
     D::Float64
     )::Float64
-    return (1-embryo) * k_D * (C_W - D)
+    return (1-embryo) * KD * (C_W - D)
 end
 
 """
@@ -106,14 +106,14 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
     for z in eachindex(glb.C_W) # for every chemical
         for j in eachindex(ind.y_j) # for every PMoA
             # calculate change in damage
-            du.ind.D_z[z,j] = minimal_TK(ind.embryo, p.ind.k_D_z[z,j], glb.C_W[z], ind.D_z[z,j]) #(1 - ind.embryo) * p.ind.k_D_z[z, j] * (glb.C_W[z] - ind.D_z[z, j])
+            du.ind.D_z[z,j] = minimal_TK(ind.embryo, p.ind.KD[z,j], glb.C_W[z], ind.D_z[z,j]) #(1 - ind.embryo) * p.ind.KD[z, j] * (glb.C_W[z] - ind.D_z[z, j])
             # update relative response with respect to PMoA j
-            ind.y_j = ind.y_j * LL2(ind.D_z[z,j], p.ind.e_z[z,j], p.ind.b_z[z,j])
+            ind.y_j = ind.y_j * LL2(ind.D_z[z,j], p.ind.E[z,j], p.ind.B[z,j])
         end
         # calculate change in damage for lethal effects
-        du.ind.D_h[z] = (1 - ind.embryo) * p.ind.k_D_h[z] * (glb.C_W[z] - ind.D_h[z])
+        du.ind.D_h[z] = (1 - ind.embryo) * p.ind.KD_h[z] * (glb.C_W[z] - ind.D_h[z])
         # update hazard rate
-        ind.h_z += LL2GUTS(ind.D_h[z], p.ind.e_h[z], p.ind.b_h[z])
+        ind.h_z += LL2GUTS(ind.D_h[z], p.ind.E_h[z], p.ind.B_h[z])
     end
 
     ind.y_j[2] /= ind.y_j[2]^2 # for pmoas with increasing responses (M), the relative response has to be inverted  (x/x^2 == 1/x) 

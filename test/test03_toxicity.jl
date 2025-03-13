@@ -12,18 +12,18 @@ begin
     p.glb.dX_in = 2400.
     p.glb.k_V = 0.
 
-    p.spc.k_D_z .= 0
-    p.spc.e_z .= 1.
-    p.spc.b_z .= 0.1
+    p.spc.KD .= 0
+    p.spc.E .= 1.
+    p.spc.B .= 0.1
 
     let C_Wvec =  hcat([0], round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2)...)' |> Matrix
         global sims = DataFrame()
         pmoas = ["G", "M", "A", "R"]
         for (j,pmoa) in enumerate(pmoas)
 
-            p.spc.k_D_z .= 0.
-            p.spc.k_D_z[1,j] = 1.
-            p.spc.k_D_h[1] = 1.
+            p.spc.KD .= 0.
+            p.spc.KD[1,j] = 1.
+            p.spc.KD_h[1] = 1.
 
             # using the exposure function to iterate over treatments
             sim_j = exposure(EcotoxSystems.ODE_simulator, p, C_Wvec)
