@@ -11,9 +11,6 @@ using StatsBase
 
 using Revise
 @time using EcotoxSystems
-import EcotoxSystems: defaultparams, ODE_simulator
-
-#TODO: include randomized inputs in each test
 
 include("test01_defaults.jl") # simulates the default parameters
 include("test02_food.jl") # performs a parameter sweep

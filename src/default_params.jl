@@ -17,7 +17,7 @@ global_params = ComponentVector(
 # Species-level DEB and TKTD parameters with ComponentVector
 species_params = ComponentVector(
     Z = Dirac(1.0), # individual variability through zoom factor
-    propagate_zoom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
+    propagate_joom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
         dI_max = 1/3, 
         dI_max_emb = 1/3,
         X_emb_int = 1,
@@ -38,12 +38,12 @@ species_params = ComponentVector(
     k_M = 0.59,     # somatic maintenance rate constant [d^-1]
     k_J = 0.504,    # maturity maintenance rate constant [d^-1]
     H_p = 100,    # maturity at puberty [μgC]
-    k_D_j = [0 0 0 .38;], # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
-    b_z = [0 0 0 0.93;], # slope parameters
-    e_z = [0 0 0 167;], # sensitivity parameters (thresholds)
-    k_D_h = [0;], # k_D - value for GUTS-Sd module (1 row = 1 stressor)
-    e_h = [0;], # sensitivity parameter (threshold) for GUTS-SD module
-    b_h = [0;], # slope parameter for GUTS-SD module 
+    KD = Float64[0. 0. 0. 0.;], # KD - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
+    B = Float64[2. 2. 2. 2.;], # slope parameters
+    E = Float64[1e10 1e10 1e10 167;], # sensitivity parameters (thresholds)
+    KD_h = Float64[0.;], # KD - value for GUTS-Sd module (1 row = 1 stressor)
+    E_h = Float64[1e10;], # sensitivity parameter (threshold) for GUTS-SD module
+    B_h = Float64[2.;], # slope parameter for GUTS-SD module 
     # these are curently only used in an individual-based context, but could find application in the pure-ODE implementation 
     # for example by triggering emptying of the reproduction buffer through callbacks
     S_rel_crit = 0.66,  # relative amount of structure which can be lost before hazard rate kicks in
@@ -95,9 +95,9 @@ end
 getval(x::Distribution) = rand(x) 
 getval(x::Any) = x
 
-# propagate_zoom applies the zoomfactor to the parameters which are indicated in propagate_zoom, with the appropriate scaling factor
-propagate_zoom(ind::ComponentVector) = begin
-    zprop = ind[keys(ind.propagate_zoom)] .* ind.Z .^ ind.propagate_zoom
+# propagate_joom applies the zoomfactor to the parameters which are indicated in propagate_joom, with the appropriate scaling factor
+propagate_joom(ind::ComponentVector) = begin
+    zprop = ind[keys(ind.propagate_joom)] .* ind.Z .^ ind.propagate_joom
     ind = ComponentVector(
         ind;
         zprop...
@@ -113,8 +113,8 @@ If a parameter entry is a distribution, a random sample is taken.
 This also works for Vectors of distributions. 
 The kwargs need to be supplemented with additional components if there are more than just a global and an individual-level component.
 """
-function generate_individual_params(p::ComponentVector; kwargs...) 
-    ind = getval.(p.spc) |> propagate_zoom
+function generate_individual_params(p::ComponentVector; kwargs...)::ComponentVector
+    ind = getval.(p.spc) |> propagate_joom
     return ComponentVector(
         glb = p.glb, 
         ind = ind;

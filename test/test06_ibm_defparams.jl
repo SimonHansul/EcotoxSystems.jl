@@ -18,7 +18,7 @@ using Plots, StatsPlots
 
 # the output for a single individual from the IBM is compared with the pure-ODE solution 
 # this is done for a case with food limitation, since that is where there are most likely to be discrepancies
-# (it is curently not possible to handle feedback with external food abundance in exactly the same way in both variants)
+# (it is curently not possible to handle feedback with external food abundance in exactly the same way in both variants, and I am not sure it ever will be)
 @testset "IBM vs ODE" begin
 
     p = params()
@@ -70,14 +70,7 @@ using Plots, StatsPlots
 end
 
 
-@testset "Running IBM" begin
-    # FIXME: lots of memory allocs in the ODE part
-    # maybe a problem in how I used broadcasting in the TKTD model, although removing TKTD part does not change so much
-    # (cf https://discourse.julialang.org/t/can-i-avoid-allocations-when-broadcasting-over-slices/102501/2)
-    # keyword "broadcast fusion" https://bkamins.github.io/julialang/2023/03/31/broadcast.html
-
-    # we can play a little with the parameters here, but we are not looking for a "correct" prediction here!
-    # the IBM_simulator just provides the infrastructure to combine the necessary components
+@testset "Running IBM with default parameters" begin
 
     p = params()
 
@@ -85,7 +78,7 @@ end
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.5
     p.glb.N0 = 10
-    p.glb.t_max = 365
+    p.glb.t_max = 56
 
     p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
     p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
@@ -107,5 +100,31 @@ end
     @test 500 < maximum(sim_ibm.glb.N) < 1500
     @test 250 < maximum(sim_ibm.spc.S) < 800
     @test 50 < maximum(sim_ibm.spc.H) < 200
+
+    
+    # checking initial growth rate
+    
+    t0, N0 = sim_ibm.glb[1,[:t, :N]]
+    t_peak, N_peak = sim_ibm.glb[argmax(sim_ibm.glb.N),[:t, :N]]
+
+    r_int = (log(N_peak) - log(N0))/(t_peak-t0)
+
+    @test 0.1 < r_int < 0.3
 end
+
+
+#let p = params()
+#
+#    p.glb.dX_in = 50_000 #100_000
+#    p.glb.k_V = 0.1
+#    p.glb.V_patch = 0.5
+#    p.glb.N0 = 10
+#    p.glb.t_max = 56
+#
+#    p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
+#    p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
+#
+#    #VSCodeServer.@profview_allocs IBM_simulator(p, saveat = 1, showinfo = 14)
+#    @time IBM_simulator(p, saveat = 1, showinfo = 28)
+#end;
 

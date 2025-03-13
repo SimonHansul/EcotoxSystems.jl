@@ -24,9 +24,12 @@ This function is essentially a wrapper around `OrdinaryDiffEq.solve` with additi
 
 args:
 
-- `p`: Parameters, given as component vector. Typically at least two components are given: `glb` for global parameters, `spc` for species-level parameters.
+- `p`: Parameters, given as component vector. 
+At least two components are given: `glb` for global parameters, 
+`spc` for species-level parameters. `glb` as to contain an entry `t_max` for the maximum simulation time. 
+`spc` has to contain entries `Z` and `propagate_joom` for the zoom factor and the parameters which are affected by the zoom factor.
 
-kwargs
+kwargs:
 
 The following kwargs are used internally by `OrdinaryDiffEq.solve`. See `OrdinaryDiffEq` documentation for more information.
 
@@ -89,7 +92,7 @@ end
         global_ode! = DEBODE_global!,
         global_rules! = default_global_rules!,
         init_global_statevars = initialize_global_statevars,
-        individual_ode! = DEBODE_individual!,
+        individual_ode! = DEBkiss_individual!,
         individual_rules! = default_individual_rules!,
         init_individual_statevars = initialize_individual_statevars,
         dt = 1/24, 
@@ -114,7 +117,7 @@ function IBM_simulator(
     global_ode! = DEBODE_global!,
     global_rules! = default_global_rules!,
     
-    individual_ode! = DEBODE_individual!,
+    individual_ode! = DEBkiss_individual!,
     individual_rules! = default_individual_rules!,
     init_individual_statevars = initialize_individual_statevars,
     gen_ind_params = generate_individual_params,
@@ -152,10 +155,17 @@ function IBM_simulator(
         model_step!(m)
     end
 
+<<<<<<< HEAD
     glb_df = global_record_to_df(m)
     spc_df = record_individuals ? individual_record_to_df(m) : DataFrame()
 
     return (glb = glb_df, spc = spc_df)
+=======
+    df_spc =  record_individuals ?  individual_record_to_df(m) : DataFrame()
+
+
+    return (glb = global_record_to_df(m), spc = df_spc)
+>>>>>>> 44f7fd3d2ca32e6a6ac0da9f5876f6f57215b16e
 end
 
 

@@ -1,16 +1,16 @@
 # drcfuncts.jl
 # dose-response functions used in the default model
 
-"""
-Transformation of softNEC2pos for decreasing relationships with domain (0,1).
-"""
-@inline softNEC2neg(x::Real, p::NTuple{2,Real}) = 1 / (1 + p[2] *(x - p[1]) * (0.5 + (1 / pi) * atan(1e6 * (x - p[1]))))
-@inline softNEC2neg(x::Real, p1::Real, p2::Real) = 1 / (1 + p2 *(x - p1) * (0.5 + (1 / pi) * atan(1e6 * (x - p1))))
-"""
-Transformation of softNECpos for increasing relationships with domain (0,Inf).
-"""
-@inline softNEC2GUTS(x::Real, p::NTuple{2,Real}) = p[2] * (x - p[1]) * (0.5 + (1 / pi) * atan(1e6 * (x - p[1])))
-@inline softNEC2GUTS(x::Real, p1::Real, p2::Real) = p2 * (x - p1) * (0.5 + (1 / pi) * atan(1e6 * (x - p1)))
+#"""
+#Transformation of softNEC2pos for decreasing relationships with domain (0,1).
+#"""
+#@inline softNEC2neg(x::Real, p::NTuple{2,Real}) = 1 / (1 + p[2] *(x - p[1]) * (0.5 + (1 / pi) * atan(1e6 * (x - p[1]))))
+#@inline softNEC2neg(x::Real, p1::Real, p2::Real) = 1 / (1 + p2 *(x - p1) * (0.5 + (1 / pi) * atan(1e6 * (x - p1))))
+#"""
+#Transformation of softNECpos for increasing relationships with domain (0,Inf).
+#"""
+#@inline softNEC2GUTS(x::Real, p::NTuple{2,Real}) = p[2] * (x - p[1]) * (0.5 + (1 / pi) * atan(1e6 * (x - p[1])))
+#@inline softNEC2GUTS(x::Real, p1::Real, p2::Real) = p2 * (x - p1) * (0.5 + (1 / pi) * atan(1e6 * (x - p1)))
 
 
 # more dose-response functions that could be useful
@@ -23,11 +23,14 @@ Transformation of softNECpos for increasing relationships with domain (0,Inf).
 ##Negative values should theoretically be impossible, but very small values of `x` (`<= 1e-20`) might occur during ODE solving. 
 ##In this case, the returned real part of the expression evaluates to 1, which is in turn the expected behaviour.  
 #
-#@inline function LL2(x::Real, p::NTuple{2,Real})
-#    return (1 / (1 + Complex(x / p[1]) ^ p[2])).re
-#end
-#
-#LL2(x, p1, p2) = LL2(x, (p1, p2))
+@inline function LL2(x::Float64, p::NTuple{2,Float64})::Float64
+    return (1 / (1 + Complex(x / p[1]) ^ p[2])).re
+end
+
+@inline LL2(x::Float64, p1::Float64, p2::Float64)::Float64 = LL2(x, (p1, p2))
+@inline LL2GUTS(x::Float64, p1::Float64, p2::Float64)::Float64 = -log(LL2(x, (p1, p2)))
+
+
 #
 #
 ##Cumulative hazard function of the log-logistic distribution. Mainly used for application in GUTS.

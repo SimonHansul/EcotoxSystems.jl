@@ -22,7 +22,7 @@ p = ComponentVector(
     ),
     spc = ComponentVector(
         Z = Dirac(1.0), # individual variability through zoom factor
-        propagate_zoom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
+        propagate_joom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
             dI_max = 1/3, 
             dI_max_emb = 1/3,
             X_emb_int = 1,
@@ -43,12 +43,12 @@ p = ComponentVector(
         k_M = 0.59,     # somatic maintenance rate constant [d^-1]
         k_J = 0.504,    # maturity maintenance rate constant [d^-1]
         H_p = 1 / 3,    # maturity at puberty [μgC]
-        k_D_j = zeros((2, 4)), # k_D - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
-        e_z = ones((2, 4)), # sensitivity parameters (thresholds)
-        b_z = ones((2,4)), # slope parameters
-        k_D_h = zeros((2,1)), # k_D - value for GUTS-Sd module (1 row = 1 stressor)
-        e_h = ones((2,1)), # sensitivity parameter (threshold) for GUTS-SD module
-        b_h = ones((2,1)), # slope parameter for GUTS-SD module 
+        KD = zeros((2, 4)), # KD - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
+        E = ones((2, 4)), # sensitivity parameters (thresholds)
+        B = ones((2,4)), # slope parameters
+        KD_h = zeros((2,1)), # KD - value for GUTS-Sd module (1 row = 1 stressor)
+        E_h = ones((2,1)), # sensitivity parameter (threshold) for GUTS-SD module
+        B_h = ones((2,1)), # slope parameter for GUTS-SD module 
         # these are curently only used in an individual-based context, but could find application in the pure-ODE implementation 
         # for example by triggering emptying of the reproduction buffer through callbacks
         f_Xthr = 0.5,  # functional response threshold for starvation mortality
@@ -61,29 +61,29 @@ p = ComponentVector(
 
 # simulating two stressors with different PMoAs
 
-p.spc.k_D_j = [
+p.spc.KD = [
     1. 0. 0. 0.; # stressor 1 has PMoA G
     0. 0. 0. 1. # stressor 2 has PMoA R
     ]
 
 # setting all dose-response params to the same values
-p.spc.e_z = ones(size(p.spc.k_D_j))
-p.spc.b_z = fill(1, size(p.spc.k_D_j))
+p.spc.E = ones(size(p.spc.KD))
+p.spc.B = fill(2., size(p.spc.KD))
 
 C_Wmat = [ # simulating a ray design
     0.0 0.0; 
-    1.5 0.0;
-    0.0 1.5;
-    1.5 1.5;
+    0.5 0.0;
+    0.0 0.5;
+    0.5 0.5;
 ]
 
-p.spc.k_D_j 
-p.spc.e_z
-p.spc.b_z
+p.spc.KD 
+p.spc.E
+p.spc.B
 
 sim = exposure(p->EcotoxSystems.ODE_simulator(p), p, C_Wmat);
 
-@time ODE_simulator(p);
+@time EcotoxSystems.ODE_simulator(p);
 
 
 @df sim plot(
@@ -98,12 +98,12 @@ sim = exposure(p->EcotoxSystems.ODE_simulator(p), p, C_Wmat);
 
 p.glb.C_W
 
-p.spc.k_D_j = [
+p.spc.KD = [
     0. 0. 0. 1.; 
     0. 0. 0. 1.
     ]
 
-sim = exposure(ODE_simulator, p, C_Wmat);
+sim = exposure(EcotoxSystems.ODE_simulator, p, C_Wmat);
 
 @df sim plot(
     plot(:t, :S, group = :treatment_id, leg = true),
