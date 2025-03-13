@@ -68,13 +68,13 @@ p.spc.KD = [
 
 # setting all dose-response params to the same values
 p.spc.E = ones(size(p.spc.KD))
-p.spc.B = fill(1, size(p.spc.KD))
+p.spc.B = fill(2., size(p.spc.KD))
 
 C_Wmat = [ # simulating a ray design
     0.0 0.0; 
-    1.5 0.0;
-    0.0 1.5;
-    1.5 1.5;
+    0.5 0.0;
+    0.0 0.5;
+    0.5 0.5;
 ]
 
 p.spc.KD 
@@ -83,7 +83,7 @@ p.spc.B
 
 sim = exposure(p->EcotoxSystems.ODE_simulator(p), p, C_Wmat);
 
-@time ODE_simulator(p);
+@time EcotoxSystems.ODE_simulator(p);
 
 
 @df sim plot(
@@ -103,7 +103,7 @@ p.spc.KD = [
     0. 0. 0. 1.
     ]
 
-sim = exposure(ODE_simulator, p, C_Wmat);
+sim = exposure(EcotoxSystems.ODE_simulator, p, C_Wmat);
 
 @df sim plot(
     plot(:t, :S, group = :treatment_id, leg = true),

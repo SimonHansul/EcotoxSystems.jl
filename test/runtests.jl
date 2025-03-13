@@ -12,8 +12,6 @@ using StatsBase
 using Revise
 @time using EcotoxSystems
 
-#TODO: include randomized inputs in each test
-
 include("test01_defaults.jl") # simulates the default parameters
 include("test02_food.jl") # performs a parameter sweep
 include("test03_toxicity.jl") # simulates single stressors
