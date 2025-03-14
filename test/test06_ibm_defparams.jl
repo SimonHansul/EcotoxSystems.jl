@@ -83,7 +83,7 @@ end
     p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
     p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
 
-    @time global sim_ibm = @replicates IBM_simulator(p, saveat = 1, showinfo = 14) 3
+    @time global sim_ibm = @replicates IBM_simulator(p, saveat = 1, showinfo = 14) 1
     #VSCodeServer.@profview_allocs global sim_ibm = treplicates(x -> IBM_simulator(p, saveat = 1, showinfo = 14), p, 1)
     
     plt = plot(
