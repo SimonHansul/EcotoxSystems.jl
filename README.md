@@ -49,8 +49,8 @@ using Pkg; Pkg.add("https://github.com/simonhansul/ecotoxsystems.jl")
 ### Running the ODE simulator
 
 The following code executes the *default* model and parameters. <br>
-This is a Dynamic Energy Budget Toxicokinetic-Toxicodynamic (DEB-TKTD) model based on the DEBkiss model developed by Tjalling Jager. <br> 
-Inspect `default_derivatives.jl` to see how this default model is defined. 
+This is a Dynamic Energy Budget Toxicokinetic-Toxicodynamic (DEB-TKTD) model based on the DEBkiss. <br> 
+The derivatives are defined in `src/default_derivatives.jl`. 
 
 ```Julia
 import EcotoxSystems: import defaultparams, ODE_simulator
