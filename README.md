@@ -11,6 +11,7 @@
 This package aims to 
 
 - Provide a systematic approach for modular modelling of mechanistic models in ecotoxicology
+- Facilitate the integration of organism-level ecotoxicological models into individual-based population models
 - Provide a default model and parameters to serve as an entry point for teaching, research and development
 
 Explicitly not within the scope of this package:
@@ -30,6 +31,8 @@ The equation-based part is a system of ODEs. We make heavy use of [ComponentArra
 to define parameters and state variables for each component. Components are further sub-divided to an extent that is considered practical, e.g. into a DEB and TKTD component.
 
 <img src="implementation_logic.png" alt="Implementation logic">
+
+
 
 ## Installation 
 
