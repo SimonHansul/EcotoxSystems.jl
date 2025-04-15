@@ -11,6 +11,7 @@
 This package aims to 
 
 - Provide a systematic approach for modular modelling of mechanistic models in ecotoxicology
+- Facilitate the integration of organism-level ecotoxicological models into individual-based population models
 - Provide a default model and parameters to serve as an entry point for teaching, research and development
 
 Explicitly not within the scope of this package:
@@ -31,6 +32,8 @@ to define parameters and state variables for each component. Components are furt
 
 <img src="implementation_logic.png" alt="Implementation logic">
 
+
+
 ## Installation 
 
 While `EcotoxSystems.jl` is not registered, install directly from github:
@@ -46,8 +49,8 @@ using Pkg; Pkg.add("https://github.com/simonhansul/ecotoxsystems.jl")
 ### Running the ODE simulator
 
 The following code executes the *default* model and parameters. <br>
-This is a Dynamic Energy Budget Toxicokinetic-Toxicodynamic (DEB-TKTD) model based on the DEBkiss model developed by Tjalling Jager. <br> 
-Inspect `default_derivatives.jl` to see how this default model is defined. 
+This is a Dynamic Energy Budget Toxicokinetic-Toxicodynamic (DEB-TKTD) model based on the DEBkiss. <br> 
+The derivatives are defined in `src/default_derivatives.jl`. 
 
 ```Julia
 import EcotoxSystems: import defaultparams, ODE_simulator
