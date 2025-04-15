@@ -120,7 +120,15 @@ Initial version.
 
 - `init_global_statevars` and `init_individual_statevars` are now a keyword argument to `IBM_simulator` - necessary to implement modified models with additional states
 
-### v0.1.4-0.1.6
+### v0.1.4-0.1.x
 
 - small bugfixes in IBM_simulator
 - small improvements on utils
+
+## v0.2.1
+
+- optimized default model implementation by improve type stability
+
+## v0.2.2
+
+- fixed issue in default TKTD function

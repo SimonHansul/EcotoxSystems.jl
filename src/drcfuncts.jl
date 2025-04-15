@@ -30,6 +30,12 @@ end
 @inline LL2(x::Float64, p1::Float64, p2::Float64)::Float64 = LL2(x, (p1, p2))
 @inline LL2GUTS(x::Float64, p1::Float64, p2::Float64)::Float64 = -log(LL2(x, (p1, p2)))
 
+@inline function LL2pos(x::Float64, p::NTuple{2,Float64})::Float64
+    return 1 - log((1 / (1 + Complex(x / p[1]) ^ p[2])).re)
+end
+
+@inline LL2pos(x::Float64, p1::Float64, p2::Float64)::Float64 = LL2pos(x, (p1, p2))
+
 
 #
 #

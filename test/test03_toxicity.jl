@@ -6,21 +6,26 @@ using DataFramesMeta
 import EcotoxSystems: exposure, relative_response
 
 @testset begin
-    p = EcotoxSystems.params()
+
+    global p = EcotoxSystems.params()
     
     p.glb.t_max = 42.
     p.glb.dX_in = 2400.
     p.glb.k_V = 0.
 
+    p.spc.H_p = 0.75
+
     p.spc.KD .= 0
     p.spc.E .= 1.
-    p.spc.B .= 0.1
+    p.spc.B .= 2.
 
     let C_Wvec =  hcat([0], round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2)...)' |> Matrix
-        global sims = DataFrame()
-        pmoas = ["G", "M", "A", "R"]
-        for (j,pmoa) in enumerate(pmoas)
 
+        global sims = DataFrame()
+        global pmoas = ["G", "M", "A", "R"]
+        
+        for (j,pmoa) in enumerate(pmoas)
+            
             p.spc.KD .= 0.
             p.spc.KD[1,j] = 1.
             p.spc.KD_h[1] = 1.
@@ -60,7 +65,9 @@ import EcotoxSystems: exposure, relative_response
         end
         
         display(plt)
-        @test unique(rankcor.r .<= 0.9) == [true]
+        @test unique(rankcor.r .<= 0.9) == [true] # all pmoas affect reproduction
         @test minimum(sims.y_R) .< 0.5
+        @test minimum(sims[sims.pmoa.=="R",:].y_S) > 0.99 # no effect on growth for PMoA R
     end
 end
+

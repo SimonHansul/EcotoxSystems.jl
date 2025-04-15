@@ -108,7 +108,11 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
             # calculate change in damage
             du.ind.D_z[z,j] = minimal_TK(ind.embryo, p.ind.KD[z,j], glb.C_W[z], ind.D_z[z,j]) #(1 - ind.embryo) * p.ind.KD[z, j] * (glb.C_W[z] - ind.D_z[z, j])
             # update relative response with respect to PMoA j
-            ind.y_j *= LL2(ind.D_z[z,j], p.ind.E[z,j], p.ind.B[z,j])
+            if j != 2 # PMoAs with decreasing response
+                ind.y_j[j] *= LL2(ind.D_z[z,j], p.ind.E[z,j], p.ind.B[z,j])
+            else # PMoAs with increasing response
+                ind.y_j[j] *= LL2pos(ind.D_z[z,j], p.ind.E[z,j], p.ind.B[z,j])
+            end
         end
         # calculate change in damage for lethal effects
         du.ind.D_h[z] = (1 - ind.embryo) * p.ind.KD_h[z] * (glb.C_W[z] - ind.D_h[z])
@@ -116,8 +120,6 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
         ind.h_z += LL2GUTS(ind.D_h[z], p.ind.E_h[z], p.ind.B_h[z])
     end
 
-    ind.y_j[2] /= ind.y_j[2]^2 # for pmoas with increasing responses (M), the relative response has to be inverted  (x/x^2 == 1/x) 
-    
     du.ind.S_z = -ind.h_z * ind.S_z # survival probability according to GUTS-RED-SD
     
     return nothing
@@ -143,6 +145,27 @@ end
 
 end
 
+"""
+    dS(
+        kappa::Float64,
+        dA::Float64, 
+        dM::Float64, 
+        eta_SA::Float64,
+        y_G::Float64,
+        eta_AS::Float64
+        )::Float64
+
+Structural growth rate. 
+
+## Arguments 
+
+- `kappa`: Allocation fraction to somatic growth and maintenance
+- `dA`: Assimilation rate
+- `dM`: Somatic maintenance rate 
+- `eta_SA`: Growth efficiency (yield of somatic mass on assimilates)
+- `y_G`: Relative response of growth efficiency
+- `eta_SA`: Shrinking efficiency
+"""
 @inline function dS(
     kappa::Float64,
     dA::Float64, 
@@ -152,14 +175,31 @@ end
     eta_AS::Float64
     )::Float64
 
-    return sig(
-        kappa * dA, 
-        dM, -(dM / eta_SA - kappa * dA), 
-        y_G * eta_AS * (kappa * dA - dM)
-    )   
+    if kappa * dA >= dM
+        return y_G * eta_AS * (kappa * dA - dM)
+    else
+        return -(dM / eta_SA - kappa * dA)
+    end 
 
 end
 
+"""
+    dI_embryo(
+        embryo::Float64,
+        S::Float64,
+        dI_max_emb::Float64,
+        y_T::Float64
+        )::Float64
+
+Resource ingestion by embryos, i.e. uptake of yolk/vitellus. 
+
+## Arguments
+
+- `embryo`: State variable indicating whether current state is embryonic
+- `S`: Structural mass
+- `dI_max_emb`: Maxmimum size-specific ingestion rate of embryos
+- `y_T`: Temperature coefficient
+"""
 @inline function dI_embryo(
     embryo::Float64,
     S::Float64,
@@ -192,7 +232,7 @@ end
     dJ::Float64
     )::Float64
 
-    return adult * clipneg(eta_AR * y_R * ((1 - kappa) * dA - dJ))  # reproduction flux
+    return adult * clipneg(eta_AR * y_R * ((1 - kappa) * dA - dJ))  
 
 end
 
