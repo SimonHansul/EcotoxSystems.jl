@@ -41,7 +41,7 @@ The following kwargs are used internally by `OrdinaryDiffEq.solve`. See `Ordinar
 
 In addition we have some kwargs that are used to further process inputs and outputs: 
 
-- `statevars_init`: Function that defines initial state variables as component vector. Components typically match those in the parameter vector. 
+- `statevars_init`: Function with signature `statevars_init(p)` that defines initial state variables as component vector. Components typically match those in the parameter vector. 
 - `gen_ind_params: Function that converts species-level parameters to individual-level parameters, for example by replacing parameters which are given as distributions with a random sample from the distribution. The inputs and outputs of this function should contain all components. 
 - `returntype`: Indicating of how to return the result. Currently allowed are `dataframe` (complete solution converted to a `DataFrame`) and `odesol` (the ODE solution object as returned by `OrdinaryDiffEq`). Default is `dataframe`.
 
