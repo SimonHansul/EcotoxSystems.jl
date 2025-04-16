@@ -135,3 +135,7 @@ Initial version.
 ## v0.2.2
 
 - fixed issue in default TKTD function
+
+## v0.2.3
+
+- `exposure()` can now take a Vector as argument

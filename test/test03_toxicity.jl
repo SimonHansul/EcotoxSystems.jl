@@ -2,8 +2,24 @@
 Simulate single stressors with different PMoAs
 =#
 
-using DataFramesMeta
+using Pkg; Pkg.activate("test")
+
+using Test
+using Distributions
+
+using OrdinaryDiffEq
+using DataFrames, DataFramesMeta
+using Plots, StatsPlots, Plots.Measures
+default(leg = false)
+using StatsBase
+
+using Revise
+@time using EcotoxSystems
+
 import EcotoxSystems: exposure, relative_response
+
+EcotoxSystems.ODE_simulator(EcotoxSystems.defaultparams)
+
 
 @testset begin
 
@@ -19,7 +35,7 @@ import EcotoxSystems: exposure, relative_response
     p.spc.E .= 1.
     p.spc.B .= 2.
 
-    let C_Wvec =  hcat([0], round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2)...)' |> Matrix
+    let C_Wvec =  vcat(0., round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2)) #hcat([0], round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2)...)' |> Matrix
 
         global sims = DataFrame()
         global pmoas = ["G", "M", "A", "R"]

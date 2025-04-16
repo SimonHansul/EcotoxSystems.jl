@@ -295,23 +295,27 @@ function add_idcol(nt::NT, col::Symbol, val::Any) where NT <: NamedTuple
     return nt
 end
 
+reshape_C_Wmat(C_Wmat::Matrix{Float64}) = C_Wmat
+reshape_C_Wmat(C_Wmat::Vector{Float64}) = hcat(C_Wmat...)' |> Matrix
+
 """
     exposure(
         simulator::Function, 
         p::ComponentVector, 
-        C_Wmat::Matrix{R}
+        C_Wmat::Union{Vector{R},Matrix{R}}
     ) where R <: Real
 
-Simulate exposure to an arbitrary number of stressors over a Matrix of constant exposure concentrations `C_Wmat`. 
+Simulate constant chemical exposure with over an arbitrary number of treatments and chemical stressors, defined in `C_Wmat`. 
 
-The exposure matrix columns are stressors, the rows are treatments. 
-That means, to simulate a single-stressor experiment, do 
+The columns of `C_W` are stressors, the rows are treatments. <br>
+If `C_W` is supplied as a Vector, it is assumed that the elements represent different levels of single-stressor exposure. <br>
+That means, to simulate a single-stressor experiment with three treatments, do 
 
 ```Julia 
-C_Wmat = [0.; 1.; 2;]
+C_Wmat = [0., 1., 2,]
 ```
 
-, creating a 1 x 3 matrix with exposure concentrations 0, 1 and 2. 
+, internally creating a 1 x 3 matrix with exposure concentrations 0, 1 and 2. 
 
 A single treatment with multiple stressors can be defined as 
 
@@ -319,12 +323,17 @@ A single treatment with multiple stressors can be defined as
 C_Wmat = [0 1 2;]
 ```
 
-, creating a 1 x 3 matrix. Here, we would have three stressors with the simultaneous exposure concentrations 0,1,2. <br>
+Here, we would have three stressors with the simultaneous exposure concentrations 0,1,2. <br>
 
-Thus, defining four treatments for two stressors looks like this:
+Defining four treatments for two stressors looks like this:
 
 ```Julia
-C_Wmat = [0.0 0.0; 0.0 0.5; 1.0 0.0; 0.5 1.0]
+C_Wmat = [
+    0.0 0.0; 
+    0.0 0.5; 
+    1.0 0.0; 
+    0.5 1.0
+    ]
 ```
 
 This exposure matrix corresponds to a ray design with constant exposure ratios.
@@ -332,9 +341,11 @@ This exposure matrix corresponds to a ray design with constant exposure ratios.
 function exposure(
     simulator::Function, 
     p::ComponentVector, 
-    C_Wmat::Matrix{R}
+    C_Wmat::VecOrMat{R}
     ) where R <: Real
     
+    C_Wmat = reshape_C_Wmat(C_Wmat)
+
     let C_W_int = p.glb.C_W # we will modify this value and then reset to the initial value
         sim = []
 
