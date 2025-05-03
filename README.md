@@ -28,8 +28,7 @@ Furthermore, in the context of models developed for ecotoxicology and ecological
 we need to consider the organism-level as well as the environment (*individual* and *global* in the diagram below). <br>
 
 The equation-based part is a system of ODEs. We make heavy use of [ComponentArrays.jl](https://github.com/jonniedie/ComponentArrays.jl) 
-to define parameters and state variables for each component. Components are further sub-divided to an extent that is considered practical, e.g. into a DEB and TKTD component.
-
+to define parameters and state variables for each component. 
 <img src="implementation_logic.png" alt="Implementation logic">
 
 
