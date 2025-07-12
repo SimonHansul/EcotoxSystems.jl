@@ -80,11 +80,12 @@ function ODE_simulator(
     end
 
     if returntype == dataframe # return solution as dataframe
-        return  DataFrame(hcat(sol.t, hcat(sol.u...)'), getcolnames(sol)) # convert solution to dataframe
+        return DataFrame(hcat(sol.t, hcat(sol.u...)'), getcolnames(sol)) # convert solution to dataframe
     end
 
     error("returntype $returntype not implemented")
 end
+
 
 """
     IBM_simulator(
@@ -173,7 +174,6 @@ function individual_record_to_df(
         [keys(m.individual_record[1])...]
     )  |> unique
 
-    
     hcat([map(x -> getproperty(x, y), m.individual_record) for y in cols]...) |> 
     x -> DataFrame(x, cols)
 end
@@ -189,6 +189,9 @@ combine_outputs(outputs::Vector{DataFrame}; idcol = :replicate) = begin
 
     return out
 end
+
+combine_outputs(sims::Any) = combine_outputs(Vector{typeof(sims[1])}(sims))
+
 
 combine_outputs(outputs::Vector{N}; idcol = :replicate) where N <: NamedTuple = begin
 
@@ -271,8 +274,9 @@ function treplicates(
 
     sim = Vector{Any}(undef, nreps)
 
-    @threads for replicate in 1:nreps
+    @threads for i in 1:nreps
         sim_i = simulator(defaultparams; kwargs...)
+        sim[i] = sim_i
     end
     
     return combine_outputs(Vector{typeof(sim[1])}(sim))
