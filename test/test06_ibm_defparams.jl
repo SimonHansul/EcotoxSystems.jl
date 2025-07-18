@@ -12,7 +12,7 @@ using Test
 using Revise
 @time using EcotoxSystems
 @time import EcotoxSystems: params, ODE_simulator, IBM_simulator 
-@time import EcotoxSystems: @replicates, DEBIndividual, treplicates
+@time import EcotoxSystems: @replicates, Individual, treplicates
 
 using Plots, StatsPlots
 
@@ -68,7 +68,6 @@ using Plots, StatsPlots
     @test sum(dH .> 2) == 0
     @test sum(dR .> 2) == 0
 end
-
 
 @testset "Running IBM with default parameters" begin
 

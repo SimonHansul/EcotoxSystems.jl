@@ -96,31 +96,31 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
 """
 @inline function TKTD_mix_IA!(du, u, p, t)::Nothing
 
-    @unpack glb, ind = u
+    @unpack glb, ind = :u
 
     # scaled damage dynamics based on the minimal model
     
-    ind.y_j .= 1.0 # reset relative responses 
-    ind.h_z = 0.0 # reset GUTS-SD hazard rate
+    p.ind.y_j .= 1.0 # reset relative responses 
+    p.ind.h_z = 0.0 # reset GUTS-SD hazard rate
 
     for z in eachindex(glb.C_W) # for every chemical
-        for j in eachindex(ind.y_j) # for every PMoA
+        for j in eachindex(p.ind[:y_j]) # for every PMoA
             # calculate change in damage
             du.ind.D_z[z,j] = minimal_TK(ind.embryo, p.ind.KD[z,j], glb.C_W[z], ind.D_z[z,j]) #(1 - ind.embryo) * p.ind.KD[z, j] * (glb.C_W[z] - ind.D_z[z, j])
             # update relative response with respect to PMoA j
             if j != 2 # PMoAs with decreasing response
-                ind.y_j[j] *= LL2(ind.D_z[z,j], p.ind.E[z,j], p.ind.B[z,j])
+                p.ind[:y_j][j] *= LL2(ind.D_z[z,j], p.ind.E[z,j], p.ind.B[z,j])
             else # PMoAs with increasing response
-                ind.y_j[j] *= LL2pos(ind.D_z[z,j], p.ind.E[z,j], p.ind.B[z,j])
+                p.ind[:y_j][j] *= LL2pos(ind.D_z[z,j], p.ind.E[z,j], p.ind.B[z,j])
             end
         end
         # calculate change in damage for lethal effects
         du.ind.D_h[z] = (1 - ind.embryo) * p.ind.KD_h[z] * (glb.C_W[z] - ind.D_h[z])
         # update hazard rate
-        ind.h_z += LL2GUTS(ind.D_h[z], p.ind.E_h[z], p.ind.B_h[z])
+        p.ind.h_z += LL2GUTS(ind.D_h[z], p.ind.E_h[z], p.ind.B_h[z])
     end
 
-    du.ind.S_z = -ind.h_z * ind.S_z # survival probability according to GUTS-RED-SD
+    du.ind.S_z = -p.ind[:h_z] * ind.S_z # survival probability according to GUTS-RED-SD
     
     return nothing
 end
@@ -298,16 +298,16 @@ function DEBkiss_physiology!(du, u, p, t)::Nothing
     determine_life_stage!(du.ind, ind, p.ind, t)
 
     # temperature correction
-    ind.y_T = y_T(p.ind.T_A, p.ind.T_ref, p.glb.T) # temperature correction
+    p.ind.y_T = y_T(p.ind.T_A, p.ind.T_ref, p.glb.T) # temperature correction
 
     # ingestion rates and feedback with resource pools
 
-    ind.f_X = f_X(glb.X, p.glb.V_patch, p.ind.K_X)
+    ind.f_X = f_X(glb.X, p.glb.V_patch, p.ind[:K_X])
 
     # calculation of resource uptake for embryos vs hatched individuals
     
-    dI_emb = dI_embryo(ind.embryo, ind.S, p.ind.dI_max_emb, ind.y_T)
-    dI_all = dI(ind.embryo, ind.f_X, p.ind.dI_max, ind.S, ind.y_T)
+    dI_emb = dI_embryo(ind.embryo, ind.S, p.ind.dI_max_emb, p.ind[:y_T])
+    dI_all = dI(ind.embryo, ind.f_X, p.ind.dI_max, ind.S, p.ind[:y_T])
 
     # ingestion rate is the sum of both (dI_emb and dI are mutually exclusive)
     
@@ -318,13 +318,13 @@ function DEBkiss_physiology!(du, u, p, t)::Nothing
 
     # remaining derivatives
 
-    du.ind.A = dA(du.ind.I, p.ind.eta_IA, ind.y_j[3]) # Assimilation flux
-    du.ind.M = dM(ind.S, p.ind.k_M, ind.y_j[2], ind.y_T) # Somatic maintenance flux
-    du.ind.J = dJ(ind.H, p.ind.k_J, ind.y_j[2], ind.y_T) # Maturity maintenance flux
-    du.ind.S = dS(p.ind.kappa, du.ind.A, du.ind.M, p.ind.eta_SA, ind.y_j[1], p.ind.eta_AS)
+    du.ind.A = dA(du.ind.I, p.ind.eta_IA, p.ind[:y_j][3]) # Assimilation flux
+    du.ind.M = dM(ind.S, p.ind.k_M, p.ind[:y_j][2], p.ind[:y_T]) # Somatic maintenance flux
+    du.ind.J = dJ(ind.H, p.ind.k_J, p.ind[:y_j][2], p.ind[:y_T]) # Maturity maintenance flux
+    du.ind.S = dS(p.ind.kappa, du.ind.A, du.ind.M, p.ind.eta_SA, p.ind[:y_j][1], p.ind.eta_AS)
  
     du.ind.H = dH(ind.adult, p.ind.kappa, du.ind.A, du.ind.J) # maturiation flux
-    du.ind.R = dR(ind.adult, p.ind.eta_AR, ind.y_j[4], p.ind.kappa, du.ind.A, du.ind.J) # reproduction flux
+    du.ind.R = dR(ind.adult, p.ind.eta_AR, p.ind[:y_j][4], p.ind.kappa, du.ind.A, du.ind.J) # reproduction flux
 
     return nothing
 end

@@ -13,7 +13,8 @@ using Base.Threads
 
 using RecipesBase
 
-abstract type AbstractDEBIBM end
+abstract type AbstractIBM end
+const AbstractDEBIBM = AbstractIBM # this alias only exists for backwards-compatability
 
 include("utils.jl")
 
@@ -29,6 +30,7 @@ include("default_statevars.jl")
 
 include("individuals.jl")
 include("individualbasedmodel.jl")
+export IndividualBasedModel
 include("ibmschedules.jl")
 
 # functions to simulate models

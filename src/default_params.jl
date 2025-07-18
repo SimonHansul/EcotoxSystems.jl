@@ -49,8 +49,20 @@ species_params = ComponentVector(
     S_rel_crit = 0.66,  # relative amount of structure which can be lost before hazard rate kicks in
     h_S = 0.7, # starvation hazard rate caused be shrinking below S_rel_crit
     a_max = Truncated(Normal(60, 6), 0, Inf), # maximum life span 
-    tau_R = 2.0 # reproduction interval
-)
+    tau_R = 2.0, # reproduction interval
+
+    # intermediate state variables
+    # these are stored in the parameter vector to avoid direct mutation of the state variables
+    y_T = 1., # response to temperature, relative to temperature
+    y_j = @MMatrix([0. 0. 0. 0.]), # relative response per pmoa 
+    h_z = 0., # hazard rate caused by chemical stressors
+
+    S_max_hist = 1e-3, # initial reference structure
+    age = 0.,
+    cause_of_death = 0.,
+    time_since_last_repro = 0.,
+    cum_repro = 0.,
+) 
 
 """
 Default parameter object

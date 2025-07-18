@@ -147,9 +147,9 @@ function IBM_simulator(
         record_individuals = record_individuals
         )
 
-    while !(m.t > m.p.glb.t_max)
-        if showinfo < Inf && isapprox(m.t % showinfo, 0, atol = m.dt)
-            @info("t=$(m.t), N = $(m.u.glb.N), mem = $(Base.summarysize(m))")
+    while !(m.integrator.t > m.integrator.p.glb.t_max)
+        if showinfo < Inf && isapprox(m.integrator.t % showinfo, 0, atol = m.dt)
+            @info("t=$(m.integrator.t), N = $(m.integrator.u.glb.N)")
         end
 
         model_step!(m)
@@ -162,10 +162,10 @@ function IBM_simulator(
 end
 
 
-global_record_to_df(m::AbstractDEBIBM)::DataFrame = DataFrame(hcat(m.global_record...)', getcolnames(m))
+global_record_to_df(m::AbstractIBM)::DataFrame = DataFrame(hcat(m.global_record...)', getcolnames(m))
 
 function individual_record_to_df(
-    m::AbstractDEBIBM; 
+    m::AbstractIBM; 
     )::DataFrame
 
     cols = vcat(

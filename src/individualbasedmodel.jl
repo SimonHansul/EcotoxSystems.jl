@@ -3,15 +3,12 @@
 # this type should be generic enough for most applications, 
 # but if extensions are required, it is best to make use of the associated AbstractIBM type
 
-mutable struct IndividualBasedModel <: AbstractDEBIBM
+mutable struct IndividualBasedModel <: AbstractIBM
     global_ode!::Function
     global_rules!::Function
     init_global_statevars::Function
-    individuals::Vector{DEBIndividual}
-    du::ComponentVector
-    u::ComponentVector
-    p::ComponentVector
-    t::Real
+    individuals::Vector{Individual}
+    integrator::SciMLBase.DEIntegrator
     dt::Real
     idcount::Int
     saveat::Real
@@ -65,20 +62,29 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
 
         dt = 1/24, 
         saveat = 1, 
-        record_individuals::Bool = true
+        record_individuals::Bool = true, 
+        ode_alg = Tsit5()
         )::IndividualBasedModel
 
         m = new()
         m.global_ode! = global_ode!
         m.global_rules! = global_rules!
-        m.individuals = Vector{DEBIndividual}(undef, Int(p.glb.N0))
+        m.individuals = Vector{Individual}(undef, Int(p.glb.N0))
         
-        # setting up global states and individuals
+        # setting up global integrator
+
+        ode_problem = ODEProblem(
+            global_ode!,
+            ComponentVector(glb = init_global_statevars(p)), 
+            (0.0, Inf),
+            p
+        )
+        m.integrator = OrdinaryDiffEq.init(
+            ode_problem,
+            ode_alg;
+            advance_to_tstop = true
+        )
         
-        m.u = ComponentVector(glb = init_global_statevars(p))
-        m.du = similar(m.u) 
-        m.p = p
-        m.t = 0.
         m.dt = dt
         m.saveat = saveat
         m.idcount = 0
@@ -91,15 +97,13 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
 
         for i in 1:Int(p.glb.N0)
             m.idcount += 1
-            m.individuals[i] = DEBIndividual(
+            m.individuals[i] = Individual(
                 p, 
-                m.u.glb;
-
+                m.integrator.u.glb;
                 individual_ode! = individual_ode!,
                 individual_rules! = individual_rules!,
                 init_individual_statevars = init_individual_statevars,
                 gen_ind_params = gen_ind_params,
-                
                 id = m.idcount
                 )
         end

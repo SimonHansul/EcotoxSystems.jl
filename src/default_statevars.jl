@@ -90,25 +90,10 @@ function initialize_individual_statevars(
         
         D_z = constrmmat(p.ind.KD), # sublethal damage per stressor and PMoA
         D_h = constrmvec(p.ind.KD_h), # lethal damage per stressor
-
-        y_T = 1.,
-
-        y_z = constrmmat(p.ind.KD), # relative response per stressor and pmoa
-        #y_j = constrmmat(p.ind.KD, 2, fillval = 1), # relative response per pmoa
-        y_j = [0. 0. 0. 0.],
-        h_z = 0., # hazard rate caused by chemical stressors
+        
         S_z = 1., # chemical-related survival probability
-
-        # these are curently only needed in the IBM version, 
-        # but may find application in the pure-ODE implementation 
-
-        S_max_hist = p.ind.X_emb_int * X_EMB_INT_REL, # initial reference structure
         id = id, 
         cohort = cohort,
-        age = 0.,
-        cause_of_death = 0.,
-        time_since_last_repro = 0.,
-        cum_repro = 0.,
     )
 end
 
