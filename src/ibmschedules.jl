@@ -94,7 +94,7 @@ Remove individuals which have been flagged to die after the current time-step.
 
 Individuals for which the condition `u.ind.cause_of_death == 0` applies are retained.
 """
-filter_individuals!(m::AbstractIBM) = m.individuals = filter(x -> x.integrator.u.ind.cause_of_death == 0, m.individuals)
+filter_individuals!(m::AbstractIBM) = m.individuals = filter(x -> x.integrator.p.ind.cause_of_death == 0, m.individuals)
 
 function step_all_individuals!(m::AbstractIBM)::Nothing
     

@@ -96,7 +96,7 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
 """
 @inline function TKTD_mix_IA!(du, u, p, t)::Nothing
 
-    @unpack glb, ind = :u
+    @unpack glb, ind = u
 
     # scaled damage dynamics based on the minimal model
     
@@ -307,13 +307,13 @@ function DEBkiss_physiology!(du, u, p, t)::Nothing
     # calculation of resource uptake for embryos vs hatched individuals
     
     dI_emb = dI_embryo(ind.embryo, ind.S, p.ind.dI_max_emb, p.ind[:y_T])
-    dI_all = dI(ind.embryo, ind.f_X, p.ind.dI_max, ind.S, p.ind[:y_T])
+    dI_all_but_emb = dI(ind.embryo, ind.f_X, p.ind.dI_max, ind.S, p.ind[:y_T])
 
     # ingestion rate is the sum of both (dI_emb and dI are mutually exclusive)
     
-    du.ind.I = dI_emb + dI_all
+    du.ind.I = dI_emb + dI_all_but_emb
 
-    du.glb.X -= dI_all  # Change in external resource abundance
+    du.glb.X -= dI_all_but_emb  # Change in external resource abundance
     du.ind.X_emb = -dI_emb  # Change in vitellus (yolk)
 
     # remaining derivatives

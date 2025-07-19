@@ -19,7 +19,6 @@ using Revise
 @time import EcotoxSystems: @replicates, Individual, treplicates
 
 using Plots, StatsPlots
-
 using OrdinaryDiffEq
 
 #=
@@ -33,10 +32,16 @@ the generic IBM step
 Starting point with custom euler function: 
 - 5 seconds for 56d with dX_in = 50k, N0 = 10
 - 40 seconds for 365d same settings
-=#
 
-#=
-trying to simulate just one
+- changed implementation to use integrator interface
+- the code kind of works but tsit tends to get stuck on the second or third cohort...
+- maybe the problem is that we are mutating the u-vector?
+- moved auxiliary states to p-vector
+- that doesn't seem to solve it
+- we get a maxiters issue and then popsize goes into the 100ks...
+- something must be wrong with the feedbacks!
+- probably we cannot do du.glb .= 0 anymore, and in the indivudal ODE we do du.glb.X -= du.ind.I
+
 =#
 
 p = deepcopy(EcotoxSystems.defaultparams)
@@ -45,12 +50,10 @@ p.glb.dX_in = 50_000 #100_000
 p.glb.k_V = 0.1
 p.glb.V_patch = 0.5
 p.glb.N0 = 1
-p.glb.t_max = 21
+p.glb.t_max = 56
 
 p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
 p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
-
-# the code kind of works but tsit tends to get stuck on the second or third cohort...
 
 @time global sim_ibm = @replicates IBM_simulator(p, saveat = 1, showinfo = 14, dt = 7.) 1;
 
@@ -67,6 +70,13 @@ p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
 end
 
 m = IndividualBasedModel(p)
+
+
+a = m.individuals[1]
+
+step!(a.integrator)
+
+
 OrdinaryDiffEq.u_modified!(m.integrator, true)
 OrdinaryDiffEq.step!(m.integrator, m.dt, true)
 m.integrator.t 

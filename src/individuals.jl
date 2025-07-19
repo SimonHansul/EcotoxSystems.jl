@@ -60,12 +60,12 @@ function default_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothi
     u = a.integrator.u
     p = a.integrator.p
 
-    u.ind.age += m.dt 
+    p.ind.age += m.dt 
 
     # aging is implemented in a non-mechanistic manner 
     # individuals die when they exceed their maximum age a_max
     # a_max is subject to individual variability
-    if death_by_aging(u[:ind][:age], p[:ind][:a_max])
+    if death_by_aging(p[:ind][:age], p[:ind][:a_max])
         ind.cause_of_death = 1.
     end
     
@@ -80,7 +80,7 @@ function default_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothi
     # reproduction, assuming a constant reproduction period
     
     # reproduction only occurs if the reproduction period has been exceeded
-    if check_reproduction_period(u.ind[:time_since_last_repro], p[:ind][:tau_R]) 
+    if check_reproduction_period(p.ind[:time_since_last_repro], p[:ind][:tau_R]) 
         # if that is the case, calculate the number of offspring, 
         # based on the reproduction buffer and the dry mass of an egg
         for _ in 1:calc_num_offspring(u.ind[:R], p[:ind][:X_emb_int])
@@ -97,12 +97,12 @@ function default_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothi
                 )
             )
             u.ind.R -= p[:ind][:X_emb_int] # decrease reproduction buffer
-            u.ind.cum_repro += 1 # keep track of cumulative reproduction of the mother individual
+            p.ind.cum_repro += 1 # keep track of cumulative reproduction of the mother individual
         end
-        u.ind.time_since_last_repro = 0. # reset reproduction period
+        p.ind.time_since_last_repro = 0. # reset reproduction period
     # if reproduction period has not been exceeded,
     else
-        u.ind.time_since_last_repro += m.dt # track reproduction period
+        p.ind.time_since_last_repro += m.dt # track reproduction period
     end
 
     return nothing
