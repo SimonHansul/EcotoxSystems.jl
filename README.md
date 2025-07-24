@@ -16,7 +16,7 @@ This package aims to
 
 Explicitly not within the scope of this package:
 
-- Routines for model fitting. These are being developed in [EcotoxModelFitting.jl](https://github.com/simonhansul/ecotoxmodelfitting.jl.git) (under development)
+- Routines for model fitting. These are being developed in [EcotoxModelFitting.jl](https://github.com/simonhansul/ecotoxmodelfitting.jl.git) (work in progress)
 - Providing pre-calibrated/validated models and parameter sets. Such things are better out-sourced into independent smaller modules.
 - Providing an extensive set of pre-implemented models. Also better done in smaller separate modules, as done for the [AmphiDEB](https://github.com/simonhansul/amphideb) model.
 
