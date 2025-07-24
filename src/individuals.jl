@@ -74,7 +74,7 @@ function default_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothi
     p.ind.S_max_hist = determine_S_max_hist(u.ind[:S], p.ind[:S_max_hist])
 
     if death_by_loss_of_structure(u.ind[:S], p.ind[:S_max_hist], p[:ind][:S_rel_crit], p[:ind][:h_S], m.dt)
-        u.ind.cause_of_death = 2.
+        p.ind.cause_of_death = 2.
     end
 
     # reproduction, assuming a constant reproduction period

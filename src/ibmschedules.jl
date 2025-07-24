@@ -136,10 +136,10 @@ Generic definition of an individual-based model step.
 """
 function model_step!(m::AbstractIBM)::Nothing
 
+    step_all_individuals!(m)
+    
     OrdinaryDiffEq.u_modified!(m.integrator, true)
     OrdinaryDiffEq.step!(m.integrator, m.dt, true)
-
-    step_all_individuals!(m)
     default_global_rules!(m)
     record_global!(m)
 
