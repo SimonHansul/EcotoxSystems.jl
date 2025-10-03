@@ -344,21 +344,22 @@ function exposure(
     C_Wmat::VecOrMat{R}
     ) where R <: Real
     
-    C_Wmat = reshape_C_Wmat(C_Wmat)
+    C_Wmat = reshape_C_Wmat(C_Wmat) # if a Vector has been provided, we have to reshape
 
-    let C_W_int = p.glb.C_W # we will modify this value and then reset to the initial value
-        sim = []
+    let original_C_W = deepcopy(p.glb.C_W) # we will modify this value and then reset to the original value
+        sim = [] # initialize vector of simulation outputs
 
-        for (i,C_W) in enumerate(eachrow(C_Wmat))
-            p.glb.C_W = C_W
-            sim_i = simulator(p)
+        for (i,C_W) in enumerate(eachrow(C_Wmat)) # iterate over concentrations
+            p.glb.C_W = C_W # update concentration
+            sim_i = simulator(p) # simulate
             typeof(C_W) <: Number ? sim_i = add_idcol(sim_i, :C_W, C_W) : nothing
             sim_i = add_idcol(sim_i, :treatment_id, i)
             push!(sim, sim_i)
         end
         
-        p.glb.C_W = C_W_int 
+        p.glb.C_W = original_C_W # reset C_W, so that the input remains unmodified
 
+        # combine vector of simulation outputs into a single output object
         return combine_outputs(Vector{typeof(sim[1])}(sim); idcol = :treatment_id)
     end
 end

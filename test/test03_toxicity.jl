@@ -18,8 +18,16 @@ using Revise
 
 import EcotoxSystems: exposure, relative_response
 
-EcotoxSystems.ODE_simulator(EcotoxSystems.defaultparams)
+p = deepcopy(EcotoxSystems.defaultparams)
+p.glb.C_W = [0.]
 
+sim = exposure(
+    EcotoxSystems.ODE_simulator, 
+    p,
+    [0., 1., 2.]
+)
+
+p.glb.C_W
 
 @testset begin
 
