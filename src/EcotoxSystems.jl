@@ -20,10 +20,11 @@ include("utils.jl")
 #
 ## definition of the default model
 #
-include("drcfuncts.jl")
-include("default_params.jl")
-include("default_derivatives.jl")
-include("default_statevars.jl")
+
+include("models/default/drcfuncts.jl")
+include("models/default/params.jl")
+include("models/default/derivatives.jl")
+include("models/default/statevars.jl")
 
 # infrastructure to incorporate ODE-based model into an IBM framework
 
