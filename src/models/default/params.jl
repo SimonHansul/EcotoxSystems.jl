@@ -3,7 +3,7 @@
 # the default parameters are a plausible starting point for *Daphnia* with model currency μgC, 
 # but their main purpose is to serve as a reference during development and testing (including extensions of the base model)
 
-# Global parameters with ComponentVector
+# Global parameters 
 global_params = ComponentVector(
     N0 = 1,                    # initial number of individuals [#]
     t_max = 21.0,              # maximum simulation time [days]
@@ -14,7 +14,7 @@ global_params = ComponentVector(
     T = 293.15                 # ambient temperature [K]
 )
 
-# Species-level DEB and TKTD parameters with ComponentVector
+# Species-level DEB and TKTD parameters 
 species_params = ComponentVector(
     Z = Dirac(1.0), # individual variability through zoom factor
     propagate_zoom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
@@ -38,7 +38,7 @@ species_params = ComponentVector(
     k_M = 0.59,     # somatic maintenance rate constant [d^-1]
     k_J = 0.504,    # maturity maintenance rate constant [d^-1]
     H_p = 100,    # maturity at puberty [μgC]
-    KD = Float64[0. 0. 0. 0.;], # KD - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
+    KD = Float64[0. 0. 0. 0.;], # dominant rate constants KD - columns = PMoA, rows = stressors
     B = Float64[2. 2. 2. 2.;], # slope parameters
     E = Float64[1e10 1e10 1e10 167;], # sensitivity parameters (thresholds)
     KD_h = Float64[0.;], # KD - value for GUTS-Sd module (1 row = 1 stressor)

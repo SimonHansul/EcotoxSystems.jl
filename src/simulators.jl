@@ -2,7 +2,58 @@
 # these functions are central to easily run simulations from parameters
 # central functions are ODE_simulator and IBM_simulator 
 
-@enum ReturnType odesol dataframe
+@enum ReturnType odesol dataframe # return types for ODE_simulator
+
+"""
+
+Converts a Vector of constant exposure concentrations to interpolator objects. 
+"""
+function constant_exposure(C_W::Vector{Float64})
+
+    interpolators = [linear_interpolator([0., Inf], C_W_i) for C_W_i in C_W]
+
+    return interpolators
+end
+
+
+"""
+
+This function checks a given list of parameters given in `p.glb`, which are assumed to provide information on the simulated chemical exposure. 
+The input is processed as follows: 
+
+- If it is a number, it will construct an interpolator that returns that number for any positively valued time point.
+- If it is an Extrapolation object as defined by Interpolations.jl, it will leave it as is.
+- If it is a `DataFrame`, it will construct a linear interpolation object according to the keyword argument `construct_interpolation`.
+"""
+function preprocess_exposure_input!(
+    p::ComponentVector; 
+    exposure_parameters::Vector{Symbol} = [:C_W],
+    construct_interpolation::Function = Interpolations.linear_interpolation
+    )
+
+    # for every exposure parameters (e.g. C_W for aquatic exposure, other symbols for different exposure pathways)
+    for exposure_parameter in exposure_parameters
+        # for every stressor
+        for input_value in p.glb[exposure_parameter]
+            # check type, process accordingly
+            if input_value isa Number
+                p.glb[input_value][i] = constant_exposure(input_value)
+                return nothing # exit the function
+            end
+            if input_value isa Interpolations.Extrapolation
+                return nothing
+            end
+
+            if input_value isa AbstractDataFrame
+                error("interpolation construction still needs to be implemented")
+            end
+
+            error("$(typeof(input_value)) not accounted for. Give a Number, `Interpolations.Extrapolation` or `AbstractDataFrame`.")
+        end
+    end
+
+end
+
 
 """
     ODE_simulator(
@@ -19,7 +70,7 @@
         kwargs...
     )
 
-Run the model as ODE system. 
+Run a model as ODE system. 
 This function is essentially a wrapper around `OrdinaryDiffEq.solve` with additional input and output processing.
 
 args:
@@ -70,6 +121,8 @@ function ODE_simulator(
     p_ind = gen_ind_params(p) # converts spc component to ind component
     link_params!(p_ind, param_links) # apply parameter 
 
+    preprocess_exposure_input!(p)
+
     u = statevars_init(p_ind)
 
     prob = ODEProblem(model, u, (0, p.glb.t_max), p_ind) # define the problem
@@ -86,18 +139,6 @@ function ODE_simulator(
     error("returntype $returntype not implemented")
 end
 
-mutable struct IBMConfig <: AbstractSimulatorConfig
-
-    init_global_statevars::Function
-    global_ode!::function
-    global_rules!::Function
-
-    individual_ode!::Function
-    individual_rules!::Function
-    init_individual_statevars::Function
-    gen__ind_params::Function
-
-end
 
 """
     IBM_simulator(

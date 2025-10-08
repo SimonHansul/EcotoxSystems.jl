@@ -10,6 +10,8 @@ using StaticArrays
 using StatsBase
 using Random
 using Base.Threads
+using Interpolations
+#using DocStringExtensions
 
 using RecipesBase
 

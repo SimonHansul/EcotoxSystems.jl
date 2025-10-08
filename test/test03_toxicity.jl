@@ -17,7 +17,8 @@ using Revise
 @time using EcotoxSystems
 
 import EcotoxSystems: exposure, relative_response
-
+ 
+# NOTE: this will currently fail, because we assume that glb.C_W is always called as a function
 @testset "Constant exposure" begin
 
     global p = EcotoxSystems.params()
@@ -84,8 +85,7 @@ import EcotoxSystems: exposure, relative_response
     end
 end
 
-
-
+p.glb.C_W = 
 
 using DataFrames 
 
@@ -97,6 +97,8 @@ exposure_profiles = DataFrame(
 
 @df exposure_profiles scatter(:t, :C_W_1)
 
+EcotoxSystems.preprocess_exposure_input!(p)
+
 using Interpolations
 
 xs = exposure_profiles.t
@@ -105,9 +107,10 @@ A = exposure_profiles[:,3]
 Interpolations.deduplicate_knots!(xs)
 
 linear_interpolator = linear_interpolation(xs, A);
-
-
 linear_interpolator(22.)
+
+linear_interpolator = linear_interpolation([0., Inf], [0., 0.])
+linear_interpolator(rand())
 
 let xvalues = 0:0.01:21
     plot!(xvalues, linear_interpolator.(xvalues))
