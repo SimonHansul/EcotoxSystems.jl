@@ -18,18 +18,7 @@ using Revise
 
 import EcotoxSystems: exposure, relative_response
 
-p = deepcopy(EcotoxSystems.defaultparams)
-p.glb.C_W = [0.]
-
-sim = exposure(
-    EcotoxSystems.ODE_simulator, 
-    p,
-    [0., 1., 2.]
-)
-
-p.glb.C_W
-
-@testset begin
+@testset "Constant exposure" begin
 
     global p = EcotoxSystems.params()
     
@@ -93,5 +82,45 @@ p.glb.C_W
         @test minimum(sims.y_R) .< 0.5
         @test minimum(sims[sims.pmoa.=="R",:].y_S) > 0.99 # no effect on growth for PMoA R
     end
+end
+
+
+
+
+using DataFrames 
+
+exposure_profiles = DataFrame(
+    treatment_id = repeat([1], 12),
+    t     = Vector{Float64}([0, 2, 5, 7, 7,    9,    11,      14,   14,   16,   19,   21]), 
+    C_W_1 = Vector{Float64}([0, 0, 0, 0, 0.1,  0.05, 0.025,   0.,   0.2,  0.1,  0.05,  0.025])
+)
+
+@df exposure_profiles scatter(:t, :C_W_1)
+
+using Interpolations
+
+xs = exposure_profiles.t
+A = exposure_profiles[:,3]
+
+Interpolations.deduplicate_knots!(xs)
+
+linear_interpolator = linear_interpolation(xs, A);
+
+
+linear_interpolator(22.)
+
+let xvalues = 0:0.01:21
+    plot!(xvalues, linear_interpolator.(xvalues))
+end
+
+
+
+
+@testset "Time-variable exposure" begin
+    
+    p.glb.C_W = 
+    exposure_simulator()
+    
+
 end
 

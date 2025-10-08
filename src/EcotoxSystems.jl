@@ -13,7 +13,7 @@ using Base.Threads
 
 using RecipesBase
 
-abstract type AbstractDEBIBM end
+abstract type AbstractIBM end
 
 include("utils.jl")
 
@@ -25,10 +25,11 @@ include("models/default/drcfuncts.jl")
 include("models/default/params.jl")
 include("models/default/derivatives.jl")
 include("models/default/statevars.jl")
+include("models/default/individuals.jl")
+include("models/default/traits.jl")
 
 # infrastructure to incorporate ODE-based model into an IBM framework
 
-include("individuals.jl")
 include("individualbasedmodel.jl")
 include("ibmschedules.jl")
 
@@ -40,7 +41,6 @@ export @replicates, replicates, treplicates, exposure
 # inferring traits from simulations - this is probably misplaced here and should go live somewhere else
 # atm we sill need it
 
-include("traits.jl")
 
 include("plotrecipes.jl")
 export lineplot, groupedlineplot, rugplot

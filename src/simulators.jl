@@ -86,6 +86,19 @@ function ODE_simulator(
     error("returntype $returntype not implemented")
 end
 
+mutable struct IBMConfig <: AbstractSimulatorConfig
+
+    init_global_statevars::Function
+    global_ode!::function
+    global_rules!::Function
+
+    individual_ode!::Function
+    individual_rules!::Function
+    init_individual_statevars::Function
+    gen__ind_params::Function
+
+end
+
 """
     IBM_simulator(
         p::ComponentVector; 
@@ -162,10 +175,10 @@ function IBM_simulator(
 end
 
 
-global_record_to_df(m::AbstractDEBIBM)::DataFrame = DataFrame(hcat(m.global_record...)', getcolnames(m))
+global_record_to_df(m::AbstractIBM)::DataFrame = DataFrame(hcat(m.global_record...)', getcolnames(m))
 
 function individual_record_to_df(
-    m::AbstractDEBIBM; 
+    m::AbstractIBM; 
     )::DataFrame
 
     cols = vcat(

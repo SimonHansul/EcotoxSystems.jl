@@ -16,7 +16,7 @@ Used to replace simple if-statements with a continuous function in ODE models.
 `y_left` and `y_right` are the function values left and right of the threshold `x_thr`.
 
 """
-@inline function sig(
+@inline function sigmoid_switch(
     x::Float64, 
     x_thr::Float64,
     y_left::Float64, 
@@ -30,8 +30,8 @@ end
 """
 Clip negative values at 0 as a continuous function, using `sig`.
 """
-@inline function clipneg(x::Float64)::Float64
-    return sig(x, 0., 0., x)
+@inline function clip_negative(x::Float64)::Float64
+    return sigmoid_switch(x, 0., 0., x)
 end
 
 # definition of the conditions for life stage transitions
@@ -51,15 +51,15 @@ end
 #end
 
 @inline function is_embryo(X_emb::Float64)::Float64
-    return sig(X_emb, 0., 0., 1.; beta = 100.)
+    return sigmoid_switch(X_emb, 0., 0., 1.; beta = 100.)
 end
 
 @inline function is_juvenile(X_emb::Float64, H_p::Float64, H::Float64)::Float64
-    return sig(X_emb, 0., 1., 0.; beta = 100.) * sig(H, H_p, 1., 0.)
+    return sigmoid_switch(X_emb, 0., 1., 0.; beta = 100.) * sigmoid_switch(H, H_p, 1., 0.)
 end
 
 @inline function is_adult(H_p::Float64, H::Float64)::Float64
-    return sig(H, H_p, 0., 1.)
+    return sigmoid_switch(H, H_p, 0., 1.)
 end
 
 @inline function determine_life_stage!(du::ComponentVector, u::ComponentVector, p::ComponentVector, t::Float64)::Nothing 
@@ -75,18 +75,26 @@ end
 
 DEBODE_callbacks = CallbackSet() # while life stages are defined through sigmoid functions, CB is empty 
 
-@inline function DEBODE_global!(du, u, p, t)::Nothing
+@inline function DEBODE_global!(
+    du, 
+    u, 
+    p, 
+    t
+    )::Nothing
+    
+    u.glb.C_W = p.glb.C_W(t)
     du.glb.X = p.glb.dX_in - p.glb.k_V * u.glb.X  
+    
     return nothing
 end
 
 @inline function minimal_TK(
     embryo::Float64,
-    KD::Float64, 
+    k_D::Float64, 
     C_W::Float64,
     D::Float64
     )::Float64
-    return (1-embryo) * KD * (C_W - D)
+    return (1-embryo) * k_D * (C_W - D)
 end
 
 """
@@ -232,7 +240,7 @@ end
     dJ::Float64
     )::Float64
 
-    return adult * clipneg(eta_AR * y_R * ((1 - kappa) * dA - dJ))  
+    return adult * clip_negative(eta_AR * y_R * ((1 - kappa) * dA - dJ))  
 
 end
 
@@ -243,7 +251,7 @@ end
     dJ::Float64
     )::Float64
 
-    return (1 - adult) * clipneg(((1 - kappa) * dA) - dJ) # maturiation flux
+    return (1 - adult) * clip_negative(((1 - kappa) * dA) - dJ) # maturiation flux
 
 end
 

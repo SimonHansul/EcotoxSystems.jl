@@ -3,7 +3,7 @@
 # this type should be generic enough for most applications, 
 # but if extensions are required, it is best to make use of the associated AbstractIBM type
 
-mutable struct IndividualBasedModel <: AbstractDEBIBM
+mutable struct IndividualBasedModel <: AbstractIBM
     global_ode!::Function
     global_rules!::Function
     init_global_statevars::Function
