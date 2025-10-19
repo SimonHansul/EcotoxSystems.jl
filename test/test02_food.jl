@@ -20,7 +20,13 @@
             p.glb.dX_in = dX_in
             p.glb.t_max = 56.
             p.spc.K_X = 12e3
-            sim_i = EcotoxSystems.ODE_simulator(p, reltol = 1e-10, alg = Tsit5())
+            @time sim_i = EcotoxSystems.ODE_simulator(
+                p, 
+                saveat = 1, 
+                returntype = EcotoxSystems.dataframe
+                );
+
+            @test nrow(sim_i) == 57
 
             # plot the trajectories
             @df sim_i plot!(plt, :t, :S, ylabel = "S", subplot = 1, leg = :outertopleft, label = "dX_in = $(dX_in)") 
@@ -39,6 +45,6 @@
 
     # checking that maximum size increases strictly monotonically with increasing food availability
     rankcor_size = combine(groupby(sim, :dX_in), :S => maximum) |> x -> corspearman(x.dX_in, x.S_maximum)
-
     @test rankcor_size == 1 
+    
 end
