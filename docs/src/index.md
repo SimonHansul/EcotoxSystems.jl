@@ -56,7 +56,7 @@ p.glb.dX_in = 10_000 # provide more food
 # adjusting species-level parameters
 
 p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf) # induce individual variability 
-p.spc.S_rel_crit = 0.66
+p.spc.W_S_rel_crit = 0.66
 p.spc.h_S = -log(0.5)
 
 sims = @replicates EcotoxSystems.IBM_simulator(p, showinfo = Inf) 10 # run replicated simulations

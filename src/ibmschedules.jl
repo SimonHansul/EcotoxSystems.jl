@@ -56,11 +56,11 @@ function individual_step!(a::AbstractDEBIndividual, m::AbstractDEBIBM)
 end
 
 """
-    Euler!(u::ComponentVector, du::ComponentVector, dt::Real)::Nothing
+    Euler!(u::CVOrParamStruct, du::CVOrParamStruct, dt::Real)::Nothing
 
 Apply Euler scheme to state variables.
 """
-function Euler!(u::ComponentVector, du::ComponentVector, dt::Real)::Nothing
+function Euler!(u::CVOrParamStruct, du::CVOrParamStruct, dt::Real)::Nothing
     u .+= du .* dt
     return nothing
 end

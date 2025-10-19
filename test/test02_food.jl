@@ -20,7 +20,7 @@
             p.glb.dX_in = dX_in
             p.glb.t_max = 56.
             p.spc.K_X = 12e3
-            sim_i = EcotoxSystems.ODE_simulator(p, reltol = 1e-10)
+            sim_i = EcotoxSystems.ODE_simulator(p, reltol = 1e-10, alg = Tsit5())
 
             # plot the trajectories
             @df sim_i plot!(plt, :t, :S, ylabel = "S", subplot = 1, leg = :outertopleft, label = "dX_in = $(dX_in)") 

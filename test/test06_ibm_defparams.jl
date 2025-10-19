@@ -101,7 +101,6 @@ end
     @test 250 < maximum(sim_ibm.spc.S) < 800
     @test 50 < maximum(sim_ibm.spc.H) < 200
 
-    
     # checking initial growth rate
     
     t0, N0 = sim_ibm.glb[1,[:t, :N]]

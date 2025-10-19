@@ -22,12 +22,12 @@ end
 @inline function death_by_loss_of_structure(
     S::Float64,
     S_max_hist::Float64,
-    S_rel_crit::Float64,
+    W_S_rel_crit::Float64,
     h_S::Float64,
     dt::Float64
     )::Bool
 
-    return ((S/S_max_hist) < S_rel_crit) && (rand() > exp(-h_S * dt))
+    return ((S/S_max_hist) < W_S_rel_crit) && (rand() > exp(-h_S * dt))
 
 end
 
@@ -93,7 +93,7 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
     # this is basically only a sanity check, and the actual starvation rules should be assessed on a species-by-species basis
     ind.S_max_hist = determine_S_max_hist(ind[:S], ind[:S_max_hist])
 
-    if death_by_loss_of_structure(ind[:S], ind[:S_max_hist], p[:ind][:S_rel_crit], p[:ind][:h_S], m.dt)
+    if death_by_loss_of_structure(ind[:S], ind[:S_max_hist], p[:ind][:W_S_rel_crit], p[:ind][:h_S], m.dt)
         ind.cause_of_death = 2.
     end
 
@@ -131,9 +131,9 @@ end
 
 @with_kw mutable struct DEBIndividual <: AbstractDEBIndividual
 
-    du::ComponentVector
-    u::ComponentVector
-    p::ComponentVector
+    du::CVOrParamStruct
+    u::CVOrParamStruct
+    p::CVOrParamStruct
 
     individual_ode!::Function # equation-based portion of the individual step
     individual_rules!::Function # rule-based portion of the individual step
@@ -142,11 +142,11 @@ end
 
     """
     DEBIndividual(
-            p::ComponentVector, 
-            global_statevars::ComponentVector;
+            p::CVOrParamStruct, 
+            global_statevars::CVOrParamStruct;
             id::Int = 1,
             cohort::Int = 0,
-            individual_ode! = DEBkiss_individual!,
+            individual_ode! = default_individual_ODE!,
             individual_rules! = default_individual_rules,
             init_individual_statevars = initialize_individual_statevars,
             )::DEBIndividual
@@ -157,11 +157,11 @@ end
     Keyword arguments are used to assure that rules and equations for individual behaviour are inherited correctly.
     """
     function DEBIndividual(
-        p::ComponentVector, 
-        global_statevars::ComponentVector;
+        p::CVOrParamStruct, 
+        global_statevars::CVOrParamStruct;
         id::Int = 1,
         cohort::Int = 0,
-        individual_ode! = DEBkiss_individual!,
+        individual_ode! = default_individual_ODE!,
         individual_rules! = default_individual_rules,
         init_individual_statevars = initialize_individual_statevars,
         gen_ind_params = generate_individual_params

@@ -15,13 +15,13 @@
     # only that we can access p.foo.x from within the individual step
 
     function foo_individual!(du, u, p, t)
-        EcotoxSystems.TKTD_mix_IA!(du, u, p, t)
-        EcotoxSystems.DEBkiss_physiology!(du, u, p, t)
+        EcotoxSystems.default_TKTD!(du, u, p, t)
+        EcotoxSystems.default_physiology!(du, u, p, t)
         du.ind.S *= p.foo.x
     end
 
     function foo!(du,u,p,t)
-        EcotoxSystems.DEBODE_global!(du, u, p, t)
+        EcotoxSystems.default_global_ODE!(du, u, p, t)
         foo_individual!(du, u, p, t)
     end
 
@@ -54,8 +54,8 @@ end
     # only that we can access p.foo.x from within the individual step
 
     function foo_individual!(du, u, p, t)
-        EcotoxSystems.TKTD_mix_IA!(du, u, p, t)
-        EcotoxSystems.DEBkiss_physiology!(du, u, p, t)
+        EcotoxSystems.default_TKTD!(du, u, p, t)
+        EcotoxSystems.default_physiology!(du, u, p, t)
         du.ind.S *= p.foo.x
     end
 

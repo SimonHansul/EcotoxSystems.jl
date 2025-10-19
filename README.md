@@ -114,7 +114,7 @@ Initial version.
 
 ### v0.1.2 
 
-- Changed the default individual rules to use `S_rel_hist` and `S_rel_crit`: If structural mass decreases by a critical relative amount, constant hazard rate kicks in.
+- Changed the default individual rules to use `S_rel_hist` and `W_S_rel_crit`: If structural mass decreases by a critical relative amount, constant hazard rate kicks in.
 - Default callbacks use `save_positions = (false,false)` => time-points of callbacks will not be additionaly saved
 
 ### v0.1.3

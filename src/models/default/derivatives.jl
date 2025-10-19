@@ -75,7 +75,7 @@ end
 
 DEBODE_callbacks = CallbackSet() # while life stages are defined through sigmoid functions, CB is empty 
 
-@inline function DEBODE_global!(du, u, p, t)::Nothing
+@inline function default_global_ODE!(du, u, p, t)::Nothing
     du.glb.X = p.glb.dX_in - p.glb.k_V * u.glb.X  
     return nothing
 end
@@ -90,11 +90,11 @@ end
 end
 
 """
-    function TKTD_mix_IA!(du, u, p, t)::Nothing
+    function default_TKTD!(du, u, p, t)::Nothing
 
 Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
 """
-@inline function TKTD_mix_IA!(du, u, p, t)::Nothing
+@inline function default_TKTD!(du, u, p, t)::Nothing
 
     @unpack glb, ind = u
 
@@ -332,18 +332,17 @@ end
 """
 Individual-level part of the DEB-ODE model with arbitrary number of stressors, assuming IA to compute combined effects.
 """
-@inline function DEBkiss_individual!(du, u, p, t)::Nothing
-    
-    TKTD_mix_IA!(du, u, p, t)
+@inline function default_individual_ODE!(du, u, p, t)::Nothing
+    default_TKTD!(du, u, p, t)
     DEBkiss_physiology!(du, u, p, t)
-
     return nothing
 end
 
 """
 DEB-ODE model with arbitrary number of stressors, assuming IA to compute combined effects. 
 """
-function DEBODE!(du, u, p, t)
-    DEBODE_global!(du, u, p, t)
-    DEBkiss_individual!(du, u, p, t)
+function default_ODE!(du, u, p, t)::Nothing
+    default_global_ODE!(du, u, p, t)
+    default_individual_ODE!(du, u, p, t)
+    return nothing
 end

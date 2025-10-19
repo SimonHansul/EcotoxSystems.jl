@@ -261,9 +261,9 @@ Upon initialization of a parameter structure, `agn` has the value `nothing`. Use
 To run the base model, one can start by initializing the default parameters. <br>
 
 ```Julia
-using MechanisticEffectModels.DEBODE
+using MechanisticEffectModels.default_ODE
 p = Params()
-sim = DEBODE.simulator(p)
+sim = default_ODE.simulator(p)
 ```
 
 This returns a data frame with all state variables over time. <br>
@@ -272,13 +272,13 @@ The code snippet below simulates five nutrient input rates (`Xdot_in`) and store
 in a single data frame.
 
 ``` Julia
-using MechanisticEffectModels.DEBODE, DataFrames
+using MechanisticEffectModels.default_ODE, DataFrames
 p = Params() #
 sim = DataFrame()
 let Tvec = [17.5, 20., 22.5] # simulate three ambient temperatures
     for T in Tvec
         p.glb.T = 273.15 + T # succesively lower the food input rate
-        sim_i = DEBODE.simulator(p) # generate the predidction
+        sim_i = default_ODE.simulator(p) # generate the predidction
         sim_i[!,:T] .= T
         append!(sim, sim_i) #
     end
@@ -293,7 +293,7 @@ The output is visualized in Figure 1.
 ### Example simulations of the ABM
 
 To take this to the population-level, in principle only need to change the simulator. 
-Instead of `DEBODE.simulator`, we call `DEBABM.simulator`. <br>
+Instead of `default_ODE.simulator`, we call `DEBABM.simulator`. <br>
 
 For simulations of population dynamics we will tpyically want to include individual variability, which is done through the zoom factor `Z` (see model description for details). <br>
 In addition, we might want to adjust some global parameters (longer simulation timespan and higher food input rate), by modify the `glb`-entries. <br>

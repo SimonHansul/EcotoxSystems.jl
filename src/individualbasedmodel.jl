@@ -8,9 +8,9 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
     global_rules!::Function
     init_global_statevars::Function
     individuals::Vector{DEBIndividual}
-    du::ComponentVector
-    u::ComponentVector
-    p::ComponentVector
+    du::CVOrParamStruct
+    u::CVOrParamStruct
+    p::CVOrParamStruct
     t::Real
     dt::Real
     idcount::Int
@@ -22,11 +22,11 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
 
     """
         IndividualBasedModel(
-            p::ComponentVector; 
-            global_ode! = DEBODE_global!,
+            p::CVOrParamStruct; 
+            global_ode! = default_global_ODE!,
             global_rules! = default_global_rules!,
             init_global_statevars = initialize_global_statevars,
-            individual_ode! = DEBkiss_individual!,
+            individual_ode! = default_individual_ODE!,
             individual_rules! = default_individual_rules!,
             init_individual_statevars = initialize_individual_statevars,
             dt = 1/24, 
@@ -53,12 +53,12 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
         - `record_individuals`: Whether to record states of each individual 
     """
     function IndividualBasedModel(
-        p::ComponentVector; 
+        p::CVOrParamStruct; 
         init_global_statevars = initialize_global_statevars,
-        global_ode! = DEBODE_global!,
+        global_ode! = default_global_ODE!,
         global_rules! = default_global_rules!,
 
-        individual_ode! = DEBkiss_individual!,
+        individual_ode! = default_individual_ODE!,
         individual_rules! = default_individual_rules!,
         init_individual_statevars = initialize_individual_statevars,
         gen_ind_params = generate_individual_params,

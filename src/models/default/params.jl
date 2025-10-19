@@ -41,13 +41,13 @@ species_params = ComponentVector(
     KD = Float64[0. 0. 0. 0.;], # KD - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
     B = Float64[2. 2. 2. 2.;], # slope parameters
     E = Float64[1e10 1e10 1e10 167;], # sensitivity parameters (thresholds)
-    KD_h = Float64[0.;], # KD - value for GUTS-Sd module (1 row = 1 stressor)
+    KD_h = Float64[0.;], # KD - value for GUTS-SD module (1 row = 1 stressor)
     E_h = Float64[1e10;], # sensitivity parameter (threshold) for GUTS-SD module
     B_h = Float64[2.;], # slope parameter for GUTS-SD module 
     # these are curently only used in an individual-based context, but could find application in the pure-ODE implementation 
     # for example by triggering emptying of the reproduction buffer through callbacks
-    S_rel_crit = 0.66,  # relative amount of structure which can be lost before hazard rate kicks in
-    h_S = 0.7, # starvation hazard rate caused be shrinking below S_rel_crit
+    W_S_rel_crit = 0.66,  # relative amount of structure which can be lost before hazard rate kicks in
+    h_S = 0.7, # starvation hazard rate caused be shrinking below W_S_rel_crit
     a_max = Truncated(Normal(60, 6), 0, Inf), # maximum life span 
     tau_R = 2.0 # reproduction interval
 )
@@ -96,7 +96,7 @@ getval(x::Distribution) = rand(x)
 getval(x::Any) = x
 
 # propagate_zoom applies the zoomfactor to the parameters which are indicated in propagate_zoom, with the appropriate scaling factor
-propagate_zoom(ind::ComponentVector) = begin
+propagate_zoom(ind::CVOrParamStruct) = begin
     zprop = ind[keys(ind.propagate_zoom)] .* ind.Z .^ ind.propagate_zoom
     ind = ComponentVector(
         ind;
@@ -105,7 +105,7 @@ propagate_zoom(ind::ComponentVector) = begin
 end
 
 """
-    generate_individual_params(p::ComponentVector; kwargs...)
+    generate_individual_params(p::CVOrParamStruct; kwargs...)
 
     Generate individual-specific parameter set from species-specific parameter set. 
 If a parameter entry is a distribution, a random sample is taken. 
@@ -113,7 +113,7 @@ If a parameter entry is a distribution, a random sample is taken.
 This also works for Vectors of distributions. 
 The kwargs need to be supplemented with additional components if there are more than just a global and an individual-level component.
 """
-function generate_individual_params(p::ComponentVector; kwargs...)::ComponentVector
+function generate_individual_params(p::CVOrParamStruct; kwargs...)::CVOrParamStruct
     ind = getval.(p.spc) |> propagate_zoom
     return ComponentVector(
         glb = p.glb, 
@@ -123,7 +123,7 @@ function generate_individual_params(p::ComponentVector; kwargs...)::ComponentVec
 end
 
 """
-    link_params!(p::ComponentVector, links::NamedTuple = (spc = linkfun,))::Nothing 
+    link_params!(p::CVOrParamStruct, links::NamedTuple = (spc = linkfun,))::Nothing 
 
 Apply functions to link parameters. <br>
 
@@ -156,7 +156,7 @@ and we need to update the link for each simulated individual. <br>
 sim = ODE_simulator(p, param_links = (ind = link_ind_params!,))
 ```
 """
-link_params!(p::ComponentVector, links::NamedTuple = (spc = link_ind_params!,))::Nothing = begin
+link_params!(p::CVOrParamStruct, links::NamedTuple = (spc = link_ind_params!,))::Nothing = begin
 
     for (component,linkfun!) in pairs(links)
         linkfun!(p[component])
@@ -165,4 +165,4 @@ link_params!(p::ComponentVector, links::NamedTuple = (spc = link_ind_params!,)):
     return nothing
 end
 
-link_params!(p::ComponentVector, links::Nothing)::Nothing = nothing
+link_params!(p::CVOrParamStruct, links::Nothing)::Nothing = nothing

@@ -15,7 +15,7 @@ function extract_colnames(c::AbstractVector, k::Symbol)
     return [Symbol("$(k)_$(i)") for i in 1:length(c)]
 end
 
-function extract_colnames(u::ComponentVector)
+function extract_colnames(u::CVOrParamStruct)
     colnames = []
     for k in keys(u)
         push!(colnames, extract_colnames(u[k], k))

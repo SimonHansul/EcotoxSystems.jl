@@ -21,8 +21,8 @@ end;
        some more, small improvement (43k -> 40k)
    same with f_X
        allocations down to 38k...(little less than 1MB)
-   changed TKTD_mix_IA to apply product to y_j in inner loop
-  in TKTD_mix_IA, removed call to reduce in favor of updating y_j and h_z within the loop
+   changed default_TKTD to apply product to y_j in inner loop
+  in default_TKTD, removed call to reduce in favor of updating y_j and h_z within the loop
        allocations down from 50k to 5k! (≈ 300 kB)
        runtime down to 1-2 ms 
        no more suspicious in ODE part for now
@@ -31,6 +31,8 @@ end;
 =#
 
 @time sim = EcotoxSystems.ODE_simulator(p);
+using BenchmarkTools; 
+@benchmark EcotoxSystems.ODE_simulator(p)
 #VSCodeServer.@profview_allocs [EcotoxSystems.ODE_simulator(p) for _ in 1:100];
 
 #=

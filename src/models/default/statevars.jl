@@ -13,12 +13,11 @@ constrmvec(x::AbstractVector; fillval::Float64 = 0.) = MVector{length(x),Float64
 constrmmat(x::AbstractMatrix; fillval::Float64 = 0.) = MMatrix{size(x)...,Float64}(fill(fillval, size(x)))
 constrmmat(x::AbstractMatrix, dims::Int64; fillval::Float64 = 0.) = MMatrix{size(x)[dims],1,Float64}(fill(fillval, size(x)[dims]))
 
-
 """
     initialize_individual_statevars(
-        p::ComponentVector; 
+        p::CVOrParamStruct; 
         id = 1., 
-        cohort = 0.)::ComponentVector
+        cohort = 0.)::CVOrParamStruct
 
 This function defines the individual-level state variables and their initial values for the default model. 
 
@@ -80,14 +79,14 @@ function initialize_individual_statevars(
         S = p.ind.X_emb_int * X_EMB_INT_REL, # initial structure is a small fraction of initial reserve // mass of vitellus
         H = 0., # maturity
         R = 0., # reproduction buffer
+        I = 0., # cumulative ingestion
+        A = 0., # cumulative assimilation
+        M = 0., # cumulative somatic maintenance
+        J = 0., # cumulative maturity maintenance 
         f_X = 1., # scaled functional response 
-        I_emb = 0., # ingestion from vitellus
-        I_p = 0., # ingestion from external food resource
-        I = 0., # total ingestion
-        A = 0., # assimilation
-        M = 0., # somatic maintenance
-        J = 0., # maturity maintenance 
-        
+        I_emb = 0., # cumulative ingestion from vitellus
+        I_p = 0., # cumulative ingestion from external food resource
+
         D_z = constrmmat(p.ind.KD), # sublethal damage per stressor and PMoA
         D_h = constrmvec(p.ind.KD_h), # lethal damage per stressor
 
@@ -114,7 +113,7 @@ end
 
 
 """
-    initialize_global_statevars(p::ComponentVector)
+    initialize_global_statevars(p::CVOrParamStruct)
 
 Function to initialize global state variables. 
 In the default model, these are the resource abundance `X`, 
@@ -122,7 +121,7 @@ external chemical stressor concentration `C_W` and population size `N`.
 
 Global state variables can be extended, modified or replaced in the same way as individual-level state variables. 
 """
-function initialize_global_statevars(p::ComponentVector)::ComponentVector
+function initialize_global_statevars(p::CVOrParamStruct)::CVOrParamStruct
     ComponentArray( # initial states
         X = p.glb.dX_in, # initial resource abundance equal to influx rate
         C_W = p.glb.C_W, # external stressor concentrations
@@ -131,11 +130,11 @@ function initialize_global_statevars(p::ComponentVector)::ComponentVector
 end
 
 """
-    initialize_statevars(p::ComponentVector)::ComponentVector
+    initialize_statevars(p::CVOrParamStruct)::CVOrParamStruct
 
 For initialization of ODE simulator, initialize the component vector of state variables, `u`, based on common oaraeter collection `p`.
 """
-function initialize_statevars(p::ComponentVector)::ComponentVector
+function initialize_statevars(p::CVOrParamStruct)::CVOrParamStruct
     return ComponentVector(     
         glb = initialize_global_statevars(p),
         ind = initialize_individual_statevars(p)
