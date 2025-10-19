@@ -20,7 +20,7 @@ abstract type AbstractIBM end
 include("utils.jl")
 
 #
-## definition of the default model
+## pre-defined models
 #
 
 include("models/default/drcfuncts.jl")
@@ -36,14 +36,10 @@ include("individualbasedmodel.jl")
 include("ibmschedules.jl")
 
 # functions to simulate models
-
 include("simulators.jl")
 export @replicates, replicates, treplicates, exposure
 
-# inferring traits from simulations - this is probably misplaced here and should go live somewhere else
-# atm we sill need it
-
-
+# useful recipes
 include("plotrecipes.jl")
 export lineplot, groupedlineplot, rugplot
 
