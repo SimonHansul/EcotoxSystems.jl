@@ -13,9 +13,10 @@ using Base.Threads
 
 using RecipesBase
 
-abstract type AbstractDEBIBM end
+abstract type AbstractIBM end
 abstract type AbstractParamStruct end
-const CVOrParamStruct = Union{ComponentVector,AbstractParamStruct} # make it possible to use component vectors or custom structs to store parameters
+const RealOrDist = Union{Real,Distribution}
+const CVOrStruct = Union{ComponentVector,AbstractParamStruct} 
 
 include("utils.jl")
 include("drcfuncts.jl")

@@ -15,9 +15,9 @@ constrmmat(x::AbstractMatrix, dims::Int64; fillval::Float64 = 0.) = MMatrix{size
 
 """
     initialize_individual_statevars(
-        p::CVOrParamStruct; 
+        p::ComponentVector; 
         id = 1., 
-        cohort = 0.)::CVOrParamStruct
+        cohort = 0.)::ComponentVector
 
 This function defines the individual-level state variables and their initial values for the default model. 
 
@@ -75,8 +75,8 @@ function initialize_individual_statevars(
         juvenile = 0.,
         adult = 0.,
 
-        X_emb = p.ind.X_emb_int, # initial mass of vitellus
-        S = p.ind.X_emb_int * X_EMB_INT_REL, # initial structure is a small fraction of initial reserve // mass of vitellus
+        X_emb = p.spc.X_emb_int, # initial mass of vitellus
+        S = p.spc.X_emb_int * X_EMB_INT_REL, # initial structure is a small fraction of initial reserve // mass of vitellus
         H = 0., # maturity
         R = 0., # reproduction buffer
         I = 0., # cumulative ingestion
@@ -87,13 +87,13 @@ function initialize_individual_statevars(
         I_emb = 0., # cumulative ingestion from vitellus
         I_p = 0., # cumulative ingestion from external food resource
 
-        D_z = constrmmat(p.ind.KD), # sublethal damage per stressor and PMoA
-        D_h = constrmvec(p.ind.KD_h), # lethal damage per stressor
+        D_z = constrmmat(p.spc.KD), # sublethal damage per stressor and PMoA
+        D_h = constrmvec(p.spc.KD_h), # lethal damage per stressor
 
         y_T = 1.,
 
-        y_z = constrmmat(p.ind.KD), # relative response per stressor and pmoa
-        #y_j = constrmmat(p.ind.KD, 2, fillval = 1), # relative response per pmoa
+        y_z = constrmmat(p.spc.KD), # relative response per stressor and pmoa
+        #y_j = constrmmat(p.spc.KD, 2, fillval = 1), # relative response per pmoa
         y_j = [0. 0. 0. 0.],
         h_z = 0., # hazard rate caused by chemical stressors
         S_z = 1., # chemical-related survival probability
@@ -101,7 +101,7 @@ function initialize_individual_statevars(
         # these are curently only needed in the IBM version, 
         # but may find application in the pure-ODE implementation 
 
-        S_max_hist = p.ind.X_emb_int * X_EMB_INT_REL, # initial reference structure
+        S_max_hist = p.spc.X_emb_int * X_EMB_INT_REL, # initial reference structure
         id = id, 
         cohort = cohort,
         age = 0.,
@@ -113,7 +113,7 @@ end
 
 
 """
-    initialize_global_statevars(p::CVOrParamStruct)
+    initialize_global_statevars(p::ComponentVector)
 
 Function to initialize global state variables. 
 In the default model, these are the resource abundance `X`, 
@@ -121,7 +121,7 @@ external chemical stressor concentration `C_W` and population size `N`.
 
 Global state variables can be extended, modified or replaced in the same way as individual-level state variables. 
 """
-function initialize_global_statevars(p::CVOrParamStruct)::CVOrParamStruct
+function initialize_global_statevars(p::ComponentVector)::ComponentVector
     ComponentArray( # initial states
         X = p.glb.dX_in, # initial resource abundance equal to influx rate
         C_W = p.glb.C_W, # external stressor concentrations
@@ -130,11 +130,11 @@ function initialize_global_statevars(p::CVOrParamStruct)::CVOrParamStruct
 end
 
 """
-    initialize_statevars(p::CVOrParamStruct)::CVOrParamStruct
+    initialize_statevars(p::ComponentVector)::ComponentVector
 
 For initialization of ODE simulator, initialize the component vector of state variables, `u`, based on common oaraeter collection `p`.
 """
-function initialize_statevars(p::CVOrParamStruct)::CVOrParamStruct
+function initialize_statevars(p::ComponentVector)::ComponentVector
     return ComponentVector(     
         glb = initialize_global_statevars(p),
         ind = initialize_individual_statevars(p)

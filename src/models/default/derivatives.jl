@@ -36,18 +36,18 @@ end
 
 # definition of the conditions for life stage transitions
 
-#condition_juvenile(u, t, integrator) = u.ind.X_emb # transition to juvenile when X_emb hits 0
+#condition_juvenile(u, t, integrator) = u.spc.X_emb # transition to juvenile when X_emb hits 0
 #function effect_juvenile!(integrator) 
-#    integrator.u.ind.embryo = 0.
-#    integrator.u.ind.juvenile = 1.
-#    integrator.u.ind.adult = 0.
+#    integrator.u.spc.embryo = 0.
+#    integrator.u.spc.juvenile = 1.
+#    integrator.u.spc.adult = 0.
 #end
 # 
-#condition_adult(u, t, integrator) = integrator.p.ind.H_p - u.ind.H # condition to adult when H reaches H_p
+#condition_adult(u, t, integrator) = integrator.p.spc.H_p - u.spc.H # condition to adult when H reaches H_p
 #function effect_adult!(integrator) 
-#    integrator.u.ind.embryo = 0.
-#    integrator.u.ind.juvenile = 0.
-#    integrator.u.ind.adult = 1.
+#    integrator.u.spc.embryo = 0.
+#    integrator.u.spc.juvenile = 0.
+#    integrator.u.spc.adult = 1.
 #end
 
 @inline function is_embryo(X_emb::Real)::Real
@@ -101,27 +101,27 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
 
     # scaled damage dynamics based on the minimal model
     
-    ind.y_j .= 1.0 # reset relative responses 
-    ind.h_z = 0.0 # reset GUTS-SD hazard rate
+    spc.y_j .= 1.0 # reset relative responses 
+    spc.h_z = 0.0 # reset GUTS-SD hazard rate
 
     for z in eachindex(glb.C_W) # for every chemical
-        for j in eachindex(ind.y_j) # for every PMoA
+        for j in eachindex(spc.y_j) # for every PMoA
             # calculate change in damage
-            du.ind.D_z[z,j] = minimal_TK(ind.embryo, p.ind.KD[z,j], glb.C_W[z], ind.D_z[z,j]) #(1 - ind.embryo) * p.ind.KD[z, j] * (glb.C_W[z] - ind.D_z[z, j])
+            du.spc.D_z[z,j] = minimal_TK(spc.embryo, p.spc.KD[z,j], glb.C_W[z], spc.D_z[z,j]) #(1 - spc.embryo) * p.spc.KD[z, j] * (glb.C_W[z] - spc.D_z[z, j])
             # update relative response with respect to PMoA j
             if j != 2 # PMoAs with decreasing response
-                ind.y_j[j] *= LL2(ind.D_z[z,j], p.ind.E[z,j], p.ind.B[z,j])
+                spc.y_j[j] *= LL2(spc.D_z[z,j], p.spc.E[z,j], p.spc.B[z,j])
             else # PMoAs with increasing response
-                ind.y_j[j] *= LL2pos(ind.D_z[z,j], p.ind.E[z,j], p.ind.B[z,j])
+                spc.y_j[j] *= LL2pos(spc.D_z[z,j], p.spc.E[z,j], p.spc.B[z,j])
             end
         end
         # calculate change in damage for lethal effects
-        du.ind.D_h[z] = (1 - ind.embryo) * p.ind.KD_h[z] * (glb.C_W[z] - ind.D_h[z])
+        du.spc.D_h[z] = (1 - spc.embryo) * p.spc.KD_h[z] * (glb.C_W[z] - spc.D_h[z])
         # update hazard rate
-        ind.h_z += LL2GUTS(ind.D_h[z], p.ind.E_h[z], p.ind.B_h[z])
+        spc.h_z += LL2GUTS(spc.D_h[z], p.spc.E_h[z], p.spc.B_h[z])
     end
 
-    du.ind.S_z = -ind.h_z * ind.S_z # survival probability according to GUTS-RED-SD
+    du.spc.S_z = -spc.h_z * spc.S_z # survival probability according to GUTS-RED-SD
     
     return nothing
 end
@@ -295,19 +295,19 @@ function default_physiology!(du, u, p, t)::Nothing
     @unpack glb, ind = u
 
     determine_life_stage!(du.ind, ind, p.ind, t)
-    ind.y_T = y_T(p.ind.T_A, p.ind.T_ref, p.glb.T) # temperature correction
-    ind.f_X = f_X(glb.X, p.glb.V_patch, p.ind.K_X) # ingestion rates and feedback with resource pools    
-    dI_emb = dI_embryo(ind.embryo, ind.S, p.ind.dI_max_emb, ind.y_T) # resource uptake for embryos
-    dI_all = dI(ind.embryo, ind.f_X, p.ind.dI_max, ind.S, ind.y_T) # resource uptake after birth    
-    du.ind.I = dI_emb + dI_all # current resource uptake
+    spc.y_T = y_T(p.spc.T_A, p.spc.T_ref, p.glb.T) # temperature correction
+    spc.f_X = f_X(glb.X, p.glb.V_patch, p.spc.K_X) # ingestion rates and feedback with resource pools    
+    dI_emb = dI_embryo(spc.embryo, spc.S, p.spc.dI_max_emb, spc.y_T) # resource uptake for embryos
+    dI_all = dI(spc.embryo, spc.f_X, p.spc.dI_max, spc.S, spc.y_T) # resource uptake after birth    
+    du.spc.I = dI_emb + dI_all # current resource uptake
     du.glb.X -= dI_all  # change in external resource abundance
-    du.ind.X_emb = -dI_emb  # change in vitellus (yolk)
-    du.ind.A = dA(du.ind.I, p.ind.eta_IA, ind.y_j[3]) # assimilation rate
-    du.ind.M = dM(ind.S, p.ind.k_M, ind.y_j[2], ind.y_T) # somatic maintenance rate
-    du.ind.J = dJ(ind.H, p.ind.k_J, ind.y_j[2], ind.y_T) # maturity maintenance rate
-    du.ind.S = dS(p.ind.kappa, du.ind.A, du.ind.M, p.ind.eta_SA, ind.y_j[1], p.ind.eta_AS)
-    du.ind.H = dH(ind.adult, p.ind.kappa, du.ind.A, du.ind.J) # maturation rate
-    du.ind.R = dR(ind.adult, p.ind.eta_AR, ind.y_j[4], p.ind.kappa, du.ind.A, du.ind.J) # reproduction rate
+    du.spc.X_emb = -dI_emb  # change in vitellus (yolk)
+    du.spc.A = dA(du.spc.I, p.spc.eta_IA, spc.y_j[3]) # assimilation rate
+    du.spc.M = dM(spc.S, p.spc.k_M, spc.y_j[2], spc.y_T) # somatic maintenance rate
+    du.spc.J = dJ(spc.H, p.spc.k_J, spc.y_j[2], spc.y_T) # maturity maintenance rate
+    du.spc.S = dS(p.spc.kappa, du.spc.A, du.spc.M, p.spc.eta_SA, spc.y_j[1], p.spc.eta_AS)
+    du.spc.H = dH(spc.adult, p.spc.kappa, du.spc.A, du.spc.J) # maturation rate
+    du.spc.R = dR(spc.adult, p.spc.eta_AR, spc.y_j[4], p.spc.kappa, du.spc.A, du.spc.J) # reproduction rate
 
     return nothing
 end

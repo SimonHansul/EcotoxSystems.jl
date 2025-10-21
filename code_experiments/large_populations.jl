@@ -23,8 +23,8 @@ end
 # modification of the individual-ODE without TK
 function individual_noTK!(du, u, p, t)::Nothing
     
-    @. u.ind.y_j = 1.
-    u.ind.h_z = 0.
+    @. u.spc.y_j = 1.
+    u.spc.h_z = 0.
     
     DEBkiss!(du, u, p, t)
     

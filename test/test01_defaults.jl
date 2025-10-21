@@ -9,7 +9,7 @@
     @test isapprox(maximum(sim.S), EcotoxSystems.calc_S_max(p.spc), rtol = 0.1)
 end;
 
-#@time sim = EcotoxSystems.ODE_simulator(p; alg = Rosenbrock23());
+
 #using BenchmarkTools; 
 #@benchmark EcotoxSystems.ODE_simulator(p; alg = Tsit5())
 #VSCodeServer.@profview_allocs [EcotoxSystems.ODE_simulator(p) for _ in 1:100];

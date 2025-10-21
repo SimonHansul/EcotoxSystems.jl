@@ -3,14 +3,14 @@
 # this type should be generic enough for most applications, 
 # but if extensions are required, it is best to make use of the associated AbstractIBM type
 
-mutable struct IndividualBasedModel <: AbstractDEBIBM
+mutable struct IndividualBasedModel <: AbstractIBM
     global_ode!::Function
     global_rules!::Function
     init_global_statevars::Function
-    individuals::Vector{DEBIndividual}
-    du::CVOrParamStruct
-    u::CVOrParamStruct
-    p::CVOrParamStruct
+    individuals::Vector{Individual}
+    du::ComponentVector
+    u::ComponentVector
+    p::ComponentVector
     t::Real
     dt::Real
     idcount::Int
@@ -22,7 +22,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
 
     """
         IndividualBasedModel(
-            p::CVOrParamStruct; 
+            p::ComponentVector; 
             global_ode! = default_global_ODE!,
             global_rules! = default_global_rules!,
             init_global_statevars = initialize_global_statevars,
@@ -53,7 +53,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
         - `record_individuals`: Whether to record states of each individual 
     """
     function IndividualBasedModel(
-        p::CVOrParamStruct; 
+        p::ComponentVector; 
         init_global_statevars = initialize_global_statevars,
         global_ode! = default_global_ODE!,
         global_rules! = default_global_rules!,
@@ -71,7 +71,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
         m = new()
         m.global_ode! = global_ode!
         m.global_rules! = global_rules!
-        m.individuals = Vector{DEBIndividual}(undef, Int(p.glb.N0))
+        m.individuals = Vector{Individual}(undef, Int(p.glb.N0))
         
         # setting up global states and individuals
         
@@ -91,7 +91,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
 
         for i in 1:Int(p.glb.N0)
             m.idcount += 1
-            m.individuals[i] = DEBIndividual(
+            m.individuals[i] = Individual(
                 p, 
                 m.u.glb;
 

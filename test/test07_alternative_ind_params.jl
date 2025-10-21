@@ -17,7 +17,7 @@
     function foo_individual!(du, u, p, t)
         EcotoxSystems.default_TKTD!(du, u, p, t)
         EcotoxSystems.default_physiology!(du, u, p, t)
-        du.ind.S *= p.foo.x
+        du.spc.S *= p.foo.x
     end
 
     function foo!(du,u,p,t)
@@ -56,7 +56,7 @@ end
     function foo_individual!(du, u, p, t)
         EcotoxSystems.default_TKTD!(du, u, p, t)
         EcotoxSystems.default_physiology!(du, u, p, t)
-        du.ind.S *= p.foo.x
+        du.spc.S *= p.foo.x
     end
 
     gen_ind_params(p) = EcotoxSystems.generate_individual_params(p; foo = p.foo)

@@ -1,11 +1,11 @@
 # utils.jl
 # general utility functions, e.g. for i/o processing
 
-reformat_labels(labels::Vector{String}) = replace.(labels, "glb." => "", "ind." => "", "[" => "_", "]"=>"", ","=>"_") 
+reformat_labels(labels::Vector{String}) = replace.(labels, "glb." => "", "spc." => "", "[" => "_", "]"=>"", ","=>"_") 
 
 getcolnames(sol::O) where O <: ODESolution = getcolnames(sol.u)
 getcolnames(record::Vector{CV}) where CV <: ComponentVector = ComponentArrays.labels(record[1]) |> reformat_labels |> x-> vcat("t", x)
-getcolnames(m::AbstractDEBIBM) = ComponentArrays.labels(m.global_record[1]) |> reformat_labels
+getcolnames(m::AbstractIBM) = ComponentArrays.labels(m.global_record[1]) |> reformat_labels
 
 function extract_colnames(c::R, k::Symbol) where R <: Real
     return k
@@ -15,7 +15,7 @@ function extract_colnames(c::AbstractVector, k::Symbol)
     return [Symbol("$(k)_$(i)") for i in 1:length(c)]
 end
 
-function extract_colnames(u::CVOrParamStruct)
+function extract_colnames(u::ComponentVector)
     colnames = []
     for k in keys(u)
         push!(colnames, extract_colnames(u[k], k))

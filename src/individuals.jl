@@ -49,7 +49,7 @@ end
 end
 
 """
-    default_individual_rules(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
+    default_individual_rules(a::AbstractDEBIndividual, m::AbstractIBM)::Nothing
 
 Defines the default rule-based portion for DEBIndividuals. <br>
 
@@ -59,13 +59,13 @@ A crude rule for starvation mortality is implemented, applying a constant hazard
 
 Reproduction is assumed to occur in fixed time intervals, according to `spc.tau_R`.
 """
-function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM)::Nothing
+function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractIBM)::Nothing
     
     @unpack glb,ind = a.u
     du = a.du
     p = a.p
 
-    ind.age += m.dt 
+    spc.age += m.dt 
 
     #### life-stage transitions
     # here, we re-use the continuous callback functions defined in EcotoxSystems
@@ -86,15 +86,15 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
     # individuals die when they exceed their maximum age a_max
     # a_max is subject to individual variability
     if death_by_aging(ind[:age], p[:ind][:a_max])
-        ind.cause_of_death = 1.
+        spc.cause_of_death = 1.
     end
     
     # for starvation mortality, currently only a limit is set on the amount of mass that can be lost
     # this is basically only a sanity check, and the actual starvation rules should be assessed on a species-by-species basis
-    ind.S_max_hist = determine_S_max_hist(ind[:S], ind[:S_max_hist])
+    spc.S_max_hist = determine_S_max_hist(ind[:S], ind[:S_max_hist])
 
     if death_by_loss_of_structure(ind[:S], ind[:S_max_hist], p[:ind][:W_S_rel_crit], p[:ind][:h_S], m.dt)
-        ind.cause_of_death = 2.
+        spc.cause_of_death = 2.
     end
 
     # reproduction, assuming a constant reproduction period
@@ -105,35 +105,35 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
         # based on the reproduction buffer and the dry mass of an egg
         for _ in 1:calc_num_offspring(ind[:R], p[:ind][:X_emb_int])
             m.idcount += 1 # increment individual counter
-            push!(m.individuals, DEBIndividual( # create new individual and push to individuals vector
+            push!(m.individuals, Individual( # create new individual and push to individuals vector
                 m.p, 
                 m.u.glb; 
                 id = m.idcount, 
-                cohort = Int(ind.cohort + 1),
+                cohort = Int(spc.cohort + 1),
                 individual_ode! = a.individual_ode!,
                 individual_rules! = a.individual_rules!,
                 init_individual_statevars = a.init_individual_statevars,
                 gen_ind_params = a.generate_individual_params,
                 )
             )
-            ind.R -= p[:ind][:X_emb_int] # decrease reproduction buffer
-            ind.cum_repro += 1 # keep track of cumulative reproduction of the mother individual
+            spc.R -= p[:ind][:X_emb_int] # decrease reproduction buffer
+            spc.cum_repro += 1 # keep track of cumulative reproduction of the mother individual
         end
-        ind.time_since_last_repro = 0. # reset reproduction period
+        spc.time_since_last_repro = 0. # reset reproduction period
     # if reproduction period has not been exceeded,
     else
-        ind.time_since_last_repro += m.dt # track reproduction period
+        spc.time_since_last_repro += m.dt # track reproduction period
     end
 
     return nothing
 end
 
 
-@with_kw mutable struct DEBIndividual <: AbstractDEBIndividual
+@with_kw mutable struct Individual <: AbstractDEBIndividual
 
-    du::CVOrParamStruct
-    u::CVOrParamStruct
-    p::CVOrParamStruct
+    du::ComponentVector
+    u::ComponentVector
+    p::ComponentVector
 
     individual_ode!::Function # equation-based portion of the individual step
     individual_rules!::Function # rule-based portion of the individual step
@@ -141,24 +141,24 @@ end
     generate_individual_params::Function # function to initialize individual parameters
 
     """
-    DEBIndividual(
-            p::CVOrParamStruct, 
-            global_statevars::CVOrParamStruct;
+    Individual(
+            p::ComponentVector, 
+            global_statevars::ComponentVector;
             id::Int = 1,
             cohort::Int = 0,
             individual_ode! = default_individual_ODE!,
             individual_rules! = default_individual_rules,
             init_individual_statevars = initialize_individual_statevars,
-            )::DEBIndividual
+            )::Individual
 
     Initialization of an individual based on parameters `p` 
     and global state `global_statevars`. 
 
     Keyword arguments are used to assure that rules and equations for individual behaviour are inherited correctly.
     """
-    function DEBIndividual(
-        p::CVOrParamStruct, 
-        global_statevars::CVOrParamStruct;
+    function Individual(
+        p::ComponentVector, 
+        global_statevars::ComponentVector;
         id::Int = 1,
         cohort::Int = 0,
         individual_ode! = default_individual_ODE!,

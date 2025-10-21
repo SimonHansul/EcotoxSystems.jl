@@ -22,8 +22,8 @@ import EcotoxSystems: default_individual_rules!
 function juvenile_removal!(a, m)
     default_individual_rules!(a, m)
 
-    if (a.u.ind.id>1)&&(isapprox(0, m.t%5, atol = m.dt))
-        a.u.ind.cause_of_death = 3.
+    if (a.u.spc.id>1)&&(isapprox(0, m.t%5, atol = m.dt))
+        a.u.spc.cause_of_death = 3.
     end
 end
 
@@ -86,7 +86,7 @@ import EcotoxSystems: combine_outputs, add_idcol
 
 function param_sweep(
     simulator::Function,
-    p::CVOrParamStruct,
+    p::ComponentVector,
     component::Symbol,
     param::Symbol,
     vals::Vector{R}
