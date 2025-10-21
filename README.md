@@ -137,3 +137,9 @@ Initial version.
 ## v0.2.3
 
 - `exposure()` can now take a Vector as argument
+
+
+## v0.2.4
+
+- added possibility to use mutable structs as parameter containers
+- deprecated functions that assume component vectors as parameter containers

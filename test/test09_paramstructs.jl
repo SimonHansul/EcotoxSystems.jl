@@ -31,13 +31,7 @@ begin # define default params as mutable struct
 
     Base.@kwdef mutable struct SpeciesParams <: AbstractParams
         Z::RealOrDist = Dirac(1.0)                   # individual variability through zoom factor
-        propagate_zoom::NamedTuple = ( # zoom propagation mapping
-            dI_max = 1/3, 
-            dI_max_emb = 1/3, 
-            X_emb_int = 1.0, 
-            H_p = 1.0, 
-            K_X = 1.0
-        )  
+        propagate_zoom::PropagateZoom = PropagateZoom() # zoom factor propagation exponents  
         T_A::RealOrDist = 8000.0                    # Arrhenius temperature [K]
         T_ref::RealOrDist = 293.15                  # reference temperature [K]
         X_emb_int::RealOrDist = 19.42               # initial vitellus [μgC]
@@ -76,6 +70,27 @@ begin # define default params as mutable struct
 
 end
 
+defaultparams.spc.propagate_zoom
+
+
+
+x = ( # zoom propagation mapping
+            :dI_max => 1/3, 
+            :dI_max_emb => 1/3, 
+            :X_emb_int => 1.0, 
+            :H_p => 1.0, 
+            :K_X => 1.0
+        )  
+
+getval(x::Pair{Symbol,Distribution}) = x # no randomization for pair types
+getval(x::PropagateZoom) = x # no randomization for zoom propagation exponents
+
+function propagate_zoom!(spc::AbstractParams, propagate_zoom::PropagateZoom)::Nothing
+    for field in fieldnames(PropagateZoom)
+        setproperty!(spc, field, getproperty(spc, field) * spc.Z .^ getproperty(spc.propagate_zoom, field))
+    end
+    return nothing
+end
 
 function generate_individual_params(spc::AbstractParams) 
 
@@ -83,21 +98,25 @@ function generate_individual_params(spc::AbstractParams)
 
     # sample from distributions 
     param_names = fieldnames(typeof(spc))
-    [setproperty!(spc, param, EcotoxSystems.getval.(getproperty(spc, param))) for param in param_names]
+    [setproperty!(spc, param, EcotoxSystems.getval(getproperty(spc, param))) for param in param_names]
 
     # propagate zoom factor
-    for field in keys(spc.propagate_zoom)
-        setproperty!(spc, field, getproperty(spc, field) * spc.Z .^ spc.propagate_zoom[field])
-    end
+    propagate_zoom!(spc, spc.propagate_zoom)
 
     return spc
 
 end
 
+using BenchmarkTools
+p = DefaultParams(
+    spc = SpeciesParams(Z =  Truncated(Normal(1, 0.1), 0, 1), 
+    KD = [Truncated(Normal(1, 0.1), 0, Inf) 1.;])
+    )
 @benchmark begin 
-    p = DefaultParams(spc = SpeciesParams(Z =  Truncated(Normal(1, 0.1), 0, 1), KD = [Truncated(Normal(1, 0.1), 0, Inf); ]))
-    p.spc = generate_individual_params = p.spc
+    p.spc = generate_individual_params(p.spc)
 end
+
+p.spc.KD
 
 @benchmark begin
     p = deepcopy(EcotoxSystems.defaultparams)
@@ -105,23 +124,7 @@ end
 end
 
 
-Base.@kwdef mutable struct SomeParams
-    aparams::AParams
-    bparams::BParams
-end
+p = deepcopy(EcotoxSystems.defaultparams)
 
-x = 1.
-@benchmark $x += p.spc[:dI_max]
 
-mutable struct BarPar
-    dI_max::Float64
-end
-
-mutable struct FooPar
-    spc::BarPar
-end
-
-p = FooPar(BarPar(1.))
-
-x = 1.
-@benchmark $x += p.spc.dI_max
+spc = getval.(p.spc) 
