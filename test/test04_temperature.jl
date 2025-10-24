@@ -19,6 +19,7 @@
 
     p = EcotoxSystems.params()
     p.glb.t_max = 56.
+    p.glb.dX_in = 1e10 
     p.spc.K_X = 12e3
 
     # iterate over nutrient input concentrations
