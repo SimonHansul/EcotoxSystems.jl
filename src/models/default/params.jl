@@ -166,3 +166,120 @@ link_params!(p::ComponentVector, links::NamedTuple = (spc = link_ind_params!,)):
 end
 
 link_params!(p::ComponentVector, links::Nothing)::Nothing = nothing
+
+
+# functions for using mutable structs as params
+
+
+abstract type AbstractParams end
+abstract type AbstractSpeciesParams <: AbstractParams end
+abstract type AbstractGlobalParams <: AbstractParams end
+abstract type AbstractComponentParams <: AbstractParams end
+abstract type AbstractAuxParams <: AbstractParams end
+abstract type AbstractParamEnsemble <: AbstractParams end
+
+using Distributions
+
+const RealOrDist = Union{Real, Distribution}
+
+Base.@kwdef mutable struct GlobalParams <: AbstractGlobalParams
+    N0::RealOrDist = 1                    # initial number of individuals [#]
+    t_max::RealOrDist = 21.0              # maximum simulation time [days]
+    dX_in::RealOrDist = 1200.0            # nutrient influx [μg C d⁻¹]
+    k_V::RealOrDist = 0.0                 # chemostat dilution rate [d⁻¹]
+    V_patch::RealOrDist = 0.05            # volume of a patch [L]
+    C_W::Vector{RealOrDist} = [0.0]       # external chemical concentrations [μg L⁻¹]
+    T::RealOrDist = 293.15                # ambient temperature [K]
+end
+
+Base.@kwdef mutable struct PropagateZoom <: AbstractAuxParams
+    dI_max::RealOrDist = 1/3
+    dI_max_emb::RealOrDist = 1/3
+    X_emb_int::RealOrDist = 1
+    H_p::RealOrDist = 1
+    K_X::RealOrDist = 1
+end
+
+Base.@kwdef mutable struct SpeciesParams <: AbstractSpeciesParams
+    Z::RealOrDist = Dirac(1.0)                   # individual variability through zoom factor
+    propagate_zoom::PropagateZoom = PropagateZoom() # zoom factor propagation exponents  
+    T_A::RealOrDist = 8000.0                    # Arrhenius temperature [K]
+    T_ref::RealOrDist = 293.15                  # reference temperature [K]
+    X_emb_int::RealOrDist = 19.42               # initial vitellus [μgC]
+    K_X::RealOrDist = 1000.0                    # half-saturation constant for food uptake [μgC L⁻¹]
+    dI_max::RealOrDist = 22.9                   # max size-specific ingestion rate [μgC μgC⁻(2/3) d⁻¹]
+    dI_max_emb::RealOrDist = 22.9               # embryonic ingestion rate [μgC μgC⁻(2/3) d⁻¹]
+    kappa::RealOrDist = 0.539                   # somatic allocation fraction [-]
+    eta_IA::RealOrDist = 0.33                   # assimilation efficiency [-]
+    eta_AS::RealOrDist = 0.8                    # growth efficiency [-]
+    eta_SA::RealOrDist = 0.8                    # shrinking efficiency [-]
+    eta_AR::RealOrDist = 0.95                   # reproduction efficiency [-]
+    k_M::RealOrDist = 0.59                      # somatic maintenance rate constant [d⁻¹]
+    k_J::RealOrDist = 0.504                     # maturity maintenance rate constant [d⁻¹]
+    H_p::RealOrDist = 100                       # maturity at puberty [μgC]
+
+    KD::Matrix{RealOrDist} = [0. 0. 0. 0.;]     # KD per PMoA (G,M,A,R) × stressor
+    B::Matrix{RealOrDist} = [2. 2. 2. 2.;]      # slope parameters
+    E::Matrix{RealOrDist} = [1e10 1e10 1e10 167.;] # sensitivity thresholds
+
+    KD_h::Vector{RealOrDist} = [0.0]            # KD for GUTS-SD
+    E_h::Vector{RealOrDist} = [1e10]            # sensitivity threshold for GUTS-SD
+    B_h::Vector{RealOrDist} = [2.0]             # slope parameter for GUTS-SD
+
+    W_S_rel_crit::RealOrDist = 0.66             # relative structure threshold before hazard
+    h_S::RealOrDist = 0.7                       # starvation hazard rate
+    a_max::RealOrDist = Truncated(Normal(60, 6), 0, Inf) # max life span
+    tau_R::RealOrDist = 2.0                     # reproduction interval
+end
+
+Base.@kwdef mutable struct DefaultParams <: AbstractParamEnsemble
+    glb::GlobalParams = GlobalParams()
+    spc::SpeciesParams = SpeciesParams()
+end
+
+getval(x::Pair{Symbol,Distribution}) = x # no randomization for pair types
+getval(x::PropagateZoom) = x # no randomization for zoom propagation exponents
+
+function propagate_zoom!(spc::AbstractSpeciesParams, propagate_zoom::PropagateZoom)::Nothing
+    for field in fieldnames(PropagateZoom)
+        setproperty!(spc, field, getproperty(spc, field) * spc.Z .^ getproperty(spc.propagate_zoom, field))
+    end
+    return nothing
+end
+
+function generate_individual_params(spc::AbstractSpeciesParams) 
+
+    T = typeof(spc) # identify type
+    new_spc = T() # instantiate default parameter object of the given type
+
+    for param in fieldnames(T) # iterate over all parameters
+        val = getfield(spc, param) # get the current value - this might be a scalar or distribution
+        indval = EcotoxSystems.getval(val) # infer the individual-level value
+
+        setfield!(new_spc, param, indval) # update the value
+    end
+
+    # propagate zoom factor
+    propagate_zoom!(new_spc, new_spc.propagate_zoom)
+
+    return new_spc
+
+end
+
+function generate_individual_params(p::AbstractParamEnsemble) 
+    p = typeof(p)(
+        spc = generate_individual_params(p.spc)
+    )
+    return p
+end
+
+function link_params!(p::AbstractParams, links::NamedTuple = (spc = link_ind_params!,))::Nothing 
+
+    for (component, linkfun!) in pairs(links)
+        linkfun!(getproperty(p, component))
+    end
+
+    return nothing
+end
+
+link_params!(p::AbstractParams, links::Nothing) = nothing

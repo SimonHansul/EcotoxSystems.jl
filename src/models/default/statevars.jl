@@ -8,10 +8,10 @@ const X_EMB_INT_REL = 0.001 # for the default DEB model, this global constant de
 
 # some helper functions to construct mutable static vectors and matrices
 
-constrmvec(x::AbstractMatrix; fillval::Float64 = 0.) = MVector{size(x)[1],Float64}(fill(fillval, size(x)[1]))
-constrmvec(x::AbstractVector; fillval::Float64 = 0.) = MVector{length(x),Float64}(fill(fillval, length(x)))
-constrmmat(x::AbstractMatrix; fillval::Float64 = 0.) = MMatrix{size(x)...,Float64}(fill(fillval, size(x)))
-constrmmat(x::AbstractMatrix, dims::Int64; fillval::Float64 = 0.) = MMatrix{size(x)[dims],1,Float64}(fill(fillval, size(x)[dims]))
+constrmvec(x::AbstractMatrix; fillval::RealOrDist = 0.) = MVector{size(x)[1],Float64}(fill(fillval, size(x)[1]))
+constrmvec(x::AbstractVector; fillval::RealOrDist = 0.) = MVector{length(x),Float64}(fill(fillval, length(x)))
+constrmmat(x::AbstractMatrix; fillval::RealOrDist = 0.) = MMatrix{size(x)...,Float64}(fill(fillval, size(x)))
+constrmmat(x::AbstractMatrix, dims::Int64; fillval::RealOrDist = 0.) = MMatrix{size(x)[dims],1,Float64}(fill(fillval, size(x)[dims]))
 
 """
     initialize_individual_statevars(
@@ -66,7 +66,7 @@ custom_statevars(p) = ComponentVector( # state variables for some completely new
 ```
 """
 function initialize_individual_statevars(
-    p::ComponentVector; 
+    p::Union{ComponentVector,AbstractParams}; 
     id = 1., 
     cohort = 0.)::ComponentVector
     
@@ -121,7 +121,7 @@ external chemical stressor concentration `C_W` and population size `N`.
 
 Global state variables can be extended, modified or replaced in the same way as individual-level state variables. 
 """
-function initialize_global_statevars(p::ComponentVector)::ComponentVector
+function initialize_global_statevars(p::Union{ComponentVector,AbstractParams})::ComponentVector
     ComponentArray( # initial states
         X = p.glb.dX_in, # initial resource abundance equal to influx rate
         C_W = p.glb.C_W, # external stressor concentrations
@@ -134,9 +134,117 @@ end
 
 For initialization of ODE simulator, initialize the component vector of state variables, `u`, based on common oaraeter collection `p`.
 """
-function initialize_statevars(p::ComponentVector)::ComponentVector
+function initialize_statevars(p::Union{ComponentVector,AbstractParams})::ComponentVector
     return ComponentVector(     
         glb = initialize_global_statevars(p),
-        ind = initialize_individual_statevars(p)
+        spc = initialize_individual_statevars(p)
     )
 end
+
+
+## --- code to replace component vectors with mutable structs --- ###
+
+# -------------------------------------------------------
+# State variable structs (replacement for ComponentVectors)
+# -------------------------------------------------------
+
+# const X_EMB_INT_REL = 0.001
+
+# mutable struct IndividualState
+#     embryo::RealOrDist
+#     juvenile::RealOrDist
+#     adult::RealOrDist
+
+#     X_emb::RealOrDist
+#     S::RealOrDist
+#     H::RealOrDist
+#     R::RealOrDist
+#     I::RealOrDist
+#     A::RealOrDist
+#     M::RealOrDist
+#     J::RealOrDist
+#     f_X::RealOrDist
+#     I_emb::RealOrDist
+#     I_p::RealOrDist
+
+#     D_z::MMatrix{N, M, Float64} where {N,M}
+#     D_h::MVector{N, Float64} where {N}
+
+#     y_T::RealOrDist
+#     y_z::MMatrix{N, M, Float64} where {N,M}
+#     y_j::NTuple{4, Float64}
+
+#     h_z::RealOrDist
+#     S_z::RealOrDist
+
+#     S_max_hist::RealOrDist
+#     id::RealOrDist
+#     cohort::RealOrDist
+#     age::RealOrDist
+#     cause_of_death::RealOrDist
+#     time_since_last_repro::RealOrDist
+#     cum_repro::RealOrDist
+
+#     function IndividualState(p::AbstractParams; id=1., cohort=0.)
+#         D_z = constrmmat(p.spc.KD)
+#         D_h = constrmvec(p.spc.KD_h)
+#         y_z = constrmmat(p.spc.KD)
+#         y_j = (0., 0., 0., 0.)
+
+#         X_emb = p.spc.X_emb_int
+#         S = p.spc.X_emb_int * X_EMB_INT_REL
+
+#         new(
+#             1., 0., 0.,
+#             X_emb, S, 0., 0., 0., 0., 0., 0., 1., 0., 0.,
+#             D_z, D_h,
+#             1., y_z, y_j,
+#             0., 1.,
+#             S, id, cohort, 0., 0., 0., 0.
+#         )
+#     end
+# end
+
+
+# mutable struct GlobalState
+#     X::RealOrDist
+#     C_W::Vector{RealOrDist}
+#     N::RealOrDist
+
+#     function GlobalState(p::AbstractParams)
+#         new(p.glb.dX_in, p.glb.C_W, p.glb.N0)
+#     end
+# end
+
+
+# mutable struct SystemState
+#     glb::GlobalState
+#     spc::IndividualState
+
+#     function SystemState(p::AbstractParams; id=1., cohort=0.)
+#         new(GlobalState(p), IndividualState(p; id=id, cohort=cohort))
+#     end
+# end
+
+
+# ## initialization functions
+
+# """
+# Initialize individual-level state variables as a mutable struct.
+# """
+# initialize_individual_statevars(p::AbstractParams; id=1., cohort=0.) = IndividualState(p; id=id, cohort=cohort)
+
+
+# """
+# Initialize global state variables as a mutable struct.
+# """
+# initialize_global_statevars(p::AbstractParams) = GlobalState(p)
+
+
+# """
+# Initialize the combined system state as a nested mutable struct.
+# """
+# initialize_statevars(p::AbstractParams; id=1., cohort=0.) = SystemState(p; id=id, cohort=cohort)
+
+
+

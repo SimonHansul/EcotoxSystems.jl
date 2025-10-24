@@ -60,8 +60,8 @@ The ODE system to simulate is a keyword-argument to `ODE_simulator`, and is defi
 So are the functions to generate initial states.
 The parameters `p` are a component vector with global (`glb`) and species-level (`spc`) parameters. <br>
 
-Species-level parameters are internally converted to individual-level parameters (`ind`) when passing them onto a simulator.
-The function that converts `spc` to `ind` is also a keyword argument of `ODE_simulator`. <br>
+Species-level parameters are internally converted to individual-level parameters  when passing them onto a simulator.
+The function that performs this conversion is also a keyword argument of `ODE_simulator`. <br>
 
 ### Individual variability
 

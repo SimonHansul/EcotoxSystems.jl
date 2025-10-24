@@ -45,7 +45,7 @@ as well as functions which require direct information exchange between individua
 function individual_step!(a::AbstractDEBIndividual, m::AbstractIBM)
     
     get_global_statevars!(a, m) # update reference to global states
-
+    
     a.individual_ode!(a.du, a.u, a.p, m.t) # calculate derivatives of the ODE-portion of the individual model
     Euler!(a.u, a.du, m.dt) # update states using Euler scheme -> this could even be replaced with a more sophisticated scheme
     a.individual_rules!(a, m) # apply the rule-based portion of the individual model

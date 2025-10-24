@@ -62,7 +62,7 @@ end
     return sig(H, H_p, 0., 1.)
 end
 
-@inline function determine_life_stage!(du::ComponentVector, u::ComponentVector, p::ComponentVector, t::Real)::Nothing 
+@inline function determine_life_stage!(du, u, p, t)::Nothing 
     
     u.embryo = is_embryo(u.X_emb)
     u.juvenile = is_juvenile(u.X_emb, p.H_p, u.H)
@@ -97,7 +97,7 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
 """
 @inline function default_TKTD!(du, u, p, t)::Nothing
 
-    @unpack glb, ind = u
+    @unpack glb, spc = u
 
     # scaled damage dynamics based on the minimal model
     
@@ -292,9 +292,9 @@ has to be applied to the model output.
 """
 function default_physiology!(du, u, p, t)::Nothing
 
-    @unpack glb, ind = u
+    @unpack glb, spc = u
 
-    determine_life_stage!(du.ind, ind, p.ind, t)
+    determine_life_stage!(du.spc, spc, p.spc, t)
     spc.y_T = y_T(p.spc.T_A, p.spc.T_ref, p.glb.T) # temperature correction
     spc.f_X = f_X(glb.X, p.glb.V_patch, p.spc.K_X) # ingestion rates and feedback with resource pools    
     dI_emb = dI_embryo(spc.embryo, spc.S, p.spc.dI_max_emb, spc.y_T) # resource uptake for embryos

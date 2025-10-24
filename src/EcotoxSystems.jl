@@ -15,7 +15,6 @@ using RecipesBase
 
 abstract type AbstractIBM end
 abstract type AbstractParamStruct end
-const RealOrDist = Union{Real,Distribution}
 const CVOrStruct = Union{ComponentVector,AbstractParamStruct} 
 
 include("utils.jl")
@@ -24,6 +23,7 @@ include("drcfuncts.jl")
 # definition of the default model
 
 include("models/default/params.jl")
+export AbstractParams, AbstractGlobalParams, AbstractSpeciesParams, AbstractComponentParams, AbstractParamEnsemble, DefaultParams, SpeciesParams, GlobalParams 
 include("models/default/derivatives.jl")
 include("models/default/statevars.jl")
 include("models/default/traits.jl")

@@ -52,11 +52,8 @@ end
     default_individual_rules(a::AbstractDEBIndividual, m::AbstractIBM)::Nothing
 
 Defines the default rule-based portion for DEBIndividuals. <br>
-
 The event functions which are used as callbacks during ODE solving are here re-used to apply rules for life stage transitions.
-
 A crude rule for starvation mortality is implemented, applying a constant hazard rate of a certain relative amount of structural mass is lost.
-
 Reproduction is assumed to occur in fixed time intervals, according to `spc.tau_R`.
 """
 function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractIBM)::Nothing

@@ -54,7 +54,7 @@ sim = DEB.ODE_simulator(EcotoxSystems.defaultparams(p))
 
 """
 function ODE_simulator(
-    p::ComponentVector; 
+    p::Any; 
     alg = Tsit5(),
     saveat = 1,
     reltol = 1e-6,
