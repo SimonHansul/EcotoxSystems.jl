@@ -81,17 +81,22 @@ DEBODE_callbacks = CallbackSet() # while life stages are defined through sigmoid
     return nothing
 end
 
+"""
+Union type representing either a real number or a view of an Array.
+"""
+const RealOrView = Union{Real,SubArray}
+
 @inline function minimal_TK(
-    embryo::Real,
-    KD::Real, 
-    C_W::Real,
-    D::Real
-    )::Real
-    return (1-embryo) * KD * (C_W - D)
+    embryo::RealOrView,
+    KD::RealOrView, 
+    C_W::RealOrView,
+    D::RealOrView
+    )::RealOrView
+    return @. (1-embryo) * KD * (C_W - D)
 end
 
 """
-    function default_TKTD!(du, u, p, t)::Nothing
+    default_TKTD!(du, u, p, t)::Nothing
 
 Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
 """
@@ -107,16 +112,21 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
     for z in eachindex(glb.C_W) # for every chemical
         for j in eachindex(spc.y_j) # for every PMoA
             # calculate change in damage
-            du.spc.D_z[z,j] = minimal_TK(spc.embryo, p.spc.KD[z,j], glb.C_W[z], spc.D_z[z,j]) #(1 - spc.embryo) * p.spc.KD[z, j] * (glb.C_W[z] - spc.D_z[z, j])
+
+            D = @view du.spc.D_z[z,j] 
+            y_j = spc.y_j[j]
+
+            D = minimal_TK(spc.embryo, p.spc.KD[z,j], glb.C_W[z], spc.D_z[z,j]) 
             # update relative response with respect to PMoA j
             if j != 2 # PMoAs with decreasing response
-                spc.y_j[j] *= LL2(spc.D_z[z,j], p.spc.E[z,j], p.spc.B[z,j])
+                y_j *= LL2(spc.D_z[z,j], p.spc.E[z,j], p.spc.B[z,j])
             else # PMoAs with increasing response
-                spc.y_j[j] *= LL2pos(spc.D_z[z,j], p.spc.E[z,j], p.spc.B[z,j])
+                y_j *= LL2pos(spc.D_z[z,j], p.spc.E[z,j], p.spc.B[z,j])
             end
         end
+        dD_h = @view du.spc.D_h[z]
         # calculate change in damage for lethal effects
-        du.spc.D_h[z] = (1 - spc.embryo) * p.spc.KD_h[z] * (glb.C_W[z] - spc.D_h[z])
+        dD_h = (1 - spc.embryo) * p.spc.KD_h[z] * (glb.C_W[z] - spc.D_h[z])
         # update hazard rate
         spc.h_z += LL2GUTS(spc.D_h[z], p.spc.E_h[z], p.spc.B_h[z])
     end
@@ -125,6 +135,7 @@ Mixture-TKTD for an arbitrary number of stressors, assuming Independent Action.
     
     return nothing
 end
+
 
 @inline function y_T(
     T_A::Real,

@@ -1,9 +1,11 @@
 
 # test09_paramstructs.jl
 # using custom mutable structs for parameters instead of component vectors
+
+
 include("test00_setup.jl")
 
-p = deepcopy(EcotoxSystems.defaultparams)
+#p = deepcopy(EcotoxSystems.defaultparams)
 
 using Distributions
 
@@ -13,10 +15,10 @@ using Distributions
 end;
 
 @testset begin
-    defaultparams = DefaultParams(spc = SpeciesParams(Z = Truncated(Normal(1, 0.1), 0, Inf)));
+    defaultparams = DefaultParams();
     p = EcotoxSystems.generate_individual_params(defaultparams)
     @test p.spc.Z isa Number
-    @test defaultparams.spc.Z isa Distribution
+    @test defaultparams.spc.individual_variability.Z isa Distribution
 end
 
 # benchmarking: mutable structs are 5 times faster here
@@ -27,25 +29,39 @@ end
 #@benchmark p = EcotoxSystems.generate_individual_params(defaultparams)
 
 using StatsPlots
-
-
 using ComponentArrays
 using BenchmarkTools
 
+# rewriting  generate_individual_params
+
 p = DefaultParams()
-p.spc.Z = Truncated(Normal(1., 0.1), 0, Inf)
 
 EcotoxSystems.ODE_simulator(p); 
+
 @benchmark EcotoxSystems.ODE_simulator(p)
 
-# why is setproperty so slow
-#   what if we dont allow for RealOrDist
+p.spc.KD[1] = 1.
+
+myview = @view(p.spc.KD[1])
+myview isa SubArray
 
 
-T = typeof(spc)
+@view p.spc.Z
 
-new_spc = T()
 
+
+@benchmark EcotoxSystems.ODE_simulator(p)
+
+VSCodeServer.@profview_allocs [EcotoxSystems.ODE_simulator(p) for _ in 1:10]
+
+p.spc.Z = 1.
+p.spc.individual_variability.Z
+
+sim = @replicates EcotoxSystems.ODE_simulator(p) 10 
+
+@df sim plot(:t, :S, group = :replicate)
+
+EcotoxSystems.ODE_simulator(p, alg = Tsit5())
 
 p = DefaultParams(spc = SpeciesParams(Z = Truncated(Normal(1, 0.1), 0, Inf)))
 sim = @replicates EcotoxSystems.ODE_simulator(p) 10

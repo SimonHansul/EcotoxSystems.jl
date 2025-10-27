@@ -200,36 +200,42 @@ Base.@kwdef mutable struct PropagateZoom <: AbstractAuxParams
     K_X::RealOrDist = 1
 end
 
+Base.@kwdef mutable struct IndividualVariability <: AbstractParams
+    Z::Distribution = Truncated(Normal(1, 0.1), 0, Inf)
+    a_max::Distribution = Truncated(Normal(60,6), 0, Inf)
+end
+
 Base.@kwdef mutable struct SpeciesParams <: AbstractSpeciesParams
-    Z::RealOrDist = Dirac(1.0)                   # individual variability through zoom factor
     propagate_zoom::PropagateZoom = PropagateZoom() # zoom factor propagation exponents  
-    T_A::RealOrDist = 8000.0                    # Arrhenius temperature [K]
-    T_ref::RealOrDist = 293.15                  # reference temperature [K]
-    X_emb_int::RealOrDist = 19.42               # initial vitellus [μgC]
-    K_X::RealOrDist = 1000.0                    # half-saturation constant for food uptake [μgC L⁻¹]
-    dI_max::RealOrDist = 22.9                   # max size-specific ingestion rate [μgC μgC⁻(2/3) d⁻¹]
-    dI_max_emb::RealOrDist = 22.9               # embryonic ingestion rate [μgC μgC⁻(2/3) d⁻¹]
-    kappa::RealOrDist = 0.539                   # somatic allocation fraction [-]
-    eta_IA::RealOrDist = 0.33                   # assimilation efficiency [-]
-    eta_AS::RealOrDist = 0.8                    # growth efficiency [-]
-    eta_SA::RealOrDist = 0.8                    # shrinking efficiency [-]
-    eta_AR::RealOrDist = 0.95                   # reproduction efficiency [-]
-    k_M::RealOrDist = 0.59                      # somatic maintenance rate constant [d⁻¹]
-    k_J::RealOrDist = 0.504                     # maturity maintenance rate constant [d⁻¹]
-    H_p::RealOrDist = 100                       # maturity at puberty [μgC]
+    individual_variability::IndividualVariability = IndividualVariability() # mapping of sampling distributions to parameters
+    Z::Real = 1.                   # individual variability through zoom factor
+    T_A::Real = 8000.0                    # Arrhenius temperature [K]
+    T_ref::Real = 293.15                  # reference temperature [K]
+    X_emb_int::Real = 19.42               # initial vitellus [μgC]
+    K_X::Real = 1000.0                    # half-saturation constant for food uptake [μgC L⁻¹]
+    dI_max::Real = 22.9                   # max size-specific ingestion rate [μgC μgC⁻(2/3) d⁻¹]
+    dI_max_emb::Real = 22.9               # embryonic ingestion rate [μgC μgC⁻(2/3) d⁻¹]
+    kappa::Real = 0.539                   # somatic allocation fraction [-]
+    eta_IA::Real = 0.33                   # assimilation efficiency [-]
+    eta_AS::Real = 0.8                    # growth efficiency [-]
+    eta_SA::Real = 0.8                    # shrinking efficiency [-]
+    eta_AR::Real = 0.95                   # reproduction efficiency [-]
+    k_M::Real = 0.59                      # somatic maintenance rate constant [d⁻¹]
+    k_J::Real = 0.504                     # maturity maintenance rate constant [d⁻¹]
+    H_p::Real = 100                       # maturity at puberty [μgC]
 
-    KD::Matrix{RealOrDist} = [0. 0. 0. 0.;]     # KD per PMoA (G,M,A,R) × stressor
-    B::Matrix{RealOrDist} = [2. 2. 2. 2.;]      # slope parameters
-    E::Matrix{RealOrDist} = [1e10 1e10 1e10 167.;] # sensitivity thresholds
+    KD::Matrix{Real} = [0. 0. 0. 0.;]     # KD per PMoA (G,M,A,R) × stressor
+    B::Matrix{Real} = [2. 2. 2. 2.;]      # slope parameters
+    E::Matrix{Real} = [1e10 1e10 1e10 167.;] # sensitivity thresholds
 
-    KD_h::Vector{RealOrDist} = [0.0]            # KD for GUTS-SD
-    E_h::Vector{RealOrDist} = [1e10]            # sensitivity threshold for GUTS-SD
-    B_h::Vector{RealOrDist} = [2.0]             # slope parameter for GUTS-SD
+    KD_h::Vector{Real} = [0.0]            # KD for GUTS-SD
+    E_h::Vector{Real} = [1e10]            # sensitivity threshold for GUTS-SD
+    B_h::Vector{Real} = [2.0]             # slope parameter for GUTS-SD
 
-    W_S_rel_crit::RealOrDist = 0.66             # relative structure threshold before hazard
-    h_S::RealOrDist = 0.7                       # starvation hazard rate
-    a_max::RealOrDist = Truncated(Normal(60, 6), 0, Inf) # max life span
-    tau_R::RealOrDist = 2.0                     # reproduction interval
+    W_S_rel_crit::Real = 0.66             # relative structure threshold before hazard
+    h_S::Real = 0.7                       # starvation hazard rate
+    a_max::Real = 60. # max life span
+    tau_R::Real = 2.0                     # reproduction interval
 end
 
 Base.@kwdef mutable struct DefaultParams <: AbstractParamEnsemble
@@ -247,16 +253,24 @@ function propagate_zoom!(spc::AbstractSpeciesParams, propagate_zoom::PropagateZo
     return nothing
 end
 
+parnames(p::AbstractParams) = fieldnames(typeof(p))
+getval(p::AbstractParams, param::Symbol) = getval(getproperty(p, param))
+
 function generate_individual_params(spc::AbstractSpeciesParams) 
 
     T = typeof(spc) # identify type
     new_spc = T() # instantiate default parameter object of the given type
 
-    for param in fieldnames(T) # iterate over all parameters
-        val = getfield(spc, param) # get the current value - this might be a scalar or distribution
-        indval = EcotoxSystems.getval(val) # infer the individual-level value
+    #for param in fieldnames(T) # iterate over all parameters
+    #    val = getfield(spc, param) # get the current value - this might be a scalar or distribution
+    #    indval = EcotoxSystems.getval(val) # infer the individual-level value
+    #
+    #    setfield!(new_spc, param, indval) # update the value
+    #end
 
-        setfield!(new_spc, param, indval) # update the value
+    for param in parnames(spc.individual_variability)
+        val = getval(new_spc.individual_variability, param) # get a sample from the distribution
+        setproperty!(new_spc, param, val) # transfer it to the species parameters
     end
 
     # propagate zoom factor
