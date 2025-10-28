@@ -14,7 +14,7 @@ using Base.Threads
 using RecipesBase
 
 abstract type AbstractDEBIBM end
-abstract type AbstractParamStruct end
+abstract type AbstractParams end
 const CVOrParamStruct = Union{ComponentVector,AbstractParamStruct} # make it possible to use component vectors or custom structs to store parameters
 
 include("utils.jl")
