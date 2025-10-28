@@ -15,7 +15,7 @@ using RecipesBase
 
 abstract type AbstractDEBIBM end
 abstract type AbstractParams end
-const CVOrParamStruct = Union{ComponentVector,AbstractParamStruct} # make it possible to use component vectors or custom structs to store parameters
+const CVOrParamStruct = Union{ComponentVector,AbstractParams} # make it possible to use component vectors or custom structs to store parameters
 
 include("utils.jl")
 include("drcfuncts.jl")
