@@ -7,7 +7,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
     global_ode!::Function
     global_rules!::Function
     init_global_statevars::Function
-    individuals::Vector{DEBIndividual}
+    individuals::Vector{Individual}
     du::CVOrParamStruct
     u::CVOrParamStruct
     p::CVOrParamStruct
@@ -71,7 +71,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
         m = new()
         m.global_ode! = global_ode!
         m.global_rules! = global_rules!
-        m.individuals = Vector{DEBIndividual}(undef, Int(p.glb.N0))
+        m.individuals = Vector{Individual}(undef, Int(p.glb.N0))
         
         # setting up global states and individuals
         
@@ -91,7 +91,7 @@ mutable struct IndividualBasedModel <: AbstractDEBIBM
 
         for i in 1:Int(p.glb.N0)
             m.idcount += 1
-            m.individuals[i] = DEBIndividual(
+            m.individuals[i] = Individual(
                 p, 
                 m.u.glb;
 

@@ -4,7 +4,7 @@
 # but their main purpose is to serve as a reference during development and testing (including extensions of the base model)
 
 # Global parameters with ComponentVector
-global_params = ComponentVector(
+debkiss_global_params = ComponentVector(
     N0 = 1,                    # initial number of individuals [#]
     t_max = 21.0,              # maximum simulation time [days]
     dX_in = 1200.0,          # nutrient influx [μg C d-1]
@@ -15,7 +15,7 @@ global_params = ComponentVector(
 )
 
 # Species-level DEB and TKTD parameters with ComponentVector
-species_params = ComponentVector(
+debkiss_species_params = ComponentVector(
     Z = Dirac(1.0), # individual variability through zoom factor
     propagate_zoom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
         dI_max = 1/3, 
@@ -49,46 +49,21 @@ species_params = ComponentVector(
     W_S_rel_crit = 0.66,  # relative amount of structure which can be lost before hazard rate kicks in
     h_S = 0.7, # starvation hazard rate caused be shrinking below W_S_rel_crit
     a_max = Truncated(Normal(60, 6), 0, Inf), # maximum life span 
-    tau_R = 2.0 # reproduction interval
+    tau_R = 2.0, # reproduction interval
+    # additional component for intermediate quantities, 
+    # these are not technically model parameters (although they could be treated so), 
+    # but this is nevertheless the best place to put them
+    intermediates = ComponentVector( 
+        y_j = ones(4), 
+        h_z = 0.0
+    )
 )
 
-"""
-Default parameter object
-"""
-defaultparams = ComponentVector(
-    glb = global_params,   
-    spc = species_params     
+default_debkiss_params = ComponentVector(
+    glb = debkiss_global_params,
+    spc = debkiss_species_params
 )
 
-Params(;kwargs...) = ComponentVector(defaultparams; kwargs...) # for backward compat with old struct-based implementation
-
-"""
-    params(;kwargs...) = ComponentVector(defaultparams; kwargs...)
-
-Initialize the default parameter set, modifying and/or adding parameter with kwargs. 
-
-## Examples 
-
-```Julia
-
-# simulate the default parameters
-p = params()
-sim = ODE_simulator(p)  
-
-# simulate the default parameters, but modify kappa
-p = params(kappa = 0.5) 
-sim = ODE_simulator
-
-# simulate the default parameters with individual variabilty in kappa
-p = params(kappa = truncated(Normal(0.5, 0.1), 0, 1))
-sim = @replicates ODE_simulator(p) 10
-``` 
-
-"""
-function params(;kwargs...)
-    defparams = deepcopy(defaultparams)
-    return ComponentVector(defparams; kwargs...)
-end
 
 # the getval function makes it possible that any parameter can also be a distribution
 # package users shouldn't have to diretly interact with this

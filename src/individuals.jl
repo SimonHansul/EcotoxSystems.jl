@@ -105,7 +105,7 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
         # based on the reproduction buffer and the dry mass of an egg
         for _ in 1:calc_num_offspring(ind[:R], p[:ind][:X_emb_int])
             m.idcount += 1 # increment individual counter
-            push!(m.individuals, DEBIndividual( # create new individual and push to individuals vector
+            push!(m.individuals, Individual( # create new individual and push to individuals vector
                 m.p, 
                 m.u.glb; 
                 id = m.idcount, 
@@ -129,7 +129,7 @@ function default_individual_rules!(a::AbstractDEBIndividual, m::AbstractDEBIBM):
 end
 
 
-@with_kw mutable struct DEBIndividual <: AbstractDEBIndividual
+@with_kw mutable struct Individual <: AbstractDEBIndividual
 
     du::CVOrParamStruct
     u::CVOrParamStruct
@@ -141,7 +141,7 @@ end
     generate_individual_params::Function # function to initialize individual parameters
 
     """
-    DEBIndividual(
+    Individual(
             p::CVOrParamStruct, 
             global_statevars::CVOrParamStruct;
             id::Int = 1,
@@ -149,14 +149,14 @@ end
             individual_ode! = default_individual_ODE!,
             individual_rules! = default_individual_rules,
             init_individual_statevars = initialize_individual_statevars,
-            )::DEBIndividual
+            )::Individual
 
     Initialization of an individual based on parameters `p` 
     and global state `global_statevars`. 
 
     Keyword arguments are used to assure that rules and equations for individual behaviour are inherited correctly.
     """
-    function DEBIndividual(
+    function Individual(
         p::CVOrParamStruct, 
         global_statevars::CVOrParamStruct;
         id::Int = 1,

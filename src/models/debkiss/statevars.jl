@@ -14,15 +14,14 @@ constrmmat(x::AbstractMatrix; fillval::Float64 = 0.) = MMatrix{size(x)...,Float6
 constrmmat(x::AbstractMatrix, dims::Int64; fillval::Float64 = 0.) = MMatrix{size(x)[dims],1,Float64}(fill(fillval, size(x)[dims]))
 
 """
-    initialize_individual_statevars(
+   debkiss_individual_statevars(
         p::CVOrParamStruct; 
         id = 1., 
         cohort = 0.)::CVOrParamStruct
 
-This function defines the individual-level state variables and their initial values for the default model. 
+This function defines the individual-level state variables and their initial values for the default debkiss model. 
 
 `p` is a parameter vector containing all components which are relevant for this simulation (including global state varaiables).
-
 `id` is an individual's unique identifier in the IBM simulation. 
 
 `cohort`is the index of the cohort an indvidiual belongs to in the IBM simulation (i.e. initial generation is cohort 0, 
@@ -65,7 +64,7 @@ custom_statevars(p) = ComponentVector( # state variables for some completely new
 )
 ```
 """
-function initialize_individual_statevars(
+function debkiss_individual_statevars(
     p::ComponentVector; 
     id = 1., 
     cohort = 0.)::ComponentVector
@@ -91,11 +90,6 @@ function initialize_individual_statevars(
         D_h = constrmvec(p.ind.KD_h), # lethal damage per stressor
 
         y_T = 1.,
-
-        y_z = constrmmat(p.ind.KD), # relative response per stressor and pmoa
-        #y_j = constrmmat(p.ind.KD, 2, fillval = 1), # relative response per pmoa
-        y_j = [0. 0. 0. 0.],
-        h_z = 0., # hazard rate caused by chemical stressors
         S_z = 1., # chemical-related survival probability
 
         # these are curently only needed in the IBM version, 
@@ -121,7 +115,7 @@ external chemical stressor concentration `C_W` and population size `N`.
 
 Global state variables can be extended, modified or replaced in the same way as individual-level state variables. 
 """
-function initialize_global_statevars(p::CVOrParamStruct)::CVOrParamStruct
+function debkiss_global_statevars(p::CVOrParamStruct)::CVOrParamStruct
     ComponentArray( # initial states
         X = p.glb.dX_in, # initial resource abundance equal to influx rate
         C_W = p.glb.C_W, # external stressor concentrations

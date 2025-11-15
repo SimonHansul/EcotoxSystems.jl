@@ -62,7 +62,6 @@ function ODE_simulator(
     statevars_init = initialize_statevars,
     gen_ind_params = generate_individual_params,
     param_links::Union{Nothing,NamedTuple} = nothing,  
-    callbacks = DEBODE_callbacks,
     returntype::ReturnType = dataframe,
     kwargs...
     )
@@ -73,7 +72,7 @@ function ODE_simulator(
     u = statevars_init(p_ind)
 
     prob = ODEProblem(model, u, (0, p.glb.t_max), p_ind) # define the problem
-    sol = solve(prob, alg; callback = callbacks, saveat = saveat, reltol = reltol, kwargs...) # get solution to the IVP
+    sol = solve(prob, alg; saveat = saveat, reltol = reltol, kwargs...) # get solution to the IVP
 
     if returntype == odesol # directly return the ODE solution object
         return sol

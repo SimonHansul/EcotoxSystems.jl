@@ -1,0 +1,48 @@
+---
+title: "Simplifying the default model"
+engine: julia
+---
+
+```{julia}
+using Pkg; Pkg.activate("test")
+include(joinpath("..", "test", "test00_setup.jl"))
+```
+
+Initial benchmark with old version:
+
+```{julia}
+# this won't work after the update
+#using BenchmarkTools
+#sim = EcotoxSystems.ODE_simulator(EcotoxSystems.defaultparams)
+#@benchmark EcotoxSystems.ODE_simulator(EcotoxSystems.defaultparams)
+```
+
+The median is at 520 µs, which is not terrible, but we can do better.
+Also, the model is just more complicated than what is practical for a default.
+
+## Re-writing the *default* (DEBkiss) model to match the new style
+
+First, we re-write the derivatives of the default (DEBkiss) model 
+to match moder EcotoxSystems style. <br>
+
+Running the default test: This still passes. ✅
+
+```{julia}
+debkiss = SimplifiedEnergyBudget() |> instantiate
+sim = simulate(debkiss)
+include("../test/test01_defaults.jl")
+```
+
+What about performance?
+
+```{julia}
+using BenchmarkTools
+simulate(debkiss)
+@benchmark simulate(debkiss)
+```
+
+This has, perhaps unsurprusingly, not gotten better so far. 
+The median is actually slightly worse - hovering between 600 and 700 microseconds now. <br>
+Part of the reason might be how mixtox is treated (generating a new vector of responses at every step), but I will ignore that for now.  <br>
+Changing the default to a simpler modelversion without tox component brought a minor increase in perofmrance (approximately -23% computation time). 
+

@@ -22,10 +22,13 @@ include("drcfuncts.jl")
 
 # definition of the default model
 
-include("models/default/params.jl")
-include("models/default/derivatives.jl")
-include("models/default/statevars.jl")
-include("models/default/traits.jl")
+include("models/debkiss/params.jl")
+include("models/debkiss/derivatives.jl")
+include("models/debkiss/statevars.jl")
+include("models/debkiss/traits.jl")
+include("models/debkiss/debkiss.jl")
+
+export SimplifiedEnergyBudget, instantiate, simulate
 
 # infrastructure to incorporate ODE-based model into an IBM framework
 
