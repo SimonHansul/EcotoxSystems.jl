@@ -29,7 +29,7 @@ Running the default test: This still passes. ✅
 
 ```{julia}
 debkiss = SimplifiedEnergyBudget() |> instantiate
-sim = simulate(debkiss)
+sim = simulate_ode(debkiss)
 include("../test/test01_defaults.jl")
 ```
 
@@ -37,8 +37,8 @@ What about performance?
 
 ```{julia}
 using BenchmarkTools
-simulate(debkiss)
-@benchmark simulate(debkiss)
+simulate_ode(debkiss)
+@benchmark simulate_ode(debkiss)
 ```
 
 This has, perhaps unsurprusingly, not gotten better so far. 
@@ -46,3 +46,53 @@ The median is actually slightly worse - hovering between 600 and 700 microsecond
 Part of the reason might be how mixtox is treated (generating a new vector of responses at every step), but I will ignore that for now.  <br>
 Changing the default to a simpler modelversion without tox component brought a minor increase in perofmrance (approximately -23% computation time). 
 
+```{julia}
+
+debkiss = SimplifiedEnergyBudget() |> instantiate
+p = debkiss.parameters
+
+p.glb.dX_in = 50_000 #100_000
+p.glb.k_V = 0.1
+p.glb.V_patch = 0.5
+p.glb.N0 = 10
+p.glb.t_max = 56
+
+p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
+p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
+
+@time sim_ibm = simulate_ibm(debkiss; saveat = 1, showinfo = 14, record_individuals=false);
+```
+
+```{julia}
+deb = debkiss
+
+m = EcotoxSystems.IndividualBasedModel(
+        p; 
+
+        init_global_statevars = deb.initialize_global_statevars,
+        global_ode!           = deb.global_derivatives!, 
+        global_rules!         = deb.global_rules!,
+        
+        individual_ode!   = deb.individual_derivatives!,
+        individual_rules! = deb.individual_rules!,
+        init_individual_statevars = deb.initialize_individual_statevars,
+        gen_ind_params            = deb.generate_individual_params,
+        
+        dt = 1/24, 
+        saveat = 1,
+        record_individuals = false
+        )
+
+@code_warntype EcotoxSystems.model_step!(m)
+```
+
+`model_step!` is now type stable. ✅
+Next we need to check the inner functions, which probably aren't:
+
+```{julia}
+
+@code_warntype EcotoxSystems.step_all_individuals!(m)
+#@code_warntype EcotoxSystems.record_global!(m)
+#@code_warntype EcotoxSystems.Euler!(m.u, m.du, m.dt) 
+#@code_warntype debkiss.global_derivatives!(m.du, m.u, m.p, m.t)  
+```

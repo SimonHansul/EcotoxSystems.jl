@@ -6,7 +6,7 @@ end
 @testset "Default debkiss parameters" begin
     p = debkiss.parameters  
     p.spc.Z = Dirac(1.)  
-    @time global sim = simulate(debkiss; reltol = 1e-3)
+    @time global sim = simulate_ode(debkiss; reltol = 1e-3)
     @test isapprox(maximum(sim.H), p.spc.H_p, rtol = 0.1) 
     @test isapprox(maximum(sim.S), EcotoxSystems.calc_S_max(p.spc), rtol = 0.1)
 end;
@@ -25,7 +25,7 @@ using Chain
 
 @testset "@replicates macro" begin
     debkiss.parameters.spc.Z = Truncated(Normal(1., 0.1), 0, Inf)
-    sim = @replicates simulate(debkiss) 10
+    sim = @replicates simulate_ode(debkiss) 10
 
     plt = @df sim plot(
         plot(:t, :S, group = :replicate, color = 1),
@@ -62,7 +62,7 @@ Basic test of replicates function.
     
     debkiss.parameters.spc.Z = Truncated(Normal(1., 0.1), 0, Inf)
 
-    function simulate(p; kwargs...)
+    function simulate_ode(p; kwargs...)
         return EcotoxSystems.ODE_simulator(
             debkiss.parameters;
             model = debkiss.complete_derivatives!, 
@@ -72,7 +72,7 @@ Basic test of replicates function.
         )
     end
 
-    sim = replicates(simulate, debkiss.parameters, 10)
+    sim = replicates(simulate_ode, debkiss.parameters, 10)
 
     plt = @df sim plot(
         plot(:t, :S, group = :replicate, color = 1),

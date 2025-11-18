@@ -28,7 +28,7 @@ include("models/debkiss/statevars.jl")
 include("models/debkiss/traits.jl")
 include("models/debkiss/debkiss.jl")
 
-export SimplifiedEnergyBudget, instantiate, simulate
+export SimplifiedEnergyBudget, instantiate, simulate_ode, simulate_ibm
 
 # infrastructure to incorporate ODE-based model into an IBM framework
 

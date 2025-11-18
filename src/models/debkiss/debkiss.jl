@@ -9,6 +9,8 @@ Base.@kwdef mutable struct SimplifiedEnergyBudget <: AbstractEnergyBudget
     individual_derivatives!::Function = debkiss!
     complete_derivatives!::Union{Function,Nothing} = nothing
     generate_individual_params::Function = generate_individual_params
+    global_rules!::Function = default_global_rules!
+    individual_rules!::Function = default_individual_rules!
 end
 
 function instantiate(deb::SimplifiedEnergyBudget; verbose = false)::SimplifiedEnergyBudget
@@ -57,7 +59,8 @@ function compose_derivatives!(deb::AbstractEnergyBudget)::Nothing
     end
 end
 
-function simulate(deb::AbstractEnergyBudget; kwargs...)
+function simulate_ode(deb::AbstractEnergyBudget; kwargs...)
+    
     sim = EcotoxSystems.ODE_simulator(
             deb.parameters;
             model = deb.complete_derivatives!, 
@@ -67,4 +70,38 @@ function simulate(deb::AbstractEnergyBudget; kwargs...)
         )
 
     return sim
+
 end
+
+function simulate_ibm(
+    deb::AbstractEnergyBudget; 
+    dt = 1/24, 
+    saveat = 1,
+    record_individuals = true,
+    showinfo = Inf,
+    kwargs...
+    )
+
+     sim = EcotoxSystems.IBM_simulator(
+        deb.parameters;
+        init_global_statevars = deb.initialize_global_statevars,
+        global_ode! = deb.global_derivatives!,
+        global_rules! = deb.global_rules!,
+
+        individual_ode! = deb.individual_derivatives!,
+        individual_rules! = deb.individual_rules!,
+        init_individual_statevars = deb.initialize_individual_statevars,
+        gen_ind_params = deb.generate_individual_params,
+
+        dt = dt, 
+        saveat = saveat, 
+        record_individuals = record_individuals,
+        showinfo = showinfo,
+        kwargs...
+        )
+
+    return sim
+end
+
+const simulate_ODE = simulate_ode
+const simulate_IBM = simulate_ibm
