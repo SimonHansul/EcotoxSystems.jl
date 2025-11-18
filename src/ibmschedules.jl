@@ -116,6 +116,7 @@ function step_all_individuals!(m::AbstractDEBIBM)::Nothing
         # before an individual step is executed, the global derivatives are reset to 0. this
         # this is so that individuals can modify the global states, e.g. when ingesting food
         m.du.glb .= 0. 
+      
         individual_step!(a, m)
         record_individual!(a, m)
     end
