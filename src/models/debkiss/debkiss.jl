@@ -2,15 +2,24 @@ abstract type AbstractEnergyBudget end
 
 Base.@kwdef mutable struct SimplifiedEnergyBudget <: AbstractEnergyBudget
     parameters::ComponentVector = default_debkiss_params
+
+    # global component
+
     initialize_global_statevars::Union{Function,Nothing} = debkiss_global_statevars
-    initialize_individual_statevars::Function = debkiss_individual_statevars
-    initialize_all_statevars::Union{Function,Nothing} = nothing
     global_derivatives!::Union{Function,Nothing} = constant_nutrient_influx!
-    individual_derivatives!::Function = debkiss!
-    complete_derivatives!::Union{Function,Nothing} = nothing
-    generate_individual_params::Function = generate_individual_params
     global_rules!::Function = default_global_rules!
+    
+    # individual-level component
+    
+    initialize_individual_statevars::Function = debkiss_individual_statevars
+    individual_derivatives!::Function = debkiss!
     individual_rules!::Function = default_individual_rules!
+    generate_individual_params::Function = generate_individual_params
+
+    # composed model
+
+    initialize_all_statevars::Union{Function,Nothing} = nothing
+    complete_derivatives!::Union{Function,Nothing} = nothing
 end
 
 function instantiate(deb::SimplifiedEnergyBudget; verbose = false)::SimplifiedEnergyBudget
