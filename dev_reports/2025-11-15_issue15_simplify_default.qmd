@@ -97,8 +97,6 @@ Next we need to check the inner functions, which probably aren't:
 #@code_warntype debkiss.global_derivatives!(m.du, m.u, m.p, m.t)  
 ```
 
-
-
 ```{julia}
 @code_warntype EcotoxSystems.individual_step!(m.individuals[1], m)
 ```

@@ -103,7 +103,6 @@ end
     filter_individuals!(m::AbstractDEBIBM)
 
 Remove individuals which have been flagged to die after the current time-step. 
-
 Individuals for which the condition `u.ind.cause_of_death == 0` applies are retained.
 """
 filter_individuals!(m::AbstractDEBIBM) = m.individuals = filter(x -> x.u.ind.cause_of_death == 0, m.individuals)
@@ -116,7 +115,6 @@ function step_all_individuals!(m::AbstractDEBIBM)::Nothing
         # before an individual step is executed, the global derivatives are reset to 0. this
         # this is so that individuals can modify the global states, e.g. when ingesting food
         m.du.glb .= 0. 
-      
         individual_step!(a, m)
         record_individual!(a, m)
     end
