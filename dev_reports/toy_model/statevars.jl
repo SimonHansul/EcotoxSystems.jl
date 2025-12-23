@@ -1,0 +1,23 @@
+using ComponentArrays
+
+function toy_individual_statevars(p)
+    return ComponentArray(
+        L = p.ind.L0, 
+        R = 0., 
+        is_adult = 0.
+    )
+
+end
+
+function toy_global_statevars(p)
+    return ComponentArray(
+        N = p.glb.N0
+    )
+end
+
+function toy_statevars(p)
+    return ComponentArray(
+        glb = toy_global_statevars(p), 
+        ind = toy_individual_statevars(p)
+    )
+end

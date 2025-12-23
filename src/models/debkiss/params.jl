@@ -97,6 +97,14 @@ function generate_individual_params(p::CVOrParamStruct; kwargs...)::CVOrParamStr
     )
 end
 
+function generate_individual_params_nozoom(p::ComponentVector; kwargs...)::ComponentVector
+    return ComponentVector(
+        glb = p.glb, 
+        ind = getval.(p.spc); 
+        kwargs...
+    )
+end
+
 """
     link_params!(p::CVOrParamStruct, links::NamedTuple = (spc = linkfun,))::Nothing 
 

@@ -1,14 +1,14 @@
 # ibmschedules.jl
 # generic scheduling for individuals
 
-get_recorded_individual_var_indices(m::AbstractDEBIBM) = map(x -> x in m.recorded_individual_vars,  keys(ind)) |> BitVector
+get_recorded_individual_var_indices(m::AbstractIBM) = map(x -> x in m.recorded_individual_vars,  keys(ind)) |> BitVector
 
 """
-    get_global_statevars!(a::AbstractIndividual, m::AbstractDEBIBM)::Nothing
+    get_global_statevars!(a::AbstractIndividual, m::AbstractIBM)::Nothing
 
 Retrieve global state variables and derivatives for use in the individual-level model step.
 """
-function get_global_statevars!(a::AbstractIndividual, m::AbstractDEBIBM)::Nothing
+function get_global_statevars!(a::AbstractIndividual, m::AbstractIBM)::Nothing
     
     a.du.glb = m.du.glb
     a.u.glb = m.u.glb
@@ -17,11 +17,11 @@ function get_global_statevars!(a::AbstractIndividual, m::AbstractDEBIBM)::Nothin
 end
 
 """
-    set_global_statevars!(m::AbstractDEBIBM, a::AbstractIndividual)::Nothing
+    set_global_statevars!(m::AbstractIBM, a::AbstractIndividual)::Nothing
 
 Update global state variables and derivatives based on individual-level model step.
 """
-function set_global_statevars!(m::AbstractDEBIBM, a::AbstractIndividual)::Nothing
+function set_global_statevars!(m::AbstractIBM, a::AbstractIndividual)::Nothing
 
     m.du.glb = a.du.glb 
     m.u.glb = a.u.glb
@@ -42,7 +42,7 @@ At the minimum, this will include life stage transitions, reproduction and death
 For a spatially explicit model, movement should also most likely be part of the rule-based portion, 
 as well as functions which require direct information exchange between individuals.
 """
-function individual_step!(a::AbstractIndividual, m::AbstractDEBIBM)
+function individual_step!(a::AbstractIndividual, m::AbstractIBM)
     
     get_global_statevars!(a, m) # update reference to global states
 
@@ -67,11 +67,11 @@ end
 
 
 """
-    record_individual!(a::AbstractIndividual, m::AbstractDEBIBM)::Nothing
+    record_individual!(a::AbstractIndividual, m::AbstractIBM)::Nothing
 
 Store individual-level state variables in `m.individual_record`.
 """
-function record_individual!(a::AbstractIndividual, m::AbstractDEBIBM)::Nothing
+function record_individual!(a::AbstractIndividual, m::AbstractIBM)::Nothing
 
     if m.record_individuals && isapprox(m.t % m.saveat, 0, atol = m.dt)
         push!(
@@ -85,11 +85,11 @@ end
 
 
 """
-    record_global!(m::AbstractDEBIBM)::Nothing
+    record_global!(m::AbstractIBM)::Nothing
 
 Store global state variables in `m.global_record`.
 """
-function record_global!(m::AbstractDEBIBM)::Nothing
+function record_global!(m::AbstractIBM)::Nothing
 
     if isapprox(m.t % m.saveat, 0, atol = m.dt)
         push!(m.global_record,ComponentVector(m.u; t = m.t))
@@ -100,14 +100,14 @@ end
 
 
 """
-    filter_individuals!(m::AbstractDEBIBM)
+    filter_individuals!(m::AbstractIBM)
 
 Remove individuals which have been flagged to die after the current time-step. 
 Individuals for which the condition `u.ind.cause_of_death == 0` applies are retained.
 """
-filter_individuals!(m::AbstractDEBIBM) = m.individuals = filter(x -> x.u.ind.cause_of_death == 0, m.individuals)
+filter_individuals!(m::AbstractIBM) = m.individuals = filter(x -> x.u.ind.cause_of_death == 0, m.individuals)
 
-function step_all_individuals!(m::AbstractDEBIBM)::Nothing
+function step_all_individuals!(m::AbstractIBM)::Nothing
     
     shuffle!(m.individuals)
 
@@ -137,11 +137,11 @@ end
 
 
 """
-    model_step!(m::AbstractDEBIBM)::Nothing
+    model_step!(m::AbstractIBM)::Nothing
 
 Generic definition of an individual-based model step.
 """
-function model_step!(m::AbstractDEBIBM)::Nothing
+function model_step!(m::AbstractIBM)::Nothing
     # calculate global derivatives
     # change in resource abundance, chemical stressor exposure etc.
     

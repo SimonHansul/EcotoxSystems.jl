@@ -49,7 +49,7 @@ end
 end
 
 """
-    default_individual_rules(a::AbstractIndividual, m::AbstractDEBIBM)::Nothing
+    default_individual_rules(a::AbstractIndividual, m::AbstractIBM)::Nothing
 
 Defines the default rule-based portion for DEBIndividuals. <br>
 
@@ -59,7 +59,7 @@ A crude rule for starvation mortality is implemented, applying a constant hazard
 
 Reproduction is assumed to occur in fixed time intervals, according to `spc.tau_R`.
 """
-function default_individual_rules!(a::AbstractIndividual, m::AbstractDEBIBM)::Nothing
+function default_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothing
 
     p = a.p
     u = a.u

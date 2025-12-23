@@ -5,7 +5,7 @@ reformat_labels(labels::Vector{String}) = replace.(labels, "glb." => "", "ind." 
 
 getcolnames(sol::O) where O <: ODESolution = getcolnames(sol.u)
 getcolnames(record::Vector{CV}) where CV <: ComponentVector = ComponentArrays.labels(record[1]) |> reformat_labels |> x-> vcat("t", x)
-getcolnames(m::AbstractDEBIBM) = ComponentArrays.labels(m.global_record[1]) |> reformat_labels
+getcolnames(m::AbstractIBM) = ComponentArrays.labels(m.global_record[1]) |> reformat_labels
 
 function extract_colnames(c::R, k::Symbol) where R <: Real
     return k

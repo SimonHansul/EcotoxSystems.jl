@@ -160,10 +160,10 @@ function IBM_simulator(
 end
 
 
-global_record_to_df(m::AbstractDEBIBM)::DataFrame = DataFrame(hcat(m.global_record...)', getcolnames(m))
+global_record_to_df(m::AbstractIBM)::DataFrame = DataFrame(hcat(m.global_record...)', getcolnames(m))
 
 function individual_record_to_df(
-    m::AbstractDEBIBM; 
+    m::AbstractIBM; 
     )::DataFrame
 
     cols = vcat(
