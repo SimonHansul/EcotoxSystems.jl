@@ -137,3 +137,7 @@ Initial version.
 ## v0.2.3
 
 - `exposure()` can now take a Vector as argument
+
+## v0.3.0
+
+- Added `ìndividual_callbacks` as argument to `IBM_simulator`
