@@ -28,7 +28,7 @@ include("models/debkiss/statevars.jl")
 include("models/debkiss/traits.jl")
 include("models/debkiss/debkiss.jl")
 
-export SimplifiedEnergyBudget, instantiate, simulate_ode, simulate_ibm
+export SimplifiedEnergyBudget, instantiate, simulate_ode, simulate_ibm, simulate
 
 # infrastructure to incorporate ODE-based model into an IBM framework
 
@@ -40,7 +40,6 @@ include("ibmschedules.jl")
 
 include("simulators.jl")
 export @replicates, replicates, treplicates, exposure
-
 
 include("plotrecipes.jl")
 export lineplot, groupedlineplot, rugplot

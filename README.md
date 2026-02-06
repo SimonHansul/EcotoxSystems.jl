@@ -51,8 +51,8 @@ This is a Dynamic Energy Budget Toxicokinetic-Toxicodynamic (DEB-TKTD) model bas
 The derivatives are defined in `src/default_derivatives.jl`. 
 
 ```Julia
-import EcotoxSystems: import defaultparams, ODE_simulator
-sim = ODE_simulator(defaultparams)
+import EcotoxSystems: import debkiss_defaultparams, ODE_simulator
+sim = ODE_simulator(debkiss_defaultparams)
 ```
 
 The ODE system to simulate is a keyword-argument to `ODE_simulator`, and is defined to work with `DifferentialEquations.jl`. <br>
@@ -68,9 +68,9 @@ The function that converts `spc` to `ind` is also a keyword argument of `ODE_sim
 There are some convenience functions, e.g. to run replicated simulations:
 
 ```Julia
-from EcotoxSystems import defaultparams, ODE_simulator, @replicates
+from EcotoxSystems import debkiss_defaultparams, ODE_simulator, @replicates
 p.spc.Z = Truncated(Normal(1,0.1), 0, Inf) # introduce individual variability through the mass-based zoom factor
-sim = @replicates ODE_simulator(defaultparams) 10 # simulate 10 times, each time sampling from Z
+sim = @replicates ODE_simulator(debkiss_defaultparams) 10 # simulate 10 times, each time sampling from Z
 ```
 
 This is interesting if one of the parameters is subject to individual variability, 
@@ -121,14 +121,14 @@ Initial version.
 
 - `init_global_statevars` and `init_individual_statevars` are now a keyword argument to `IBM_simulator` - necessary to implement modified models with additional states
 
-### v0.1.4-0.1.x
+### v0.1.4
 
 - small bugfixes in IBM_simulator
 - small improvements on utils
 
 ## v0.2.1
 
-- optimized default model implementation by improve type stability
+- optimized default model implementation by improving type stability
 
 ## v0.2.2
 
@@ -138,6 +138,9 @@ Initial version.
 
 - `exposure()` can now take a Vector as argument
 
-## v0.3.0
+## v0.2.4
 
-- Added `ìndividual_callbacks` as argument to `IBM_simulator`
+- updated depdendencies
+- updated debkiss model implementation to struct-based interface
+- updated tests to accomodate new struct-based itnerface 
+

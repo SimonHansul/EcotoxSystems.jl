@@ -15,23 +15,43 @@ using StatsBase
 
 using Revise
 @time using EcotoxSystems
-
 import EcotoxSystems: exposure, relative_response
 
-p = deepcopy(EcotoxSystems.defaultparams)
-p.glb.C_W = [0.]
+EcotoxSystems.AbstractEnergyBudget <: EcotoxSystems.AbstractModel
 
-sim = exposure(
-    EcotoxSystems.ODE_simulator, 
-    p,
-    [0., 1., 2.]
+debkiss = SimplifiedEnergyBudget(
+    individual_derivatives! = EcotoxSystems.debkiss_mixture_IA!
+    ) |> instantiate
+
+p = debkiss.parameters
+p.glb.t_max = 42.
+p.glb.dX_in = 2400.
+p.glb.k_V = 0.
+
+p.spc.H_p = 0.75
+
+p.spc.KD .= 0
+p.spc.E .= 1.
+p.spc.B .= 2.
+p.spc.KD[2] = 1.
+@show p.spc.KD
+
+p.glb.C_W = [0.1]
+
+simulate(debkiss)
+
+sim = exposure(debkiss, [0., 0.5, 1., 2.])
+
+@df sim plot(
+    plot(:t, :S, group = :treatment_id),
+    plot(:t, :D_z_1_2, group = :treatment_id),
+    plot(:t, :C_W_1, group = :treatment_id)
 )
-
-p.glb.C_W
 
 @testset begin
 
-    global p = EcotoxSystems.params()
+    debkiss = SimplifiedEnergyBudget(individual_derivatives! = EcotoxSystems.debkiss_mixture_IA!) |> instantiate
+    p = debkiss.parameters
     
     p.glb.t_max = 42.
     p.glb.dX_in = 2400.
@@ -43,7 +63,7 @@ p.glb.C_W
     p.spc.E .= 1.
     p.spc.B .= 2.
 
-    let C_Wvec =  vcat(0., round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2)) #hcat([0], round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2)...)' |> Matrix
+    let Cvec =  vcat(0., round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2)) 
 
         global sims = DataFrame()
         global pmoas = ["G", "M", "A", "R"]
@@ -55,7 +75,7 @@ p.glb.C_W
             p.spc.KD_h[1] = 1.
 
             # using the exposure function to iterate over treatments
-            sim_j = exposure(EcotoxSystems.ODE_simulator, p, C_Wvec)
+            sim_j = exposure(debkiss, Cvec)
             sim_j[!,:pmoa] .= pmoa
             append!(sims, sim_j)
         end 
@@ -89,6 +109,7 @@ p.glb.C_W
         end
         
         display(plt)
+        
         @test unique(rankcor.r .<= 0.9) == [true] # all pmoas affect reproduction
         @test minimum(sims.y_R) .< 0.5
         @test minimum(sims[sims.pmoa.=="R",:].y_S) > 0.99 # no effect on growth for PMoA R

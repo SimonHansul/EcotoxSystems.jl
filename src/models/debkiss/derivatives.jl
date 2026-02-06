@@ -57,9 +57,7 @@ end
 
 """
 DEBkiss model with mixture toxicity, assuming independent action (IA) across all components. 
-
-It would be need to separate the physiological and TKTD part into independent components, 
-but unfortunately, this does not make much sense right now due to the interchange between parameters. 
+Supports an arbitrary number of stressors and stressor/PMoA combinations.
 """
 function debkiss_mixture_IA!(du, u, p, t)::Nothing
 
@@ -74,11 +72,13 @@ function debkiss_mixture_IA!(du, u, p, t)::Nothing
     is_adult = switch(H, H_p; sharpness = 100.0)
 
     Spos = softclamp(u.ind.S, 1e-12) # soft-clamping to avoid odd behaviour at very small values
+   
+    h_z = 0.
+    y_j .= 1.
 
     for z in eachindex(C_W) # for every chemical
         for j in eachindex(y_j) # for every PMoA
-            # calculate change in damage
-            du.ind.D_z[z,j] = minimal_TK(is_embryo, p.ind.KD[z,j], C_W[z], D_z[z,j]) #(1 - ind.embryo) * p.ind.KD[z, j] * (glb.C_W[z] - ind.D_z[z, j])
+            du.ind.D_z[z,j] = minimal_TK(is_embryo, p.ind.KD[z,j], C_W[z], D_z[z,j]) # calculate change in damage
             # update relative response with respect to PMoA j
             if j != 2 # PMoAs with decreasing response
                 y_j[j] *= LL2(D_z[z,j], p.ind.E[z,j], p.ind.B[z,j])

@@ -3,15 +3,18 @@ Simulate mixtures with different PMoAs
 =#
 
 using DataFramesMeta
-import EcotoxSystems: exposure, relative_response
+import EcotoxSystems: exposure, relative_response, debkiss_mixture_IA!
+import ComponentArrays: ComponentVector; const CV = ComponentVector
 
+debkiss = SimplifiedEnergyBudget(individual_derivatives! = debkiss_mixture_IA!) |> instantiate
+p = debkiss.parameters;
 
 # changing the number of stressors is curently a bit clunky
 # we cannot do it dynamically, because ComponentArrays does not allow us to resize a Vector which is a field of a CA
 # so the only solution currently is to manually reconstruct the CV
 
-p = ComponentVector( 
-    glb = ComponentVector(
+p = CV( 
+    glb = CV(
         N0 = 1,                    # initial number of individuals [#]
         t_max = 21.0,              # maximum simulation time [days]
         dX_in = 1200.0,          # nutrient influx [μg C d-1]
@@ -20,9 +23,9 @@ p = ComponentVector(
         C_W = [0., 0.],               # external chemical concentrations [μg L-1]
         T = 293.15                 # ambient temperature [K]
     ),
-    spc = ComponentVector(
+    spc = CV(
         Z = Dirac(1.0), # individual variability through zoom factor
-        propagate_zoom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
+        propagate_zoom = CV( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
             dI_max = 1/3, 
             dI_max_emb = 1/3,
             X_emb_int = 1,
@@ -70,7 +73,7 @@ p.spc.KD = [
 p.spc.E = ones(size(p.spc.KD))
 p.spc.B = fill(2., size(p.spc.KD))
 
-C_Wmat = [ # simulating a ray design
+Cmat = [ # simulating a ray design
     0.0 0.0; 
     0.5 0.0;
     0.0 0.5;
@@ -81,10 +84,7 @@ p.spc.KD
 p.spc.E
 p.spc.B
 
-sim = exposure(p->EcotoxSystems.ODE_simulator(p), p, C_Wmat);
-
-@time EcotoxSystems.ODE_simulator(p);
-
+sim = exposure(debkiss, Cmat);
 
 @df sim plot(
     plot(:t, :S, group = :treatment_id, leg = true),
@@ -96,6 +96,8 @@ sim = exposure(p->EcotoxSystems.ODE_simulator(p), p, C_Wmat);
 # so there should be no effects on growth in any of the treatments, 
 # but every treatment should affect 
 
+# TODO: add a proper test
+
 p.glb.C_W
 
 p.spc.KD = [
@@ -103,7 +105,7 @@ p.spc.KD = [
     0. 0. 0. 1.
     ]
 
-sim = exposure(EcotoxSystems.ODE_simulator, p, C_Wmat);
+sim = exposure(EcotoxSystems.ODE_simulator, p, Cmat);
 
 @df sim plot(
     plot(:t, :S, group = :treatment_id, leg = true),

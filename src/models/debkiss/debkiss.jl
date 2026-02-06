@@ -1,7 +1,8 @@
-abstract type AbstractEnergyBudget end
+abstract type AbstractModel end
+abstract type AbstractEnergyBudget <: AbstractModel end
 
 Base.@kwdef mutable struct SimplifiedEnergyBudget <: AbstractEnergyBudget
-    parameters::ComponentVector = default_debkiss_params
+    parameters::ComponentVector = debkiss_defaultparams
 
     # global component
 
@@ -112,5 +113,6 @@ function simulate_ibm(
     return sim
 end
 
+const simulate = simulate_ode
 const simulate_ODE = simulate_ode
 const simulate_IBM = simulate_ibm

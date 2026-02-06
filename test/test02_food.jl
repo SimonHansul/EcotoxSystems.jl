@@ -1,4 +1,8 @@
 @testset"food availability" begin 
+
+    debkiss = SimplifiedEnergyBudget() |> instantiate
+    p = debkiss.parameters
+
     norm(x) = x ./ sum(x)
     # prepare the plot
     plt = plot(
@@ -11,7 +15,7 @@
         )
     
     global sim = DataFrame()
-    p = EcotoxSystems.params()
+    p = EcotoxSystems.debkiss_defaultparams |> deepcopy
     # iterate over nutrient input concentrations
     let dX_in = 4800.
         for i in 1:5
@@ -20,11 +24,7 @@
             p.glb.dX_in = dX_in
             p.glb.t_max = 56.
             p.spc.K_X = 12e3
-            @time sim_i = EcotoxSystems.ODE_simulator(
-                p, 
-                saveat = 1, 
-                returntype = EcotoxSystems.dataframe
-                );
+            @time sim_i = simulate(debkiss, saveat = 1);
 
             @test nrow(sim_i) == 57
 

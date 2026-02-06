@@ -49,7 +49,7 @@ Run a model as purely ODE-based system:
 
 ```Julia
 using EcotoxSystems
-sim = DEB.ODE_simulator(EcotoxSystems.defaultparams(p))
+sim = DEB.ODE_simulator(EcotoxSystems.debkiss_defaultparams(p))
 ```
 
 """
@@ -224,16 +224,16 @@ end
 
 
 """
-    replicates(simulator::Function, defaultparams::CVOrParamStruct, nreps::Int64; kwargs...)
+    replicates(simulator::Function, debkiss_defaultparams::CVOrParamStruct, nreps::Int64; kwargs...)
 
-Perform replicated runs of `simulator` with parameters `defaultparams` (`simulator(defaultparams)` has to be a valid function call). 
+Perform replicated runs of `simulator` with parameters `debkiss_defaultparams` (`simulator(debkiss_defaultparams)` has to be a valid function call). 
 Analogous to `@replicates`, but a bit more flexible.
 """
-function replicates(simulator::Function, defaultparams::CVOrParamStruct, nreps::Int64; kwargs...)
+function replicates(simulator::Function, debkiss_defaultparams::CVOrParamStruct, nreps::Int64; kwargs...)
     sim = []
 
     for replicate in 1:nreps
-        sim_i = simulator(defaultparams; kwargs...)
+        sim_i = simulator(debkiss_defaultparams; kwargs...)
         push!(sim, sim_i)
     end
     
@@ -243,7 +243,7 @@ end
 """
     treplicates(
         simulator::Function, 
-        defaultparams::CVOrParamStruct, 
+        debkiss_defaultparams::CVOrParamStruct, 
         nreps::Int64; 
         kwargs...)
 
@@ -263,14 +263,14 @@ for more information.
 """
 function treplicates(
     simulator::Function, 
-    defaultparams::CVOrParamStruct, 
+    debkiss_defaultparams::CVOrParamStruct, 
     nreps::Int64; 
     kwargs...)
 
     sim = Vector{Any}(undef, nreps)
 
     @threads for replicate in 1:nreps
-        sim_i = simulator(defaultparams; kwargs...)
+        sim_i = simulator(debkiss_defaultparams; kwargs...)
     end
     
     return combine_outputs(Vector{typeof(sim[1])}(sim))
@@ -293,24 +293,24 @@ function add_idcol(nt::NT, col::Symbol, val::Any) where NT <: NamedTuple
     return nt
 end
 
-reshape_C_Wmat(C_Wmat::Matrix{Float64}) = C_Wmat
-reshape_C_Wmat(C_Wmat::Vector{Float64}) = hcat(C_Wmat...)' |> Matrix
+reshape_Cmat(Cmat::Matrix{Float64}) = Cmat
+reshape_Cmat(Cmat::Vector{Float64}) = hcat(Cmat...)' |> Matrix
 
 """
     exposure(
         simulator::Function, 
         p::CVOrParamStruct, 
-        C_Wmat::Union{Vector{R},Matrix{R}}
+        Cmat::Union{Vector{R},Matrix{R}}
     ) where R <: Real
 
-Simulate constant chemical exposure with over an arbitrary number of treatments and chemical stressors, defined in `C_Wmat`. 
+Simulate constant chemical exposure with over an arbitrary number of treatments and chemical stressors, defined in `Cmat`. 
 
 The columns of `C_W` are stressors, the rows are treatments. <br>
 If `C_W` is supplied as a Vector, it is assumed that the elements represent different levels of single-stressor exposure. <br>
 That means, to simulate a single-stressor experiment with three treatments, do 
 
 ```Julia 
-C_Wmat = [0., 1., 2,]
+Cmat = [0., 1., 2,]
 ```
 
 , internally creating a 1 x 3 matrix with exposure concentrations 0, 1 and 2. 
@@ -318,7 +318,7 @@ C_Wmat = [0., 1., 2,]
 A single treatment with multiple stressors can be defined as 
 
 ```Julia
-C_Wmat = [0 1 2;]
+Cmat = [0 1 2;]
 ```
 
 Here, we would have three stressors with the simultaneous exposure concentrations 0,1,2. <br>
@@ -326,7 +326,7 @@ Here, we would have three stressors with the simultaneous exposure concentration
 Defining four treatments for two stressors looks like this:
 
 ```Julia
-C_Wmat = [
+Cmat = [
     0.0 0.0; 
     0.0 0.5; 
     1.0 0.0; 
@@ -339,15 +339,15 @@ This exposure matrix corresponds to a ray design with constant exposure ratios.
 function exposure(
     simulator::Function, 
     p::CVOrParamStruct, 
-    C_Wmat::VecOrMat{R}
+    Cmat::VecOrMat{R}
     ) where R <: Real
     
-    C_Wmat = reshape_C_Wmat(C_Wmat) # if a Vector has been provided, we have to reshape
+    Cmat = reshape_Cmat(Cmat) # if a Vector has been provided, we have to reshape
 
     let original_C_W = deepcopy(p.glb.C_W) # we will modify this value and then reset to the original value
         sim = [] # initialize vector of simulation outputs
 
-        for (i,C_W) in enumerate(eachrow(C_Wmat)) # iterate over concentrations
+        for (i,C_W) in enumerate(eachrow(Cmat)) # iterate over concentrations
             p.glb.C_W = C_W # update concentration
             sim_i = simulator(p) # simulate
             typeof(C_W) <: Number ? sim_i = add_idcol(sim_i, :C_W, C_W) : nothing
@@ -363,25 +363,50 @@ function exposure(
 end
 
 
+function exposure(model::AbstractModel, Cmat::VecOrMat{R}; C = :C_W, simfunc = simulate_ODE) where R <: Real
+  
+    Cmat = reshape_Cmat(Cmat) # if a Vector has been provided, we have to reshape
+    p = model.parameters # reference to params 
+    
+    let original_C = deepcopy(p.glb[C]) # we will modify this value and then reset to the original value
+        sim = [] # initialize vector of simulation outputs
+
+        for (i,C_i) in enumerate(eachrow(Cmat)) # iterate over concentrations
+            p.glb[C] = C_i # update concentration
+            sim_i = simfunc(model) # simulate
+            typeof(C_i) <: Number ? sim_i = add_idcol(sim_i, C, C_i) : nothing
+            sim_i = add_idcol(sim_i, :treatment_id, i)
+            push!(sim, sim_i)
+        end
+        
+        p.glb[C] = original_C # reset C_W, so that the input remains unmodified
+
+        # combine vector of simulation outputs into a single output object
+        return combine_outputs(Vector{typeof(sim[1])}(sim); idcol = :treatment_id)
+    end
+
+end
+
+
 """
 Threaded version of `exposure()`.
 """
 function texposure(
     simulator::Function, 
-    defaultparams::CVOrParamStruct, 
+    debkiss_defaultparams::CVOrParamStruct, 
     C_Wvec::Vector{Float64}
     )
     
-    let C_W_int = defaultparams.glb.C_W # we will modify this value and then reset to the initial value
+    let C_W_int = debkiss_defaultparams.glb.C_W # we will modify this value and then reset to the initial value
         sim = DataFrame()
 
         @threads for C_W in C_Wvec
-            defaultparams.glb.C_W[1] = C_W
-            sim_i = simulator(defaultparams)
+            debkiss_defaultparams.glb.C_W[1] = C_W
+            sim_i = simulator(debkiss_defaultparams)
             append!(sim, sim_i)
         end
         
-        defaultparams.glb.C_W = C_W_int 
+        debkiss_defaultparams.glb.C_W = C_W_int 
 
         return sim
     end

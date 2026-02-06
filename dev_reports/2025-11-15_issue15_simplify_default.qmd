@@ -13,8 +13,8 @@ Initial benchmark with old version:
 ```{julia}
 # this won't work after the update
 #using BenchmarkTools
-#sim = EcotoxSystems.ODE_simulator(EcotoxSystems.defaultparams)
-#@benchmark EcotoxSystems.ODE_simulator(EcotoxSystems.defaultparams)
+#sim = EcotoxSystems.ODE_simulator(EcotoxSystems.debkiss_defaultparams)
+#@benchmark EcotoxSystems.ODE_simulator(EcotoxSystems.debkiss_defaultparams)
 ```
 
 The median is at 520 µs, which is not terrible, but we can do better.

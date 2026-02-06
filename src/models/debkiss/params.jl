@@ -1,4 +1,4 @@
-# defaultparams.jl 
+# debkiss_defaultparams.jl 
 # default parameter sets for the default model
 # the default parameters are a plausible starting point for *Daphnia* with model currency μgC, 
 # but their main purpose is to serve as a reference during development and testing (including extensions of the base model)
@@ -59,7 +59,7 @@ debkiss_species_params = ComponentVector(
     )
 )
 
-default_debkiss_params = ComponentVector(
+debkiss_defaultparams = ComponentVector(
     glb = debkiss_global_params,
     spc = debkiss_species_params
 )
@@ -125,7 +125,7 @@ link_ind_params!(p) = begin
     p.k_J_emb = (1-p.kappa_emb)/p.kappa_emb * p.k_M_emb
 end
 
-p = deepcopy(defaultparams)
+p = deepcopy(debkiss_defaultparams)
 link_params!(p, (spc = link_ind_params!,) # apply link ahead of simulation 
 ```
 
