@@ -138,12 +138,9 @@ Initial version.
 
 - `exposure()` can now take a Vector as argument
 
-## v0.2.4
+## v0.3.0
 
 - updated depdendencies
 - updated debkiss model implementation to struct-based interface
-
-## v0.2.5
-
 - updated tests to accomodate new struct-based itnerface 
 
