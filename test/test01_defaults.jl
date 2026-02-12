@@ -1,10 +1,12 @@
-@testset "Default parameters" begin  
+begin # setting up a debkiss instance
+    debkiss = SimplifiedEnergyBudget() |> instantiate
+    debkiss.parameters.glb.t_max = 56.  
+end
 
-    global p = EcotoxSystems.params()
-    p.glb.t_max = 56.
-    p.spc.Z = Dirac(1.)
-    @time global sim = EcotoxSystems.ODE_simulator(p, reltol = 1e-3)
-
+@testset "Default debkiss parameters" begin
+    p = debkiss.parameters  
+    p.spc.Z = Dirac(1.)  
+    @time global sim = simulate_ode(debkiss; reltol = 1e-3)
     @test isapprox(maximum(sim.H), p.spc.H_p, rtol = 0.1) 
     @test isapprox(maximum(sim.S), EcotoxSystems.calc_S_max(p.spc), rtol = 0.1)
 end;
@@ -22,9 +24,8 @@ import EcotoxSystems: @replicates
 using Chain
 
 @testset "@replicates macro" begin
-    p = EcotoxSystems.params()
-    p.spc.Z = Truncated(Normal(1., 0.1), 0, Inf)
-    sim = @replicates EcotoxSystems.ODE_simulator(p) 10
+    debkiss.parameters.spc.Z = Truncated(Normal(1., 0.1), 0, Inf)
+    sim = @replicates simulate_ode(debkiss) 10
 
     plt = @df sim plot(
         plot(:t, :S, group = :replicate, color = 1),
@@ -54,12 +55,24 @@ using Chain
     @test cvs.R > 0.025
 end;
 
-
+#=
+Basic test of replicates function.
+=#
 @testset "replicates function" begin
     
-    p = EcotoxSystems.params()
-    p.spc.Z = Truncated(Normal(1., 0.1), 0, Inf)
-    sim = replicates(EcotoxSystems.ODE_simulator, p, 10)
+    debkiss.parameters.spc.Z = Truncated(Normal(1., 0.1), 0, Inf)
+
+    function simulate_ode(p; kwargs...)
+        return EcotoxSystems.ODE_simulator(
+            debkiss.parameters;
+            model = debkiss.complete_derivatives!, 
+            statevars_init = debkiss.initialize_all_statevars,
+            gen_ind_params = debkiss.generate_individual_params, 
+            kwargs...
+        )
+    end
+
+    sim = replicates(simulate_ode, debkiss.parameters, 10)
 
     plt = @df sim plot(
         plot(:t, :S, group = :replicate, color = 1),

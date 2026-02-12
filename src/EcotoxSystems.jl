@@ -13,19 +13,22 @@ using Base.Threads
 
 using RecipesBase
 
-abstract type AbstractDEBIBM end
-abstract type AbstractParamStruct end
-const CVOrParamStruct = Union{ComponentVector,AbstractParamStruct} # make it possible to use component vectors or custom structs to store parameters
+abstract type AbstractIBM end
+abstract type AbstractParams end
+const CVOrParamStruct = Union{ComponentVector,AbstractParams} # make it possible to use component vectors or custom structs to store parameters
 
 include("utils.jl")
 include("drcfuncts.jl")
 
 # definition of the default model
 
-include("models/default/params.jl")
-include("models/default/derivatives.jl")
-include("models/default/statevars.jl")
-include("models/default/traits.jl")
+include("models/debkiss/params.jl")
+include("models/debkiss/derivatives.jl")
+include("models/debkiss/statevars.jl")
+include("models/debkiss/traits.jl")
+include("models/debkiss/debkiss.jl")
+
+export SimplifiedEnergyBudget, instantiate, simulate_ode, simulate_ibm, simulate
 
 # infrastructure to incorporate ODE-based model into an IBM framework
 
@@ -37,7 +40,6 @@ include("ibmschedules.jl")
 
 include("simulators.jl")
 export @replicates, replicates, treplicates, exposure
-
 
 include("plotrecipes.jl")
 export lineplot, groupedlineplot, rugplot

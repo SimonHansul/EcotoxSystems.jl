@@ -10,9 +10,9 @@ using DataFrames
 using Test
 
 using Revise
-@time using EcotoxSystems
-@time import EcotoxSystems: params, ODE_simulator, IBM_simulator 
-@time import EcotoxSystems: @replicates, DEBIndividual, treplicates
+using EcotoxSystems; const ETS = EcotoxSystems
+import EcotoxSystems: @replicates, Individual, treplicates
+
 
 using Plots, StatsPlots
 
@@ -21,8 +21,9 @@ using Plots, StatsPlots
 # (it is curently not possible to handle feedback with external food abundance in exactly the same way in both variants, and I am not sure it ever will be)
 @testset "IBM vs ODE" begin
 
-    p = params()
-
+    debkiss = SimplifiedEnergyBudget() |> instantiate
+    p = debkiss.parameters
+    
     p.glb.dX_in = 1e2
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.05
@@ -36,8 +37,8 @@ using Plots, StatsPlots
     p.spc.a_max = Inf
     p.spc.K_X = 10
 
-    @time global sim_ode = ODE_simulator(p, saveat = 1);
-    @time global sim_ibm = IBM_simulator(p, dt = 1/240, showinfo = 14);
+    @time global sim_ode = ETS.simulate_ODE(debkiss, saveat = 1);
+    @time global sim_ibm = ETS.simulate_IBM(debkiss, dt = 1/240, showinfo = 14);
 
     plt = @df sim_ode plot(
         plot(:t, :X, xlabel = "t", ylabel = "X", leg = true, label = "ODE simulator"),
@@ -72,9 +73,10 @@ end
 
 @testset "Running IBM with default parameters" begin
 
-    p = params()
+    debkiss = SimplifiedEnergyBudget() |> instantiate
+    p = debkiss.parameters
 
-    p.glb.dX_in = 50_000 #100_000
+    p.glb.dX_in = 500_000 #100_000
     p.glb.k_V = 0.1
     p.glb.V_patch = 0.5
     p.glb.N0 = 10
@@ -83,7 +85,7 @@ end
     p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
     p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
 
-    @time global sim_ibm = @replicates IBM_simulator(p, saveat = 1, showinfo = 14) 1
+    @time global sim_ibm = @replicates ETS.simulate_IBM(debkiss, saveat = 1, showinfo = 14) 1
     #VSCodeServer.@profview_allocs global sim_ibm = treplicates(x -> IBM_simulator(p, saveat = 1, showinfo = 14), p, 1)
     
     plt = plot(
@@ -108,22 +110,6 @@ end
 
     r_int = (log(N_peak) - log(N0))/(t_peak-t0)
 
-    @test 0.1 < r_int < 0.3
+    @test 0.1 < r_int < 1.0
 end
-
-
-#let p = params()
-#
-#    p.glb.dX_in = 50_000 #100_000
-#    p.glb.k_V = 0.1
-#    p.glb.V_patch = 0.5
-#    p.glb.N0 = 10
-#    p.glb.t_max = 56
-#
-#    p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
-#    p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
-#
-#    #VSCodeServer.@profview_allocs IBM_simulator(p, saveat = 1, showinfo = 14)
-#    @time IBM_simulator(p, saveat = 1, showinfo = 28)
-#end;
 

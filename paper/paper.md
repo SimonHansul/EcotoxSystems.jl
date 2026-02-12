@@ -87,7 +87,7 @@ To run the base model, one can start by initializing the default parameters. <br
 
 ```Julia
 using EcotoxSystems
-p = deepcopy(EcotoxSystems.defaultparams)
+p = deepcopy(EcotoxSystems.debkiss_defaultparams)
 p.glb.t_max = 21.
 sim = EcotoxSystems.ODE_simulator(p)
 ```

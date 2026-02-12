@@ -9,7 +9,7 @@ using Plots.Measures
 
 using Revise
 @time using EcotoxSystems
-import EcotoxSystems: defaultparams, IBM_simulator
+import EcotoxSystems: debkiss_defaultparams, IBM_simulator
 import EcotoxSystems: DEBkiss!, default_global_rules!, default_individual_rules!
 
 default(leg = false, thickness_scaling = 1.2)
@@ -32,7 +32,7 @@ end
 
 =#
 begin
-    p = copy(defaultparams)
+    p = copy(debkiss_defaultparams)
 
     p.glb.dX_in = 1e7
     p.glb.k_V = 0.1
@@ -144,7 +144,7 @@ simulate_experiment(p) = IBM_simulator(
 
 using Test
 begin 
-    p = copy(defaultparams)
+    p = copy(debkiss_defaultparams)
 
     p.glb.dX_in = 1200
 
@@ -177,7 +177,7 @@ end
 
 
 begin
-    p = copy(defaultparams)
+    p = copy(debkiss_defaultparams)
 
     p.glb.dX_in = 1e7
     p.glb.k_V = 0.1
@@ -220,7 +220,7 @@ end
 
 
 begin
-    p = copy(defaultparams)
+    p = copy(debkiss_defaultparams)
 
     p.glb.dX_in = 1e7
     p.glb.k_V = 0.1
@@ -264,7 +264,7 @@ import EcotoxSystems: lineplot, groupedlineplot
 
 
 begin
-    p = copy(defaultparams)
+    p = copy(debkiss_defaultparams)
 
     p.glb.dX_in = 1e7
     p.glb.k_V = 0.1
@@ -315,7 +315,7 @@ end
 
 
 begin
-    p = copy(defaultparams)
+    p = copy(debkiss_defaultparams)
 
     p.glb.dX_in = 1e7
     p.glb.k_V = 0.1
@@ -359,7 +359,7 @@ end
 
 
 begin
-    p = copy(defaultparams)
+    p = copy(debkiss_defaultparams)
 
     p.glb.dX_in = 1e7
     p.glb.k_V = 0.1

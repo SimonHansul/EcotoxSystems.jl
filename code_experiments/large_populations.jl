@@ -2,7 +2,7 @@
 
 using Pkg; Pkg.activate("test")
 using Revise
-@time import EcotoxSystems: defaultparams, IBM_simulator
+@time import EcotoxSystems: debkiss_defaultparams, IBM_simulator
 using Plots, StatsPlots
 using Distributions
 
@@ -34,7 +34,7 @@ end
 # rough comparison with netlogo
 # netlogo took 1:30 for 56d, population leveling off around 900 individuals, dt=1/229
 begin
-    p = defaultparams
+    p = debkiss_defaultparams
 
     p.glb.dX_in = 1e7
     p.glb.k_V = 0.1

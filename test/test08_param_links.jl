@@ -16,5 +16,5 @@ using StatsBase
 
 using Revise
 @time using EcotoxSystems
-import EcotoxSystems: defaultparams, ODE_simulator
+import EcotoxSystems: debkiss_defaultparams, ODE_simulator
 

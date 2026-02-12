@@ -7,7 +7,7 @@ To get acquainted with using `EcotoxSystems.jl`, you can use the default model a
 Let's start with simulating individual life-history based on the default parameters:
 
 ```Julia
-p = deepcopy(EcotoxSystems.defaultparams)
+p = deepcopy(EcotoxSystems.debkiss_defaultparams)
 p.glb.t_max = 21.
 sim = EcotoxSystems.ODE_simulator(p)
 first(sim, 5)
@@ -45,7 +45,7 @@ and call `IBM_simulator`:
 ```Julia
 using Distributions, ProgressMeter
 
-p = deepcopy(EcotoxSystems.defaultparams)
+p = deepcopy(EcotoxSystems.debkiss_defaultparams)
 
 # adjusting global parameters
 
