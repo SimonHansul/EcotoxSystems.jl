@@ -159,3 +159,6 @@ Initial version.
 - updated debkiss model implementation to struct-based interface
 - updated tests to accomodate new struct-based itnerface 
 
+## v0.3.1
+
+- change in dependency versions
