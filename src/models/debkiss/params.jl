@@ -7,10 +7,9 @@
 debkiss_global_params = ComponentVector(
     N0 = 1,                    # initial number of individuals [#]
     t_max = 21.0,              # maximum simulation time [days]
-    dX_in = 1200.0,          # nutrient influx [μg C d-1]
+    dX_in = 1200.0,            # nutrient influx [μg C d-1]
     k_V = 0.0,                 # chemostat dilution rate [d-1]
     V_patch = 0.05,            # volume of a patch [L]
-    C_W = [0.0],               # external chemical concentrations [μg L-1]
     T = 293.15                 # ambient temperature [K]
 )
 
@@ -38,25 +37,12 @@ debkiss_species_params = ComponentVector(
     k_M = 0.59,     # somatic maintenance rate constant [d^-1]
     k_J = 0.504,    # maturity maintenance rate constant [d^-1]
     H_p = 100,    # maturity at puberty [μgC]
-    KD = Float64[0. 0. 0. 0.;], # KD - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
-    B = Float64[2. 2. 2. 2.;], # slope parameters
-    E = Float64[1e10 1e10 1e10 167;], # sensitivity parameters (thresholds)
-    KD_h = Float64[0.;], # KD - value for GUTS-SD module (1 row = 1 stressor)
-    E_h = Float64[1e10;], # sensitivity parameter (threshold) for GUTS-SD module
-    B_h = Float64[2.;], # slope parameter for GUTS-SD module 
     # these are curently only used in an individual-based context, but could find application in the pure-ODE implementation 
     # for example by triggering emptying of the reproduction buffer through callbacks
     W_S_rel_crit = 0.66,  # relative amount of structure which can be lost before hazard rate kicks in
     h_S = 0.7, # starvation hazard rate caused be shrinking below W_S_rel_crit
     a_max = Truncated(Normal(60, 6), 0, Inf), # maximum life span 
     tau_R = 2.0, # reproduction interval
-    # additional component for intermediate quantities, 
-    # these are not technically model parameters (although they could be treated so), 
-    # but this is nevertheless the best place to put them
-    intermediates = ComponentVector( 
-        y_j = ones(4), 
-        h_z = 0.0
-    )
 )
 
 debkiss_defaultparams = ComponentVector(
