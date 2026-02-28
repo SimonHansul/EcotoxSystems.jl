@@ -7,7 +7,6 @@ debkiss = SimplifiedEnergyBudget() |> instantiate
 sim = simulate_ode(debkiss)
 include(joinpath(pwd(), "test", "test01_defaults.jl"))
 
-debkiss.parameters.
 
 using BenchmarkTools
 
