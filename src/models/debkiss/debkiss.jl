@@ -21,6 +21,7 @@ Base.@kwdef mutable struct SimplifiedEnergyBudget <: AbstractEnergyBudget
 
     initialize_all_statevars::Union{Function,Nothing} = nothing
     complete_derivatives!::Union{Function,Nothing} = nothing
+    debkiss_callback_set::CallbackSet = debkiss_callbacks()
 end
 
 function instantiate(deb::SimplifiedEnergyBudget; verbose = false)::SimplifiedEnergyBudget
@@ -33,18 +34,13 @@ function instantiate(deb::SimplifiedEnergyBudget; verbose = false)::SimplifiedEn
 end
 
 function compose_statevars!(deb::AbstractEnergyBudget)::Nothing
-    let init_global_statevars
-
-        if isnothing(deb.initialize_global_statevars)
-            init_global_statevars = p -> ComponentVector()
-        else
-            init_global_statevars = deb.initialize_global_statevars
-        end
+    let init_global_statevars = isnothing(deb.initialize_global_statevars) ? p -> ComponentVector() : deb.initialize_global_statevars
+        init_individual_statevars = deb.initialize_individual_statevars
 
         function initialize_statevars(p::ComponentVector)::ComponentVector
             return ComponentVector(
                 glb = init_global_statevars(p), 
-                ind = deb.initialize_individual_statevars(p)
+                ind = init_individual_statevars(p)
             )
         end
 
@@ -55,17 +51,21 @@ function compose_statevars!(deb::AbstractEnergyBudget)::Nothing
 end
 
 function compose_derivatives!(deb::AbstractEnergyBudget)::Nothing
-    if !isnothing(deb.global_derivatives!)
-        function std_complete_ode!(du, u, p, t)::Nothing
-            deb.global_derivatives!(du, u, p, t)
-            deb.individual_derivatives!(du, u, p, t)
+    let global_derivs! = deb.global_derivatives!, 
+        individual_derivs! = deb.individual_derivatives!
+
+        if !isnothing(global_derivs!)
+            function complete_ode!(du, u, p, t)::Nothing
+                global_derivs!(du, u, p, t)
+                individual_derivs!(du, u, p, t)
+                return nothing
+            end
+            deb.complete_derivatives! = complete_ode!
+            return nothing
+        else
+            deb.complete_derivatives! = individual_derivs!
             return nothing
         end
-        deb.complete_derivatives! = std_complete_ode!
-        return nothing
-    else
-        deb.complete_derivatives! = deb.individual_derivatives!
-        return nothing
     end
 end
 

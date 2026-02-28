@@ -86,9 +86,6 @@ function debkiss_individual_statevars(
         I_emb = 0., # cumulative ingestion from vitellus
         I_p = 0., # cumulative ingestion from external food resource
 
-        D_z = constrmmat(p.ind.KD), # sublethal damage per stressor and PMoA
-        D_h = constrmvec(p.ind.KD_h), # lethal damage per stressor
-
         y_T = 1.,
         S_z = 1., # chemical-related survival probability
 
@@ -118,7 +115,6 @@ Global state variables can be extended, modified or replaced in the same way as 
 function debkiss_global_statevars(p::CVOrParamStruct)::CVOrParamStruct
     ComponentArray( # initial states
         X = p.glb.dX_in, # initial resource abundance equal to influx rate
-        C_W = p.glb.C_W, # external stressor concentrations
         N = p.glb.N0
     )
 end

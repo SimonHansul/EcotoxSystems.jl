@@ -1,16 +1,33 @@
 
 clamp(x::Real, value::Real) = Base.ifelse(x>value, x, value)
 
+birth_condition(u, t, integrator) = u.ind.X_emb
+birth_affect!(i) = i.u.ind.is_embryo = 0.
+birth_callback = ContinuousCallback(birth_condition, birth_affect!)
+
+puberty_condition(u, t, i) = p.ind.H_p - u.ind.H
+puberty_affect!(u, t, i) = i.u.ind.is_adult = 1.
+puberty_callback = ContinuousCallback(birth_condition, birth_affect!, nothing)
+
+function debkiss_callbacks(args...)
+
+    return CallbackSet(
+        birth_callback,
+        puberty_callback, 
+        args...
+    )
+
+end
+
 """
 DEBkiss model without tox component.
 """
 function debkiss!(du, u, p, t)::Nothing
 
-    @unpack C_W, V_patch = p.glb
+    @unpack V_patch = p.glb
     @unpack X = u.glb
     @unpack kappa, H_p, K_X = p.ind
-    @unpack y_j, h_z = p.ind.intermediates
-    @unpack X_emb, H, S, D_z, D_h = u.ind
+    @unpack X_emb, H, S = u.ind
 
     is_embryo = Base.ifelse(X_emb > 0, 1., 0.) 
     is_adult = Base.ifelse(H >= H_p, 1., 0.) 
@@ -155,26 +172,26 @@ end
 end
 
 @inline function dS(kappa::Real, dA::Real, dM::Real, eta_SA::Real, eta_AS::Real)::Real
-    if kappa * dA >= dM
-        return eta_AS * (kappa * dA - dM)
-    else
-        return -(dM / eta_SA - kappa * dA)
-    end
+    return Base.ifelse(
+        kappa * dA >= dM,
+        eta_AS * (kappa * dA - dM),
+        -(dM / eta_SA - kappa * dA)
+        )
 end
 
 @inline function dR(adult::Real, eta_AR::Real, kappa::Real, dA::Real, dJ::Real)::Real
-    return adult * softclamp(eta_AR * ((1 - kappa) * dA - dJ), 1e-12)
+    return adult * eta_AR * ((1 - kappa) * dA - dJ)
 end
 
 @inline function dH(adult::Real, kappa::Real, dA::Real, dJ::Real)::Real
-    return (1 - adult) * softclamp(((1 - kappa) * dA) - dJ, 1e-12)
+    return (1 - adult) * ((1 - kappa) * dA) - dJ
 end
 
 @inline function minimal_TK(
     embryo::Real,
-    KD::Real, 
-    C_W::Real,
+    kD::Real, 
+    C::Real,
     D::Real
     )::Real
-    return (1-embryo) * KD * (C_W - D)
+    return (1 - embryo) * kD * (C - D)
 end
