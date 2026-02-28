@@ -70,9 +70,8 @@ function debkiss_individual_statevars(
     cohort = 0.)::ComponentVector
     
     ComponentVector(
-        embryo = 1.,
-        juvenile = 0.,
-        adult = 0.,
+        is_embryo = 1.,
+        is_adult = 0.,
 
         X_emb = p.ind.X_emb_int, # initial mass of vitellus
         S = p.ind.X_emb_int * X_EMB_INT_REL, # initial structure is a small fraction of initial reserve // mass of vitellus

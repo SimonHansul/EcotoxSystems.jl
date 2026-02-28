@@ -2,12 +2,12 @@
 clamp(x::Real, value::Real) = Base.ifelse(x>value, x, value)
 
 birth_condition(u, t, integrator) = u.ind.X_emb
-birth_affect!(i) = i.u.ind.is_embryo = 0.
+birth_affect!(integrator) = integrator.u.ind.is_embryo = 0.
 birth_callback = ContinuousCallback(birth_condition, birth_affect!)
 
-puberty_condition(u, t, i) = p.ind.H_p - u.ind.H
-puberty_affect!(u, t, i) = i.u.ind.is_adult = 1.
-puberty_callback = ContinuousCallback(birth_condition, birth_affect!, nothing)
+puberty_condition(u, t, integrator) = integrator.p.ind.H_p - u.ind.H
+puberty_affect!(integrator) = integrator.u.ind.is_adult = 1.
+puberty_callback = ContinuousCallback(puberty_condition, puberty_affect!)
 
 function debkiss_callbacks(args...)
 
@@ -27,10 +27,9 @@ function debkiss!(du, u, p, t)::Nothing
     @unpack V_patch = p.glb
     @unpack X = u.glb
     @unpack kappa, H_p, K_X = p.ind
-    @unpack X_emb, H, S = u.ind
+    @unpack X_emb, H, S, is_embryo, is_adult = u.ind
 
-    is_embryo = Base.ifelse(X_emb > 0, 1., 0.) 
-    is_adult = Base.ifelse(H >= H_p, 1., 0.) 
+
     Spos = clamp(u.ind.S, 1e-12)
 
     # temperature correction and feeding functional response
