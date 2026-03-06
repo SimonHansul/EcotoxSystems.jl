@@ -61,7 +61,7 @@ function ODE_simulator(
     model = default_ODE!,
     statevars_init = initialize_statevars,
     gen_ind_params = generate_individual_params,
-    param_links::Union{Nothing,NamedTuple} = nothing,  
+    param_links::Union{Nothing,NamedTuple} = nothing,
     returntype::ReturnType = dataframe,
     kwargs...
     )

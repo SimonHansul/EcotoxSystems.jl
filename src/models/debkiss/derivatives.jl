@@ -5,9 +5,9 @@ birth_condition(u, t, integrator) = u.ind.X_emb
 birth_affect!(integrator) = integrator.u.ind.is_embryo = 0.
 birth_callback = ContinuousCallback(birth_condition, birth_affect!)
 
-puberty_condition(u, t, integrator) = integrator.p.ind.H_p - u.ind.H
+puberty_condition(u, t, integrator) = u.ind.H - integrator.p.ind.H_p
 puberty_affect!(integrator) = integrator.u.ind.is_adult = 1.
-puberty_callback = ContinuousCallback(puberty_condition, puberty_affect!)
+puberty_callback = ContinuousCallback(puberty_condition, puberty_affect!, nothing)
 
 function debkiss_callbacks(args...)
 
@@ -64,6 +64,7 @@ end
 
 
 # TODO: translate this to a flattened version (no vector or matrix parameters)
+#       (or discontinue altogether)
 #"""
 #DEBkiss model with mixture toxicity, assuming independent action (IA) across all components. 
 #Supports an arbitrary number of stressors and stressor/PMoA combinations.
@@ -178,12 +179,12 @@ end
         )
 end
 
-@inline function dR(adult::Real, eta_AR::Real, kappa::Real, dA::Real, dJ::Real)::Real
-    return adult * eta_AR * ((1 - kappa) * dA - dJ)
+@inline function dR(is_adult::Real, eta_AR::Real, kappa::Real, dA::Real, dJ::Real)::Real
+    return is_adult * eta_AR * ((1 - kappa) * dA - dJ)
 end
 
-@inline function dH(adult::Real, kappa::Real, dA::Real, dJ::Real)::Real
-    return (1 - adult) * ((1 - kappa) * dA) - dJ
+@inline function dH(is_adult::Real, kappa::Real, dA::Real, dJ::Real)::Real
+    return (1 - is_adult) * ( ((1 - kappa) * dA) - dJ)
 end
 
 @inline function minimal_TK(

@@ -68,6 +68,7 @@ Basic test of replicates function.
             model = debkiss.complete_derivatives!, 
             statevars_init = debkiss.initialize_all_statevars,
             gen_ind_params = debkiss.generate_individual_params, 
+            callback = debkiss.callback_set,
             kwargs...
         )
     end

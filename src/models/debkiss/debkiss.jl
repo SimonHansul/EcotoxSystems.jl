@@ -21,7 +21,7 @@ Base.@kwdef mutable struct SimplifiedEnergyBudget <: AbstractEnergyBudget
 
     initialize_all_statevars::Union{Function,Nothing} = nothing
     complete_derivatives!::Union{Function,Nothing} = nothing
-    debkiss_callback_set::CallbackSet = debkiss_callbacks()
+    callback_set::CallbackSet = debkiss_callbacks()
 end
 
 function instantiate(deb::SimplifiedEnergyBudget; verbose = false)::SimplifiedEnergyBudget
@@ -75,7 +75,8 @@ function simulate_ode(deb::AbstractEnergyBudget; kwargs...)
             deb.parameters;
             model = deb.complete_derivatives!, 
             statevars_init = deb.initialize_all_statevars,
-            gen_ind_params = deb.generate_individual_params, 
+            gen_ind_params = deb.generate_individual_params,
+            callback = deb.callback_set,
             kwargs...
         )
 
