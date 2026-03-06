@@ -58,7 +58,7 @@ function debkiss_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothi
                 individual_ode! = a.individual_ode!,
                 individual_rules! = a.individual_rules!,
                 init_individual_statevars = a.init_individual_statevars,
-                gen_ind_params = a.generate_individual_params,
+                generate_individual_params = a.generate_individual_params,
                 )
             )
             u.ind.R -= X_emb_int # decrease reproduction buffer

@@ -22,7 +22,7 @@ function toy_individual_rules!(a, m)::Nothing
                 individual_ode! = a.individual_ode!,
                 individual_rules! = a.individual_rules!,
                 init_individual_statevars = a.init_individual_statevars,
-                gen_ind_params = a.generate_individual_params,
+                generate_individual_params = a.generate_individual_params,
                 )
             )
             a.u.ind.R -= a.p[:ind][:RperN] # decrease reproduction buffer

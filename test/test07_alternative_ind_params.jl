@@ -25,13 +25,13 @@
         foo_individual!(du, u, p, t)
     end
 
-    gen_ind_params(p) = EcotoxSystems.generate_individual_params(p;foo = p.foo)
+    generate_individual_params(p) = EcotoxSystems.generate_individual_params(p;foo = p.foo)
 
     # FIXME: why is this much slower than running the default model?
     @time sim = EcotoxSystems.ODE_simulator(
         p;
         model = foo!,
-        gen_ind_params = gen_ind_params
+        generate_individual_params = generate_individual_params
     )
 
     # if this code runs without throwing an error, 
@@ -59,13 +59,13 @@ end
         du.ind.S *= p.foo.x
     end
 
-    gen_ind_params(p) = EcotoxSystems.generate_individual_params(p; foo = p.foo)
+    generate_individual_params(p) = EcotoxSystems.generate_individual_params(p; foo = p.foo)
 
     @time sim = EcotoxSystems.IBM_simulator(
         p;
         
         individual_ode! = foo_individual!,
-        gen_ind_params = gen_ind_params
+        generate_individual_params = generate_individual_params
     )
 
     # if this code runs without throwing an error, 

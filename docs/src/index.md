@@ -73,7 +73,7 @@ To deviate from the default model, there are a number of components to tweak in 
 - `init_individual_statevars`: A function that initializes individual-level state variables. 
 - `individual_ode!`: ODE-portion of the dynamics of individual-level states. 
 - `individual_rules!`: Rule-based portion of the dynamics of individual-level states.
-- `gen_ind_params`:  A function that translates species-specicif parameters `spc` into individual-level parameters `ind`. The default is `generate_individual_params` and is generic, apart from assuming that `spc` contains an entry for `Z` and `propagate_zoom`.
+- `generate_individual_params`:  A function that translates species-specicif parameters `spc` into individual-level parameters `ind`. The default is `generate_individual_params` and is generic, apart from assuming that `spc` contains an entry for `Z` and `propagate_zoom`.
 
 
 ## API

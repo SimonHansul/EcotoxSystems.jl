@@ -75,7 +75,7 @@ function simulate_ode(deb::AbstractEnergyBudget; kwargs...)
             deb.parameters;
             model = deb.complete_derivatives!, 
             statevars_init = deb.initialize_all_statevars,
-            gen_ind_params = deb.generate_individual_params,
+            generate_individual_params = deb.generate_individual_params,
             callback = deb.callback_set,
             kwargs...
         )
@@ -102,7 +102,7 @@ function simulate_ibm(
         individual_ode! = deb.individual_derivatives!,
         individual_rules! = deb.individual_rules!,
         init_individual_statevars = deb.initialize_individual_statevars,
-        gen_ind_params = deb.generate_individual_params,
+        generate_individual_params = deb.generate_individual_params,
 
         dt = dt, 
         saveat = saveat, 

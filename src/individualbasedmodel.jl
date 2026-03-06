@@ -61,7 +61,7 @@ mutable struct IndividualBasedModel <: AbstractIBM
         individual_ode! = default_individual_ODE!,
         individual_rules! = default_individual_rules!,
         init_individual_statevars = initialize_individual_statevars,
-        gen_ind_params = generate_individual_params,
+        generate_individual_params = generate_individual_params,
 
         dt = 1/24, 
         saveat = 1, 
@@ -98,7 +98,7 @@ mutable struct IndividualBasedModel <: AbstractIBM
                 individual_ode! = individual_ode!,
                 individual_rules! = individual_rules!,
                 init_individual_statevars = init_individual_statevars,
-                gen_ind_params = gen_ind_params,
+                generate_individual_params = generate_individual_params,
                 
                 id = m.idcount
                 )

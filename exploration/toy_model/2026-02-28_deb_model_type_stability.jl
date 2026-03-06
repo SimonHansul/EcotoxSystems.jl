@@ -40,7 +40,7 @@ now for the IBM...
 
 =#
 
-
+# [2026-03-06]
 # 8 weeks with peak 2000 individuals = 8.6 seconds
 #     not enough ❌
 #       the goal should be clearly below 3 seconds (based on comparison with netlogo) for small populations (<10k indivuals), then linear increase in comp time
@@ -54,7 +54,13 @@ now for the IBM...
 #           additional minor improvement => 6 seconds ☑️
 #           appled @unpack for remaining statevars relevant for debkiss rules
 #           additional improvement => 5 seconds ☑️
-#           
+#      profiling highligts  `u.ind.time_since_last_repro += m.dt # track reproduction period`
+#      I suspect thqt the profiler can't know the type of m.dt
+#       how do we achieve that?
+#       ⚠️ would it make sense if `Individual` is a struct, not a mutual struct?
+#       changing to struct actually decreased performance?
+#           we havce 90% performance time       
+
 
 begin
     debkiss = SimplifiedEnergyBudget() |> instantiate
@@ -70,9 +76,11 @@ begin
     p.spc.tau_R = truncated(Normal(2., 0.2), 0, Inf)
 end
 
+EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14); # precompile
 
-integrator.u
+using BenchmarkTools
+@benchmark EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14) # measure
+
+@df sim_ibm.glb plot(:t, :N) 
+
 VSCodeServer.@profview EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14)
-@time EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14);
-
-@df sim_ibm.glb plot(:t, :N)

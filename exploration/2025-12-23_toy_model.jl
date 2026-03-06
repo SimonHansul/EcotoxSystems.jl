@@ -27,7 +27,7 @@ begin # having a look at the ODE output
         model = toy_ODE!, 
         statevars_init = toy_statevars, 
         callback = adult_callback, 
-        gen_ind_params = EcotoxSystems.generate_individual_params_nozoom
+        generate_individual_params = EcotoxSystems.generate_individual_params_nozoom
     )
 
     @df sim_ode plot(
@@ -43,7 +43,7 @@ begin # having a look at the ODE output
         model = toy_ODE!, 
         statevars_init = toy_statevars, 
         callback = adult_callback, 
-        gen_ind_params = EcotoxSystems.generate_individual_params_nozoom
+        generate_individual_params = EcotoxSystems.generate_individual_params_nozoom
     )
 
     @df sim_ode plot!(:t, :L, subplot = 1)
@@ -64,7 +64,7 @@ begin
 
         individual_ode! = toy_individual!, 
         individual_rules! = toy_individual_rules!,
-        gen_ind_params = EcotoxSystems.generate_individual_params_nozoom,
+        generate_individual_params = EcotoxSystems.generate_individual_params_nozoom,
 
         init_global_statevars = toy_global_statevars, 
         init_individual_statevars = toy_individual_statevars

@@ -49,35 +49,22 @@ end
 end
 
 
-
-@with_kw mutable struct Individual <: AbstractIndividual
+struct Individual <: AbstractIndividual
 
     du::CVOrParamStruct
     u::CVOrParamStruct
     p::CVOrParamStruct
-
+    
     individual_ode!::Function # equation-based portion of the individual step
     individual_rules!::Function # rule-based portion of the individual step
     init_individual_statevars::Function # function to initialize individual state variables
     generate_individual_params::Function # function to initialize individual parameters
 
-    """
-    Individual(
-            p::CVOrParamStruct, 
-            global_statevars::CVOrParamStruct;
-            id::Int = 1,
-            cohort::Int = 0,
-            individual_ode! = default_individual_ODE!,
-            individual_rules! = default_individual_rules,
-            init_individual_statevars = initialize_individual_statevars,
-            )::Individual
+    
+end
 
-    Initialization of an individual based on parameters `p` 
-    and global state `global_statevars`. 
-
-    Keyword arguments are used to assure that rules and equations for individual behaviour are inherited correctly.
-    """
-    function Individual(
+"""
+Individual(
         p::CVOrParamStruct, 
         global_statevars::CVOrParamStruct;
         id::Int = 1,
@@ -85,28 +72,51 @@ end
         individual_ode! = default_individual_ODE!,
         individual_rules! = default_individual_rules,
         init_individual_statevars = initialize_individual_statevars,
-        gen_ind_params = generate_individual_params
-        )
-        
-        a = new() 
+        )::Individual
 
-        a.individual_ode! = individual_ode!
-        a.individual_rules! = individual_rules!
-        a.init_individual_statevars = init_individual_statevars
-        a.generate_individual_params = gen_ind_params
-        a.p = a.generate_individual_params(p)
-        
-        # individual stores a reference to global states + copy of own states
-        a.u = ComponentVector(
-            glb = global_statevars, # global states
-            ind = ComponentVector( # own states
-                a.init_individual_statevars(a.p, id = id, cohort = cohort);
-            )
-        )
+Initialization of an individual based on parameters `p` 
+and global state `global_statevars`. 
 
-        a.du = similar(a.u)
-        a.du .= 0.
+Keyword arguments are used to assure that rules and equations for individual behaviour are inherited correctly.
+"""
+function Individual(
+    p::CVOrParamStruct, 
+    global_statevars::CVOrParamStruct;
+    id::Int = 1,
+    cohort::Int = 0,
+    individual_ode! = default_individual_ODE!,
+    individual_rules! = default_individual_rules,
+    init_individual_statevars = initialize_individual_statevars,
+    generate_individual_params = generate_individual_params
+    )
+
+    # parameters are instantiated from the individual's method and species-specific parameters
+    p_ind = generate_individual_params(p)
+    
+    # individual stores a reference to global states + copy of own states
+    u = ComponentVector(
+        glb = global_statevars, # global states
+        ind = ComponentVector( # own states
+            init_individual_statevars(p_ind, id = id, cohort = cohort);
+        )
+    )
+
+    # derivatives have the same shape as statevars and start at 0
+    du = similar(u)
+    du .= 0.
+
+
+    return Individual(
+        du, 
+        u,
+        p_ind, 
         
-        return a
-    end
+        individual_ode!,
+        individual_rules!, 
+        init_individual_statevars, 
+        generate_individual_params
+
+    )
+    
+    return a
 end
