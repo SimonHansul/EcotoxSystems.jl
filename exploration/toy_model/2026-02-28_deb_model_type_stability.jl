@@ -79,8 +79,110 @@ end
 EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14); # precompile
 
 using BenchmarkTools
+@time EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14); # measure
 @benchmark EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14) # measure
 
 @df sim_ibm.glb plot(:t, :N) 
 
 VSCodeServer.@profview EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14)
+
+
+#=
+💡 trying an entirely differently idea
+
+    it should be ok to define a new struct for each IBM
+    maybe we can still exploit the abstract type to do some of the heavy lifting
+        TODO: if this approach works, replace global_ode! with specific functions
+=#
+
+import EcotoxSystems: AbstractIndividual, get_global_statevars!, Euler!, set_global_statevars!, AbstractIBM, IndividualBasedModel
+
+struct Phil <: AbstractIndividual
+
+    du::ComponentVector
+    u::ComponentVector
+    p::ComponentVector
+
+end
+
+function Phil(
+    p, 
+    global_statevars; 
+    id = 1., 
+    cohort = 0.
+    )
+
+    p_ind = debkiss:generate_individual_params(p)
+
+    # individual stores a reference to global states + copy of own states
+    u = ComponentVector(
+        glb = global_statevars, # global states
+        ind = ComponentVector( # own states
+            init_individual_statevars(p_ind, id = id, cohort = cohort);
+        )
+    )
+
+    # derivatives have the same shape as statevars and start at 0
+    du = similar(u)
+    du .= 0.
+
+    return Phil(
+        du, 
+        u,
+        p_ind
+    )
+end
+
+function individual_step!(a::Phil, m::AbstractIBM)::Nothing
+
+    get_global_statevars!(a, m) # update reference to global states
+
+    debkiss.individual_derivatives!(a.du, a.u, a.p, m.t) # calculate derivatives of the ODE-portion of the individual model
+    Euler!(a.u, a.du, m.dt) # update states using Euler scheme -> this could even be replaced with a more sophisticated scheme
+    debkiss.individual_rules!(a, m) # apply the rule-based portion of the individual model
+
+    set_global_statevars!(m, a) # update global states
+
+    return nothing
+end
+
+mutable struct PhilsModel <: AbstractIBM
+    individuals::Vector{Phil}
+    du::ComponentVector
+    u::ComponentVector
+    p::ComponentVector
+    t::Float64
+    dt::Float64
+    idcount::Int
+    saveat::Float64
+    global_record::Vector{ComponentVector}
+    individual_record::Vector{ComponentVector}
+
+    record_individuals::Bool
+end
+
+function PhilsModel(
+    p::ComponentVector; 
+
+    dt = 1/24, 
+    saveat = 1, 
+    record_individuals::Bool = true
+    )
+
+    return PhilsModel(
+        
+    )
+
+
+end
+
+function IndividualBasedModel(
+ 
+    )
+
+    return IndividualBasedModel(
+        global_ode!, 
+    )
+
+end
+
