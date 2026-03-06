@@ -2,7 +2,7 @@
 # these functions are central to easily run simulations from parameters
 # central functions are ODE_simulator and IBM_simulator 
 
-@enum ReturnType odesol dataframe
+@enum ReturnType odeprob odesol dataframe
 
 """
     ODE_simulator(
@@ -43,7 +43,10 @@ In addition we have some kwargs that are used to further process inputs and outp
 
 - `statevars_init`: Function with signature `statevars_init(p)` that defines initial state variables as component vector. Components typically match those in the parameter vector. 
 - `gen_ind_params: Function that converts species-level parameters to individual-level parameters, for example by replacing parameters which are given as distributions with a random sample from the distribution. The inputs and outputs of this function should contain all components. 
-- `returntype`: Indicating of how to return the result. Currently allowed are `dataframe` (complete solution converted to a `DataFrame`) and `odesol` (the ODE solution object as returned by `OrdinaryDiffEq`). Default is `dataframe`.
+- `returntype`: Indicating of how to return the result. Currently allowed are 
+    - `EcotoxSystems.dataframe`: complete solution converted to a `DataFrame`
+    - `EcotoxSystems.odesol`: the ODE solution object as returned by `OrdinaryDiffEq`
+    - `EcotoxSystems.odeprob` : returns the initial value problem without solving it
 
 Run a model as purely ODE-based system: 
 
@@ -72,6 +75,11 @@ function ODE_simulator(
     u = statevars_init(p_ind)
 
     prob = ODEProblem(model, u, (0, p.glb.t_max), p_ind) # define the problem
+
+    if returntype == odeprob
+        return prob
+    end
+
     sol = solve(prob, alg; saveat = saveat, reltol = reltol, kwargs...) # get solution to the IVP
 
     if returntype == odesol # directly return the ODE solution object

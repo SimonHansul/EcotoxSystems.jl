@@ -1,5 +1,7 @@
 
 clamp(x::Real, value::Real) = Base.ifelse(x>value, x, value)
+#@inline clamp(x::T, value::T) where {T<:Real} = Base.ifelse(x > value, x, value)
+#@inline clamp(x::T, value::S) where {T<:Real,S<:Real} = Base.ifelse(x > value, x, value)
 
 birth_condition(u, t, integrator) = u.ind.X_emb
 birth_affect!(integrator) = integrator.u.ind.is_embryo = 0.
