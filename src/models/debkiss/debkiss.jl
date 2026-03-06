@@ -14,7 +14,7 @@ Base.@kwdef mutable struct SimplifiedEnergyBudget <: AbstractEnergyBudget
     
     initialize_individual_statevars::Function = debkiss_individual_statevars
     individual_derivatives!::Function = debkiss!
-    individual_rules!::Function = default_individual_rules!
+    individual_rules!::Function = debkiss_individual_rules!
     generate_individual_params::Function = generate_individual_params
 
     # composed model

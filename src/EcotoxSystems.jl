@@ -20,21 +20,24 @@ const CVOrParamStruct = Union{ComponentVector,AbstractParams} # make it possible
 include("utils.jl")
 include("drcfuncts.jl")
 
-# definition of the default model
-
-include("models/debkiss/params.jl")
-include("models/debkiss/derivatives.jl")
-include("models/debkiss/statevars.jl")
-include("models/debkiss/traits.jl")
-include("models/debkiss/debkiss.jl")
-
-export SimplifiedEnergyBudget, instantiate, simulate_ode, simulate_ibm, simulate
-
 # infrastructure to incorporate ODE-based model into an IBM framework
 
 include("individuals.jl")
 include("individualbasedmodel.jl")
 include("ibmschedules.jl")
+
+
+# pre-defined model(s)
+
+include("models/debkiss/params.jl")
+include("models/debkiss/derivatives.jl")
+include("models/debkiss/statevars.jl")
+include("models/debkiss/rules.jl")
+include("models/debkiss/traits.jl")
+include("models/debkiss/debkiss.jl")
+
+export SimplifiedEnergyBudget, instantiate, simulate_ode, simulate_ibm, simulate
+
 
 # functions to simulate models
 

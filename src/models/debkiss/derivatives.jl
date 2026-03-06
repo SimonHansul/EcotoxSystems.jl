@@ -61,6 +61,8 @@ function debkiss!(du, u, p, t)::Nothing
     du.ind.H = dH(is_adult, kappa, du.ind.A, du.ind.J)
     du.ind.R = dR(is_adult, p.ind.eta_AR, kappa, du.ind.A, du.ind.J)
 
+    du.ind.age = 1.
+
     return nothing
 end
 
