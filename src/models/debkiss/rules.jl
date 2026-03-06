@@ -15,8 +15,8 @@ function debkiss_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothi
     p = a.p
     u = a.u
 
-    @unpack X_emb, H, S, S_max_hist = u.ind
-    @unpack H_p, W_S_rel_crit, h_S = p.ind
+    @unpack X_emb, H, S, S_max_hist, age, time_since_last_repro, R = u.ind
+    @unpack H_p, W_S_rel_crit, h_S, a_max, tau_R, X_emb_int = p.ind
 
     if u.ind.X_emb <= 0.
         u.ind.is_embryo = 0.
@@ -30,7 +30,7 @@ function debkiss_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothi
     # aging is implemented in a non-mechanistic manner 
     # individuals die when they exceed their maximum age a_max
     # a_max is subject to individual variability
-    if death_by_aging(u.ind[:age], p[:ind][:a_max])
+    if death_by_aging(age, a_max)
         u.ind.cause_of_death = 1.
     end
     
@@ -45,10 +45,10 @@ function debkiss_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothi
     # reproduction, assuming a constant reproduction period
     
     # reproduction only occurs if the reproduction period has been exceeded
-    if check_reproduction_period(u.ind[:time_since_last_repro], p[:ind][:tau_R]) 
+    if check_reproduction_period(time_since_last_repro, tau_R) 
         # if that is the case, calculate the number of offspring, 
         # based on the reproduction buffer and the dry mass of an egg
-        for _ in 1:calc_num_offspring(u.ind[:R], p[:ind][:X_emb_int])
+        for _ in 1:calc_num_offspring(R, X_emb_int)
             m.idcount += 1 # increment individual counter
             push!(m.individuals, Individual( # create new individual and push to individuals vector
                 m.p, 
@@ -61,7 +61,7 @@ function debkiss_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothi
                 gen_ind_params = a.generate_individual_params,
                 )
             )
-            u.ind.R -= p[:ind][:X_emb_int] # decrease reproduction buffer
+            u.ind.R -= X_emb_int # decrease reproduction buffer
             u.ind.cum_repro += 1 # keep track of cumulative reproduction of the mother individual
         end
         u.ind.time_since_last_repro = 0. # reset reproduction period
