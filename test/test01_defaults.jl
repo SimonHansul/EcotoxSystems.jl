@@ -1,3 +1,5 @@
+include("test00_setup.jl")
+
 begin # setting up a debkiss instance
     debkiss = SimplifiedEnergyBudget() |> instantiate
     debkiss.parameters.glb.t_max = 56.  
@@ -11,7 +13,7 @@ end
     @test isapprox(maximum(sim.S), EcotoxSystems.calc_S_max(p.spc), rtol = 0.1)
 end;
 
-#@time sim = EcotoxSystems.ODE_simulator(p; alg = Rosenbrock23());
+@time sim = simulate_ode(debkiss);
 #using BenchmarkTools; 
 #@benchmark EcotoxSystems.ODE_simulator(p; alg = Tsit5())
 #VSCodeServer.@profview_allocs [EcotoxSystems.ODE_simulator(p) for _ in 1:100];

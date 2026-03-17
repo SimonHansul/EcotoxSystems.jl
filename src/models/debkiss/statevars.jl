@@ -70,9 +70,9 @@ function debkiss_individual_statevars(
     cohort = 0.)::ComponentVector
     
     ComponentVector(
-        embryo = 1.,
-        juvenile = 0.,
-        adult = 0.,
+        is_embryo = 1.,
+        is_juvenile = 0.,
+        is_adult = 0.,
 
         X_emb = p.ind.X_emb_int, # initial mass of vitellus
         S = p.ind.X_emb_int * X_EMB_INT_REL, # initial structure is a small fraction of initial reserve // mass of vitellus
@@ -86,11 +86,11 @@ function debkiss_individual_statevars(
         I_emb = 0., # cumulative ingestion from vitellus
         I_p = 0., # cumulative ingestion from external food resource
 
-        D_z = constrmmat(p.ind.KD), # sublethal damage per stressor and PMoA
-        D_h = constrmvec(p.ind.KD_h), # lethal damage per stressor
-
-        y_T = 1.,
-        S_z = 1., # chemical-related survival probability
+        #D_z = constrmmat(p.ind.KD), # sublethal damage per stressor and PMoA
+        #D_h = constrmvec(p.ind.KD_h), # lethal damage per stressor
+        #
+        #y_T = 1.,
+        #S_z = 1., # chemical-related survival probability
 
         # these are curently only needed in the IBM version, 
         # but may find application in the pure-ODE implementation 
@@ -101,7 +101,7 @@ function debkiss_individual_statevars(
         age = 0.,
         cause_of_death = 0.,
         time_since_last_repro = 0.,
-        cum_repro = 0.,
+        cum_repro = 0.
     )
 end
 
@@ -118,7 +118,6 @@ Global state variables can be extended, modified or replaced in the same way as 
 function debkiss_global_statevars(p::CVOrParamStruct)::CVOrParamStruct
     ComponentArray( # initial states
         X = p.glb.dX_in, # initial resource abundance equal to influx rate
-        C_W = p.glb.C_W, # external stressor concentrations
         N = p.glb.N0
     )
 end

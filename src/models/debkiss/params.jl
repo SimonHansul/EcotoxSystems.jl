@@ -10,20 +10,14 @@ debkiss_global_params = ComponentVector(
     dX_in = 1200.0,          # nutrient influx [μg C d-1]
     k_V = 0.0,                 # chemostat dilution rate [d-1]
     V_patch = 0.05,            # volume of a patch [L]
-    C_W = [0.0],               # external chemical concentrations [μg L-1]
     T = 293.15                 # ambient temperature [K]
 )
 
 # Species-level DEB and TKTD parameters with ComponentVector
+# TODO: harmonize parameter naming with debkiss literature
+# TODO: add specific density, set to 1 by default
 debkiss_species_params = ComponentVector(
     Z = Dirac(1.0), # individual variability through zoom factor
-    propagate_zoom = ComponentVector( # lists parameters which are affected by the zoom factor and the corresponding scaling exponent
-        dI_max = 1/3, 
-        dI_max_emb = 1/3,
-        X_emb_int = 1,
-        H_p = 1, 
-        K_X = 1
-    ),
     T_A = 8000.0,    # Arrhenius temperature [K]
     T_ref = 293.15,  # reference temperature [K]
     X_emb_int = 19.42, # initial vitellus [μgC]
@@ -38,12 +32,12 @@ debkiss_species_params = ComponentVector(
     k_M = 0.59,     # somatic maintenance rate constant [d^-1]
     k_J = 0.504,    # maturity maintenance rate constant [d^-1]
     H_p = 100,    # maturity at puberty [μgC]
-    KD = Float64[0. 0. 0. 0.;], # KD - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
-    B = Float64[2. 2. 2. 2.;], # slope parameters
-    E = Float64[1e10 1e10 1e10 167;], # sensitivity parameters (thresholds)
-    KD_h = Float64[0.;], # KD - value for GUTS-SD module (1 row = 1 stressor)
-    E_h = Float64[1e10;], # sensitivity parameter (threshold) for GUTS-SD module
-    B_h = Float64[2.;], # slope parameter for GUTS-SD module 
+    #KD = Real[0. 0. 0. 0.;], # KD - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
+    #B = Real[2. 2. 2. 2.;], # slope parameters
+    #E = Real[1e10 1e10 1e10 167;], # sensitivity parameters (thresholds)
+    #KD_h = Real[0.;], # KD - value for GUTS-SD module (1 row = 1 stressor)
+    #E_h = Real[1e10;], # sensitivity parameter (threshold) for GUTS-SD module
+    #B_h = Real[2.;], # slope parameter for GUTS-SD module 
     # these are curently only used in an individual-based context, but could find application in the pure-ODE implementation 
     # for example by triggering emptying of the reproduction buffer through callbacks
     W_S_rel_crit = 0.66,  # relative amount of structure which can be lost before hazard rate kicks in
@@ -53,13 +47,13 @@ debkiss_species_params = ComponentVector(
     # additional component for intermediate quantities, 
     # these are not technically model parameters (although they could be treated so), 
     # but this is nevertheless the best place to put them
-    intermediates = ComponentVector( 
-        y_j = ones(4), 
-        h_z = 0.0
-    )
+    #intermediates = ComponentVector( 
+    #    y_j = ones(4), 
+    #    h_z = 0.0
+    #)
 )
 
-debkiss_defaultparams = ComponentVector(
+debkiss_defaultparams = ComponentVector{Union{Real,Distribution}}(
     glb = debkiss_global_params,
     spc = debkiss_species_params
 )
@@ -89,7 +83,8 @@ This also works for Vectors of distributions.
 The kwargs need to be supplemented with additional components if there are more than just a global and an individual-level component.
 """
 function generate_individual_params(p::CVOrParamStruct; kwargs...)::CVOrParamStruct
-    ind = getval.(p.spc) |> propagate_zoom
+    ind = getval.(p.spc) |> propagate_zoom 
+    # type must not bee to specific for autodiff compatibility
     return ComponentVector(
         glb = p.glb, 
         ind = ind;
@@ -102,9 +97,30 @@ function generate_individual_params_nozoom(p::ComponentVector; kwargs...)::Compo
         glb = p.glb, 
         ind = getval.(p.spc); 
         kwargs...
-    )
+    ) #|> 
+    #x -> ComponentVector{Real}(x) # type must not bee to specific for autodiff compatibility
 end
 
+function debkiss_individual_params(p::ComponentVector; kwargs...)
+
+    ind = getval.(p.spc) |> 
+    x -> Real.(x) |> 
+    x -> begin
+        x.dI_max *= x.Z^(1/3)
+        x.dI_max_emb *= x.Z^(1/3)
+        x.H_p *= x.Z
+        x.X_emb_int *= x.Z
+        x.K_X *= x.Z^(1/3)
+        x
+    end
+
+    return ComponentVector(
+        glb = p.glb, 
+        ind = ind; 
+        kwargs...
+    )
+
+end
 """
     link_params!(p::CVOrParamStruct, links::NamedTuple = (spc = linkfun,))::Nothing 
 
