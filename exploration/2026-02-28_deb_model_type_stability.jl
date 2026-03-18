@@ -34,7 +34,7 @@ we have small allocs (32), but should not hold us back for now
 @allocated debkiss.complete_derivatives!(du, integrator.u, integrator.p, t)
 
 #=
-now for the IBM...
+now for the IBM.
 
 - the individual rules need to use the callbacks
 
@@ -42,24 +42,28 @@ now for the IBM...
 
 # [2026-03-06]
 # 8 weeks with peak 2000 individuals = 8.6 seconds
-#     not enough ❌
-#       the goal should be clearly below 3 seconds (based on comparison with netlogo) for small populations (<10k indivuals), then linear increase in comp time
-#     look at profview   
-#       reveals that comp time is spent mostly in individual_rules!
-#       "age" could go into derivatives
-#           minor improvement => 7.6 seconds ☑️
-#      more comp time is spent in getindex
-#       try to use @unpack instead?
-#           applied @unpack for starvation 
-#           additional minor improvement => 6 seconds ☑️
-#           appled @unpack for remaining statevars relevant for debkiss rules
-#           additional improvement => 5 seconds ☑️
-#      profiling highligts  `u.ind.time_since_last_repro += m.dt # track reproduction period`
-#      I suspect thqt the profiler can't know the type of m.dt
-#       how do we achieve that?
-#       ⚠️ would it make sense if `Individual` is a struct, not a mutual struct?
-#       changing to struct actually decreased performance?
-#           we havce 90% performance time       
+#     - not enough ❌
+#       - the goal should be clearly below 3 seconds (based on comparison with netlogo) for small populations (<10k indivuals), then linear increase in comp time
+#     - inspect profview   
+#       - reveals that comp time is spent mostly in individual_rules!
+#       - "age" could go into derivatives
+#           - minor improvement => 7.6 seconds ☑️
+#      - more comp time is spent in getindex
+#      - try to use @unpack instead?
+#           - applied @unpack for starvation 
+#           - additional minor improvement => 6 seconds ☑️
+#           - appled @unpack for remaining statevars relevant for debkiss rules
+#           - additional improvement => 5 seconds ☑️
+#      - profiling highligts  `u.ind.time_since_last_repro += m.dt # track reproduction period`
+#      - I suspect thqt the profiler can't know the type of m.dt
+#      - how do we achieve that?
+#           - changing the signature of debkiss_individual_rues! to use concrete types
+#               - AbstractIBM => IndividualBasedModel: No improvement
+#               - AbstractIndividual => Individual: No improvement
+#      - it might be an issue that we have functions as fields of structs
+#           - check if https://github.com/JuliaLang/FunctionWrappers.jl is useful?
+#      - for now: try to write a more specialized function that skips any wrapping of functions.
+#           - simulate_debkiss_population below
 
 
 begin
@@ -80,11 +84,22 @@ EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14); # precompile
 
 using BenchmarkTools
 @time EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14); # measure
-@benchmark EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14) # measure
+#@benchmark EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14) # measure
 
-@df sim_ibm.glb plot(:t, :N) 
+VSCodeServer.@profview EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 7)
 
-VSCodeServer.@profview EcotoxSystems.simulate_IBM(debkiss, saveat = 1, showinfo = 14)
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 #=

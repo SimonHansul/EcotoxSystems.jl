@@ -49,7 +49,7 @@ end
 end
 
 
-struct Individual <: AbstractIndividual
+@with_kw mutable struct Individual <: AbstractIndividual
 
     du::CVOrParamStruct
     u::CVOrParamStruct
@@ -117,6 +117,4 @@ function Individual(
         generate_individual_params
 
     )
-    
-    return a
 end

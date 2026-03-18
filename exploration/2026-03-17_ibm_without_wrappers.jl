@@ -1,17 +1,47 @@
+# 2026-03-17_agentsjl_integration.jl
+# idea of this script: 
+#   skip function wrapping and write a specialized implementaion of the debkiss model
+#   however, do this without re-typing the derivatives!
+#   optionally, do this via agents.jl?
 
-"""
-    debkiss_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothing
+using Agents
+import Agents: NoSpaceAgent
+using Distributions
+import OrdinaryDiffEq: OrdinaryDiffEqTsit5
+#using CairoMakie
 
-Defines the default rule-based portion for DEBIndividuals. <br>
 
-The event functions which are used as callbacks during ODE solving are here re-used to apply rules for life stage transitions.
+@agent struct Individual(NoSpaceAgent)
+    du::ComponentVector{Real}
+    u::ComponentVector{Real}
+    p::ComponentVector{Real}
+    i#::Integrator
+end
 
-A crude rule for starvation mortality is implemented, applying a constant hazard rate of a certain relative amount of structural mass is lost.
+function initialize_model()
 
-Reproduction is assumed to occur in fixed time intervals, according to `spc.tau_R`.
-"""
-function debkiss_individual_rules!(a::Individual, m::IndividualBasedModel)::Nothing
 
+
+
+end
+
+function model_step!(m)
+
+    du::ComponentVector{Real}
+    u::ComponentVector{Real}
+    p::ComponentVector{Real}
+    i#::Integrator
+    m.t += m.dt
+
+    return nothing
+end
+
+import EcotoxSystems: debkiss!
+
+function individual_step!(a, m)
+
+    debkiss!(a.du, a.u, a.p, m.t)
+    
     p = a.p
     u = a.u
 
@@ -26,7 +56,6 @@ function debkiss_individual_rules!(a::Individual, m::IndividualBasedModel)::Noth
         u.ind.is_adult = 1.
     end
 
- 
     # aging is implemented in a non-mechanistic manner 
     # individuals die when they exceed their maximum age a_max
     # a_max is subject to individual variability
@@ -70,5 +99,23 @@ function debkiss_individual_rules!(a::Individual, m::IndividualBasedModel)::Noth
         u.ind.time_since_last_repro += m.dt # track reproduction period
     end
 
-    return nothing
+    return agent.du.I
 end
+
+
+function simulate_debkiss_population(
+
+    )
+
+
+
+end
+
+
+
+m = EcotoxSystems.IndividualBasedModel(
+    debkiss.parameters;
+    init_global_statevars = debkiss.initialize_global_statevars,
+    global_ode! = debkiss.global_derivatives!
+)
+
