@@ -1,8 +1,11 @@
 # 2026-03-17_agentsjl_integration.jl
 # idea of this script: 
 #   skip function wrapping and write a specialized implementaion of the debkiss model
-#   however, do this without re-typing the derivatives!
-#   optionally, do this via agents.jl?
+
+# it is clear that wrapping functions in structs like we did previously is not a good idea, 
+# and easily leads to type instabilities
+# we therefore try to skip the wrapping, so that the derivatives function is hard cooded into the stepping functions, 
+# but the derivatives themselves are not re-typed
 
 using Agents
 import Agents: NoSpaceAgent
