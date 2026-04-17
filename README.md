@@ -28,6 +28,7 @@ we need to consider the organism-level as well as the environment (*individual* 
 
 The equation-based part is a system of ODEs. We make heavy use of [ComponentArrays.jl](https://github.com/jonniedie/ComponentArrays.jl) 
 to define parameters and state variables for each component. 
+
 <img src="implementation_logic.png" alt="Implementation logic">
 
 This approach is work in progress, but overall in a functional state. There are currently some limitations regarding performance of the IBM due to type instabilities that occur in the generic IBM scheduling.
