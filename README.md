@@ -30,6 +30,17 @@ The equation-based part is a system of ODEs. We make heavy use of [ComponentArra
 to define parameters and state variables for each component. 
 <img src="implementation_logic.png" alt="Implementation logic">
 
+This approach is work in progress, but overall in a functional state. There are currently some limitations regarding performance of the IBM due to type instabilities that occur in the generic IBM scheduling.
+
+## TODO
+
+
+-[] resolve type instabilities in IBM scheduling
+-[] update docs
+
+-[] pre-defined spatial IBMs
+-[] native support for multi-species systems
+
 
 ## Installation 
 
