@@ -38,82 +38,12 @@ While `EcotoxSystems.jl` is not registered, install directly from github:
 ```Julia
 using Pkg; Pkg.add("https://github.com/simonhansul/ecotoxsystems.jl")
 ```
+or 
 
-
-## Quickstart
-
-### Using the pre-defined model
-
-The following code executes the *default* model and parameters. <br>
-This is a Dynamic Energy Budget Toxicokinetic-Toxicodynamic (DEB-TKTD) model based on the DEBkiss. <br> 
-The derivatives are defined in `src/default_derivatives.jl`. 
 
 ```Julia
-using EcotoxSystems
-debkiss = SimplifiedEnergyBudget() |> instantiate
-sim = ODE_simulator(debkiss)
+using Pkg; Pkg.develop(url = "https://github.com/simonhansul/ecotoxsystems.jl")
 ```
-
-The definition of `SimplifiedEnergyBudget` shows all the components that make up the fully functional simulation model:
-
-```julia
-Base.@kwdef mutable struct SimplifiedEnergyBudget <: AbstractEnergyBudget
-    parameters::ComponentVector = debkiss_defaultparams
-
-    # global component
-
-    initialize_global_statevars::Union{Function,Nothing} = debkiss_global_statevars
-    global_derivatives!::Union{Function,Nothing} = constant_nutrient_influx!
-    global_rules!::Function = default_global_rules!
-    
-    # individual-level component
-    
-    initialize_individual_statevars::Function = debkiss_individual_statevars
-    individual_derivatives!::Function = debkiss!
-    individual_rules!::Function = default_individual_rules!
-    generate_individual_params::Function = generate_individual_params
-
-    # composed model
-
-    initialize_all_statevars::Union{Function,Nothing} = nothing
-    complete_derivatives!::Union{Function,Nothing} = nothing
-end
-```
-
-The parameters `debkiss_defaultparams` are a component vector with global (`glb`) and species-level (`spc`) parameters. <br>
-
-Species-level parameters are internally converted to individual-level parameters (`ind`) when passing them onto a simulator.
-The function that converts `spc` to `ind` is also a keyword argument of `ODE_simulator`. <br>
-
-### Individual variability
-
-There are some convenience functions, e.g. to run replicated simulations:
-
-```Julia
-p = debkiss.parameters
-p.spc.Z = Truncated(Normal(1,0.1), 0, Inf) # introduce individual variability through the mass-based zoom factor
-sim = @replicates simulate(debkiss) 10 # simulate 10 times, each time sampling from Z
-```
-This is interesting if one of the parameters is subject to individual variability, 
-as done for the mass-based zoom factor `Z` in the example above. <br>
-Any species-level parameter can be defined as a probability distribution instead of a scalar value, 
-and calling `simulate` on such a parameter set will cause it to take a random sample 
-from the distribution to execute the simulation. <br>
-
-### Running the IBM simulator
-
-The following code simulates the default model as individual-based model (IBM):
-
-```
-import EcotoxSystems: simulate_IBM
-sim = simulate_IBM(debkiss)
-``` 
-
-We can thus relatively easily switch between both modes. This can be useful for several reasons:
-
-- We can develop and unit-test test the ODE part independently of the rule-based part
-- During calibration, we often only need the ODE part.
-- We can more easily re-combine different rules and ODE-systems, respectively, to study model behaviour, perform model selections, Bayesian model averaging, etc.
 
 
 ## Changelog 
