@@ -1,4 +1,4 @@
-# EcotoxSystems.jl : Simulating component-structured systems for ecotoxicology and chemical risk assessment
+# EcotoxSystems.jl : Simulation of component-structured systems in ecotoxicology and ecology
 
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://simonhansul.github.io/EcotoxSystems.jl/dev/)
