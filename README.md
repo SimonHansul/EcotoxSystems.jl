@@ -38,7 +38,7 @@ This approach is work in progress, but overall in a functional state. There are 
 
 - [ ] resolve type instabilities in IBM scheduling
 - [ ] update docs
-- [ ] pre-defined spatial IBMs
+- [ ] provide example of spatially explicit IBM
 - [ ] native support for multi-species systems
 
 
