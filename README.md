@@ -10,7 +10,7 @@
 
 This package aims to 
 
-- Provide a systematic approach for modular modelling of mechanistic models in ecotoxicology
+- Provide utilities for modular modelling of dynamic effect models
 - Facilitate the integration of organism-level ecotoxicological models into individual-based population models
 - Provide a default model and parameters to serve as an entry point for teaching, research and development
 
