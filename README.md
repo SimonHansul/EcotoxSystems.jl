@@ -36,11 +36,10 @@ This approach is work in progress, but overall in a functional state. There are 
 ## TODO
 
 
--[ ] resolve type instabilities in IBM scheduling
--[ ] update docs
-
--[ ] pre-defined spatial IBMs
--[ ] native support for multi-species systems
+- [ ] resolve type instabilities in IBM scheduling
+- [ ] update docs
+- [ ] pre-defined spatial IBMs
+- [ ] native support for multi-species systems
 
 
 ## Installation 
