@@ -49,13 +49,13 @@ While `EcotoxSystems.jl` is not registered, install directly from github:
 ```Julia
 using Pkg; Pkg.add("https://github.com/simonhansul/ecotoxsystems.jl")
 ```
-or 
+or, to check out the package for development:
 
 
 ```Julia
 using Pkg; Pkg.develop(url = "https://github.com/simonhansul/ecotoxsystems.jl")
 ```
-
+Alternatively, it can useful to make a bare clone of the repo and add it as git submodule to your project.  
 
 ## Changelog 
 
