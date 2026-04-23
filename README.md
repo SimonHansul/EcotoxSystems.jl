@@ -24,7 +24,7 @@ Explicitly not within the scope of this package:
 
 The logic of `EcotoxSystems.jl` is based around the notion that a model can be divided into an equation-based portion and a rule-based portion. <br><br>
 Furthermore, in the context of models developed for ecotoxicology and ecological risk assessment, 
-we need to consider the organism-level as well as the environment (*individual* and *global* in the diagram below). <br>
+we need to consider the organism-level (*individual*) as well as the environment (*global*). <br>
 
 The equation-based part is a system of ODEs. We make heavy use of [ComponentArrays.jl](https://github.com/jonniedie/ComponentArrays.jl) 
 to define parameters and state variables for each component. 
