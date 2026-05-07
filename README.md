@@ -102,3 +102,7 @@ Initial version.
 ## v0.3.1
 
 - change in dependency versions
+
+## v0.3.2
+
+- added missing method to fix `sol_to_df`
