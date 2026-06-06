@@ -56,11 +56,11 @@ function individual_step!(a::AbstractIndividual, m::AbstractIBM)
 end
 
 """
-    Euler!(u::CVOrParamStruct, du::CVOrParamStruct, dt::Real)::Nothing
+    Euler!(u::ComponentVector, du::ComponentVector, dt::Real)::Nothing
 
 Apply Euler scheme to state variables.
 """
-function Euler!(u::CVOrParamStruct, du::CVOrParamStruct, dt::Real)::Nothing
+function Euler!(u::ComponentVector, du::ComponentVector, dt::Real)::Nothing
     u .+= du .* dt
     return nothing
 end

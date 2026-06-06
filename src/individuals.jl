@@ -115,9 +115,9 @@ end
 
 @with_kw mutable struct Individual <: AbstractIndividual
 
-    du::CVOrParamStruct
-    u::CVOrParamStruct
-    p::CVOrParamStruct
+    du::ComponentVector
+    u::ComponentVector
+    p::ComponentVector
 
     individual_ode!::Function # equation-based portion of the individual step
     individual_rules!::Function # rule-based portion of the individual step
@@ -126,8 +126,8 @@ end
 
     """
     Individual(
-            p::CVOrParamStruct, 
-            global_statevars::CVOrParamStruct;
+            p::ComponentVector, 
+            global_statevars::ComponentVector;
             id::Int = 1,
             cohort::Int = 0,
             individual_ode! = default_individual_ODE!,
@@ -141,8 +141,8 @@ end
     Keyword arguments are used to assure that rules and equations for individual behaviour are inherited correctly.
     """
     function Individual(
-        p::CVOrParamStruct, 
-        global_statevars::CVOrParamStruct;
+        p::ComponentVector, 
+        global_statevars::ComponentVector;
         id::Int = 1,
         cohort::Int = 0,
         individual_ode! = default_individual_ODE!,

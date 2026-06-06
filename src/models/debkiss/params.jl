@@ -65,7 +65,7 @@ getval(x::Distribution) = rand(x)
 getval(x::Any) = x
 
 # propagate_zoom applies the zoomfactor to the parameters which are indicated in propagate_zoom, with the appropriate scaling factor
-propagate_zoom(ind::CVOrParamStruct) = begin
+propagate_zoom(ind::ComponentVector) = begin
     zprop = ind[keys(ind.propagate_zoom)] .* ind.Z .^ ind.propagate_zoom
     ind = ComponentVector(
         ind;
@@ -74,7 +74,7 @@ propagate_zoom(ind::CVOrParamStruct) = begin
 end
 
 """
-    generate_individual_params(p::CVOrParamStruct; kwargs...)
+    generate_individual_params(p::ComponentVector; kwargs...)
 
     Generate individual-specific parameter set from species-specific parameter set. 
 If a parameter entry is a distribution, a random sample is taken. 
@@ -82,7 +82,7 @@ If a parameter entry is a distribution, a random sample is taken.
 This also works for Vectors of distributions. 
 The kwargs need to be supplemented with additional components if there are more than just a global and an individual-level component.
 """
-function generate_individual_params(p::CVOrParamStruct; kwargs...)::CVOrParamStruct
+function generate_individual_params(p::ComponentVector; kwargs...)::ComponentVector
     ind = getval.(p.spc) |> propagate_zoom 
     # type must not bee to specific for autodiff compatibility
     return ComponentVector(
@@ -122,7 +122,7 @@ function debkiss_individual_params(p::ComponentVector; kwargs...)
 
 end
 """
-    link_params!(p::CVOrParamStruct, links::NamedTuple = (spc = linkfun,))::Nothing 
+    link_params!(p::ComponentVector, links::NamedTuple = (spc = linkfun,))::Nothing 
 
 Apply functions to link parameters. <br>
 
@@ -155,7 +155,7 @@ and we need to update the link for each simulated individual. <br>
 sim = ODE_simulator(p, param_links = (ind = link_ind_params!,))
 ```
 """
-link_params!(p::CVOrParamStruct, links::NamedTuple = (spc = link_ind_params!,))::Nothing = begin
+link_params!(p::ComponentVector, links::NamedTuple = (spc = link_ind_params!,))::Nothing = begin
 
     for (component,linkfun!) in pairs(links)
         linkfun!(p[component])
@@ -164,4 +164,4 @@ link_params!(p::CVOrParamStruct, links::NamedTuple = (spc = link_ind_params!,)):
     return nothing
 end
 
-link_params!(p::CVOrParamStruct, links::Nothing)::Nothing = nothing
+link_params!(p::ComponentVector, links::Nothing)::Nothing = nothing

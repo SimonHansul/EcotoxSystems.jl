@@ -6,7 +6,7 @@
 
 """
     ODE_simulator(
-        p::CVOrParamStruct; 
+        p::ComponentVector; 
         alg = Tsit5(),
         saveat = 1,
         reltol = 1e-6,
@@ -54,7 +54,7 @@ sim = DEB.ODE_simulator(EcotoxSystems.debkiss_defaultparams(p))
 
 """
 function ODE_simulator(
-    p::CVOrParamStruct; 
+    p::ComponentVector; 
     alg = Tsit5(),
     saveat = 1,
     reltol = 1e-6,
@@ -87,7 +87,7 @@ end
 
 """
     IBM_simulator(
-        p::CVOrParamStruct; 
+        p::ComponentVector; 
         global_ode! = default_global_ODE!,
         global_rules! = default_global_rules!,
         init_global_statevars = initialize_global_statevars,
@@ -111,7 +111,7 @@ For explanation of arguments, see `IndividualBasedModel`.
 
 """
 function IBM_simulator(
-    p::CVOrParamStruct; 
+    p::ComponentVector; 
     init_global_statevars = initialize_global_statevars,
     global_ode! = default_global_ODE!,
     global_rules! = default_global_rules!,
@@ -224,12 +224,12 @@ end
 
 
 """
-    replicates(simulator::Function, debkiss_defaultparams::CVOrParamStruct, nreps::Int64; kwargs...)
+    replicates(simulator::Function, debkiss_defaultparams::ComponentVector, nreps::Int64; kwargs...)
 
 Perform replicated runs of `simulator` with parameters `debkiss_defaultparams` (`simulator(debkiss_defaultparams)` has to be a valid function call). 
 Analogous to `@replicates`, but a bit more flexible.
 """
-function replicates(simulator::Function, debkiss_defaultparams::CVOrParamStruct, nreps::Int64; kwargs...)
+function replicates(simulator::Function, debkiss_defaultparams::ComponentVector, nreps::Int64; kwargs...)
     sim = []
 
     for replicate in 1:nreps
@@ -243,7 +243,7 @@ end
 """
     treplicates(
         simulator::Function, 
-        debkiss_defaultparams::CVOrParamStruct, 
+        debkiss_defaultparams::ComponentVector, 
         nreps::Int64; 
         kwargs...)
 
@@ -263,7 +263,7 @@ for more information.
 """
 function treplicates(
     simulator::Function, 
-    debkiss_defaultparams::CVOrParamStruct, 
+    debkiss_defaultparams::ComponentVector, 
     nreps::Int64; 
     kwargs...)
 
@@ -299,7 +299,7 @@ reshape_Cmat(Cmat::Vector{Float64}) = hcat(Cmat...)' |> Matrix
 """
     exposure(
         simulator::Function, 
-        p::CVOrParamStruct, 
+        p::ComponentVector, 
         Cmat::Union{Vector{R},Matrix{R}}
     ) where R <: Real
 
@@ -338,7 +338,7 @@ This exposure matrix corresponds to a ray design with constant exposure ratios.
 """
 function exposure(
     simulator::Function, 
-    p::CVOrParamStruct, 
+    p::ComponentVector, 
     Cmat::VecOrMat{R}
     ) where R <: Real
     
@@ -362,8 +362,8 @@ function exposure(
     end
 end
 
-
-function exposure(model::AbstractModel, Cmat::VecOrMat{R}; C = :C_W, simfunc = simulate_ODE) where R <: Real
+# FIXME: exposure function may need to be adapted for 0.3.3
+function exposure(model, Cmat::VecOrMat{R}; C = :C_W, simfunc = simulate_ODE) where R <: Real
   
     Cmat = reshape_Cmat(Cmat) # if a Vector has been provided, we have to reshape
     p = model.parameters # reference to params 
@@ -393,7 +393,7 @@ Threaded version of `exposure()`.
 """
 function texposure(
     simulator::Function, 
-    debkiss_defaultparams::CVOrParamStruct, 
+    debkiss_defaultparams::ComponentVector, 
     C_Wvec::Vector{Float64}
     )
     

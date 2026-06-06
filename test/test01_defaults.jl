@@ -1,22 +1,33 @@
 include("test00_setup.jl")
 
+using EcotoxSystems.DEBkiss
+
+debkiss = FullDEBkiss()
+sim = DEBkiss.sim_all(debkiss.parameters)
+
+@df sim plot(
+    plot(:t, :S), 
+    plot(:t, :H)
+)
+
+
+
 begin # setting up a debkiss instance
-    debkiss = SimplifiedEnergyBudget() |> instantiate
+    debkiss = FullDEBkiss() |> instantiate
     debkiss.parameters.glb.t_max = 56.  
 end
 
 @testset "Default debkiss parameters" begin
     p = debkiss.parameters  
     p.spc.Z = Dirac(1.)  
-    @time global sim = simulate_ode(debkiss; reltol = 1e-3)
+    @time global sim = simulate(debkiss; reltol = 1e-3)
     @test isapprox(maximum(sim.H), p.spc.H_p, rtol = 0.1) 
-    @test isapprox(maximum(sim.S), EcotoxSystems.calc_S_max(p.spc), rtol = 0.1)
+    @test isapprox(maximum(sim.S), DEBkiss.calc_S_max(p.spc), rtol = 0.1)
 end;
 
-@time sim = simulate_ode(debkiss);
+#@time sim = simulate(debkiss); # bencmark around 2.5 ms is decent...✅
 #using BenchmarkTools; 
-#@benchmark EcotoxSystems.ODE_simulator(p; alg = Tsit5())
-#VSCodeServer.@profview_allocs [EcotoxSystems.ODE_simulator(p) for _ in 1:100];
+#@benchmark simulate(debkiss)
 
 #=
 Basic test of @replicates macro
@@ -27,7 +38,7 @@ using Chain
 
 @testset "@replicates macro" begin
     debkiss.parameters.spc.Z = Truncated(Normal(1., 0.1), 0, Inf)
-    sim = @replicates simulate_ode(debkiss) 10
+    sim = @replicates simulate(debkiss) 10
 
     plt = @df sim plot(
         plot(:t, :S, group = :replicate, color = 1),
@@ -63,18 +74,7 @@ Basic test of replicates function.
 @testset "replicates function" begin
     
     debkiss.parameters.spc.Z = Truncated(Normal(1., 0.1), 0, Inf)
-
-    function simulate_ode(p; kwargs...)
-        return EcotoxSystems.ODE_simulator(
-            debkiss.parameters;
-            model = debkiss.complete_derivatives!, 
-            statevars_init = debkiss.initialize_all_statevars,
-            gen_ind_params = debkiss.generate_individual_params, 
-            kwargs...
-        )
-    end
-
-    sim = replicates(simulate_ode, debkiss.parameters, 10)
+    sim = replicates(p->(DEBkiss.sim_all(p)), debkiss.parameters, 10)
 
     plt = @df sim plot(
         plot(:t, :S, group = :replicate, color = 1),

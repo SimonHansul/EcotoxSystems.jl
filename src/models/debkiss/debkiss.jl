@@ -1,41 +1,42 @@
 abstract type AbstractModel end
 abstract type AbstractEnergyBudget <: AbstractModel end
+abstract type SimplifiedEnergyBudget <: AbstractEnergyBudget end
 
 # TODO: add callback_set to keep this consistent with EnergyBudgetModelZoo
-Base.@kwdef mutable struct SimplifiedEnergyBudget <: AbstractEnergyBudget
+Base.@kwdef mutable struct FullDEBkiss <: AbstractEnergyBudget
     parameters::ComponentVector = debkiss_defaultparams
 
     # global component
 
-    initialize_global_statevars::Union{Function,Nothing} = debkiss_global_statevars
-    global_derivatives!::Union{Function,Nothing} = constant_nutrient_influx!
-    global_rules!::Function = default_global_rules!
+    #initialize_global_statevars::Union{Function,Nothing} = debkiss_global_statevars
+    #global_derivatives!::Union{Function,Nothing} = constant_nutrient_influx!
+    #global_rules!::Function = default_global_rules!
     
     # individual-level component
     
-    initialize_individual_statevars::Function = debkiss_individual_statevars
-    individual_derivatives!::Function = debkiss!
-    individual_rules!::Function = default_individual_rules!
-    generate_individual_params::Function = debkiss_individual_params
+    #initialize_individual_statevars::Function = debkiss_individual_statevars
+    #individual_derivatives!::Function = debkiss!
+    #individual_rules!::Function = default_individual_rules!
+    #generate_individual_params::Function = debkiss_individual_params
 
     # composed model
 
-    initialize_all_statevars::Union{Function,Nothing} = nothing
-    complete_derivatives!::Union{Function,Nothing} = nothing
-    callback_set::CallbackSet = debkiss_callback_set
+    #initialize_all_statevars::Union{Function,Nothing} = nothing
+    #complete_derivatives!::Union{Function,Nothing} = nothing
+    #callback_set::CallbackSet = debkiss_callback_set
 end
 
-function instantiate(deb::SimplifiedEnergyBudget; verbose = false)::SimplifiedEnergyBudget
+function instantiate(deb::FullDEBkiss; verbose = false)::FullDEBkiss
     
-    compose_derivatives!(deb)
-    compose_statevars!(deb)
+    #compose_derivatives!(deb)
+    #compose_statevars!(deb)
     #compound_parameters!(deb; verbose = verbose)
     
     return deb
 end
 
 
-function compose_statevars!(deb::SimplifiedEnergyBudget)::Nothing
+function compose_statevars!(deb::FullDEBkiss)::Nothing
     let init_global_statevars = isnothing(deb.initialize_global_statevars) ? p -> ComponentVector() : deb.initialize_global_statevars, 
     init_individual_statevars = deb.initialize_individual_statevars
 
@@ -50,39 +51,11 @@ function compose_statevars!(deb::SimplifiedEnergyBudget)::Nothing
     end
 end
 
-function compose_derivatives!(deb::SimplifiedEnergyBudget)::Nothing
-    global_deriv = deb.global_derivatives!
-    indiv_deriv = deb.individual_derivatives!
-    if !isnothing(global_deriv)
-        function std_complete_ode!(du, u, p, t)::Nothing
-            global_deriv(du, u, p, t)
-            indiv_deriv(du, u, p, t)
-            return nothing
-        end
-        deb.complete_derivatives! = std_complete_ode!
-    else
-        deb.complete_derivatives! = indiv_deriv
-    end
-    return nothing
-end
+simulate(debkiss::FullDEBkiss; kwargs...) = sim_all(debkiss.parameters; kwargs...)
 
-function simulate_ode(deb::SimplifiedEnergyBudget; kwargs...)
-    
-    sim = EcotoxSystems.ODE_simulator(
-            deb.parameters;
-            model = deb.complete_derivatives!, 
-            statevars_init = deb.initialize_all_statevars,
-            gen_ind_params = deb.generate_individual_params, 
-            callback = deb.callback_set,
-            kwargs...
-        )
-
-    return sim
-
-end
 
 function simulate_ibm(
-    deb::SimplifiedEnergyBudget; 
+    deb::FullDEBkiss; 
     dt = 1/24, 
     saveat = 1,
     record_individuals = true,
@@ -111,6 +84,3 @@ function simulate_ibm(
     return sim
 end
 
-const simulate = simulate_ode
-const simulate_ODE = simulate_ode
-const simulate_IBM = simulate_ibm

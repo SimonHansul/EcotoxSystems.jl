@@ -86,7 +86,7 @@ import EcotoxSystems: combine_outputs, add_idcol
 
 function param_sweep(
     simulator::Function,
-    p::CVOrParamStruct,
+    p::ComponentVector,
     component::Symbol,
     param::Symbol,
     vals::Vector{R}
