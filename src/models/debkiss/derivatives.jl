@@ -24,10 +24,6 @@ puberty = ContinuousCallback(puberty_condition, puberty_affect!, nothing)
 
 debkiss_callback_set = CallbackSet(birth, puberty)
 
-function clamp(value::Real, clampval::Real = 0.)::Real
-    return Base.ifelse(value >= 0, value, clampval)
-end
-
 function isoutofdomain(u, p, t)
     return u.ind.S < 0
 end
@@ -39,6 +35,7 @@ function embryo!(du, u, p, t)::Nothing
     @unpack kappa, H_p, K_X = p.ind
     @unpack X_emb, H, S, is_embryo, is_adult = u.ind
     
+    # TODO: to make the implementation compatible with gradient-based solvers, it might be better to use NaNMath instead
     u = max.(u, 0) # this is valid for implicit solvers and using isoutofdomain()
 
     yT = f_T(p.ind.T_A, p.ind.T_ref, p.glb.T)
@@ -74,10 +71,16 @@ function juvenile!(du, u, p, t)::Nothing
     @unpack eta_AR, kappa, H_p, K_X = p.ind
     @unpack X_emb, H, S, is_embryo, is_adult = u.ind
 
+    # TODO: to make the implementation compatible with gradient-based solvers, it might be better to use NaNMath instead
+    u = max.(u, 0) # this is valid for implicit solvers and using isoutofdomain()
+
     yT = f_T(p.ind.T_A, p.ind.T_ref, p.glb.T)
     fX = f_X(X, V_patch, K_X)
 
     # ingestion (is_embryo & post-birth)
+
+    # TODO: to make the implementation compatible with gradient-based solvers, it might be better to use NaNMath instead
+    u = max.(u, 0) # this is valid for implicit solvers and using isoutofdomain()
  
     dI = dI_postbirth(fX, p.ind.dI_max, S) * yT # assuming ingestion rate to scale like a metabolic rate
     du.ind.I = dI
@@ -102,6 +105,9 @@ function adult!(du, u, p, t)::Nothing
     @unpack X = u.glb
     @unpack eta_AR, kappa, H_p, K_X = p.ind
     @unpack X_emb, H, S, is_embryo, is_adult = u.ind
+
+    # TODO: to make the implementation compatible with gradient-based solvers, it might be better to use NaNMath instead
+    u = max.(u, 0) # this is valid for implicit solvers and using isoutofdomain()
 
     yT = f_T(p.ind.T_A, p.ind.T_ref, p.glb.T)
     fX = f_X(X, V_patch, K_X)

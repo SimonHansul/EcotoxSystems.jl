@@ -1,9 +1,10 @@
 include("test00_setup.jl")
 
+using EcotoxSystems.DEBkiss
 
 @testset"food availability" begin 
 
-    debkiss = SimplifiedEnergyBudget() |> instantiate
+    debkiss = FullDEBkiss() |> instantiate
     p = debkiss.parameters
 
     norm(x) = x ./ sum(x)
@@ -22,6 +23,7 @@ include("test00_setup.jl")
     # iterate over nutrient input concentrations
     let dX_in = 4800.
         for i in 1:5
+            @show dX_in
             dX_in /= 2
             # generate the predidction
             p.glb.dX_in = dX_in
