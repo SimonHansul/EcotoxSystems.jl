@@ -44,7 +44,7 @@ using EcotoxSystems.DEBkiss
             sim_i[!,:dX_in] .= dX_in 
             append!(sim, sim_i)
         end
-        hline!(plt, [EcotoxSystems.calc_S_max(p.spc)], linestyle = :dash, color = "gray", subplot = 1, label = "S_max")
+        hline!(plt, [DEBkiss.calc_S_max(p.spc)], linestyle = :dash, color = "gray", subplot = 1, label = "S_max")
         display(plt)
     end
 
