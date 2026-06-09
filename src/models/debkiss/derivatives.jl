@@ -244,13 +244,20 @@ function sys_adult!(du, u, p, t)
     adult!(du, u, p, t)
 end
 
-function sim_embryo(p::ComponentVector; saveat = [], alg = Rodas5P(), return_sol = false, kwargs...)
+function sim_embryo(
+    p::ComponentVector; 
+    saveat = [], 
+    reltol = 1e-4,
+    alg = Tsit5(), 
+    return_sol = false, 
+    kwargs...
+    )
 
     p_ind = debkiss_individual_params(p)
     u0 = initialize_statevars(p_ind)
     tspan = (0,p.glb.t_max)
     prob = ODEProblem(sys_embryo!, u0, tspan, p_ind)
-    sol = solve(prob, callback = birth_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
+    sol = solve(prob; callback = birth_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain, reltol = reltol, kwargs...)
 
     if return_sol
         return sol, sol.u[end], p_ind
@@ -259,20 +266,27 @@ function sim_embryo(p::ComponentVector; saveat = [], alg = Rodas5P(), return_sol
     return sol_to_df(sol), sol.u[end], p_ind
 end
 
-function sim_juvenile(p_ind::ComponentVector, u0::ComponentVector; saveat = [], alg = Rodas5P(), kwargs...)
+function sim_juvenile(
+    p_ind::ComponentVector, 
+    u0::ComponentVector; 
+    saveat = [], 
+    reltol = 1e-4,
+    alg = Tsit5(), 
+    kwargs...
+    )
     
     tspan = (0,p_ind.glb.t_max)
-    prob = ODEProblem(sys_juvenile!, u0, tspan, p_ind, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain)
-    sol = solve(prob, callback = puberty_terminal)
+    prob = ODEProblem(sys_juvenile!, u0, tspan, p_ind)
+    sol = solve(prob; callback = puberty_terminal, saveat = saveat, alg = alg, isoutofdomain = isoutofdomain, reltol = reltol, kwargs...)
 
     return sol_to_df(sol), sol.u[end], p_ind
 end
 
-function sim_adult(p_ind, u0; saveat = [], alg = Rodas5P(), kwargs...)
+function sim_adult(p_ind, u0; saveat = [], reltol = 1e-4, alg = Tsit5(), kwargs...)
 
     tspan = (0,p_ind.glb.t_max)
     prob = ODEProblem(sys_adult!, u0, tspan, p_ind)
-    sol = solve(prob, alg = alg, saveat = saveat, isoutofdomain = isoutofdomain)
+    sol = solve(prob; alg = alg, saveat = saveat, isoutofdomain = isoutofdomain, reltol = reltol, kwargs...)
 
     return sol_to_df(sol), sol.u[end], p_ind
 end

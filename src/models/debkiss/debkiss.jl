@@ -58,7 +58,42 @@ function simulate_constant_exposure(
         setindex!(p.glb, C_value, C_label)
         sim_i = sim_all(p; kwargs...)
         sim_i[!,:treatment_id] .= i
-        sim_i[!,:C_W_nominal] .= C_value
+        append!(sim, sim_i)
+    end
+
+    return sim
+end
+
+
+"""
+
+```Julia
+DEBkiss.simulate_constant_exposure(
+    FullDEBkiss().parameters,
+    (:C_W1, :C_W2) => [
+        0. 0. # control : C_W1 and C_W2 are 0
+        0. 1. # exposure conc = 1 for C_W2
+        1. 0. # exposure conc = 1 for C_W1
+        1. 1. # exposure conc = 1 for both
+    ] 
+)
+```
+"""
+function simulate_constant_exposure(
+    p::ComponentVector, 
+    C::Pair;
+    kwargs...
+    )
+
+    sim = DataFrame()
+
+    for (i,C_values) in enumerate(eachrow(C.second))
+        for (C_label,C_value) in zip(C.first,C_values)
+            setindex!(p.glb, C_value, C_label)
+        end
+        
+        sim_i = sim_all(p; kwargs...)
+        sim_i[!,:treatment_id] .= i
         append!(sim, sim_i)
     end
 

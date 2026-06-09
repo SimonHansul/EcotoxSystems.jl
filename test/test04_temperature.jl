@@ -1,3 +1,14 @@
+# ======================================== #
+# Simulate temp effects
+# ======================================== #
+
+include("test00_setup.jl")
+
+using EcotoxSystems.DEBkiss
+import EcotoxSystems: relative_response
+using EcotoxSystems
+using DataFramesMeta
+
 @testset "Temperature" begin # effect of food input
     norm(x) = x ./ sum(x)
     # prepare the plot
@@ -10,7 +21,7 @@
         xlabel = "Time (d)"
         )
 
-    debkiss = SimplifiedEnergyBudget() |> instantiate
+    debkiss = FullDEBkiss() 
     p = debkiss.parameters
     p.glb.T = 293.15
     p.glb.t_max = 56.
@@ -18,7 +29,7 @@
 
     p.spc.K_X = 12e3
 
-    sim = DataFrame()
+    global sim = DataFrame()
 
     # iterate over temperatures
     let T_degC = 10. # temperature in °C
@@ -28,7 +39,7 @@
             p.glb.T = T_degC + 273.15
   
             # generate the predidction
-            sim_i = simulate(debkiss)
+            @time sim_i = simulate(debkiss; reltol = 1e-4, alg = Tsit5())
 
             # plot the trajectories
             @df sim_i plot!(plt, :t, :S, ylabel = "S", subplot = 1, leg = :outertopleft, label = "T = $(T_degC)") 
@@ -42,7 +53,7 @@
         end
         hline!(
             plt, 
-            [EcotoxSystems.calc_S_max(p.spc)], 
+            [DEBkiss.calc_S_max(p.spc)], 
             linestyle = :dash, 
             color = "gray", 
             subplot = 1, 
@@ -51,35 +62,20 @@
         display(plt)
     end
 
-    # check that we have simulated a case without food competition - this would change the validty of the following tests
+    # verify that we have simulated a case without food competition - this would change the validty of the following tests
 
-    cv_X_sum = 0. # coefficient of variation in food abundance X across temp treatments, summed over time points
+    fX = DEBkiss.f_X.(sim.X, p.glb.V_patch, p.spc.K_X)
+    @test  minimum(fX) .> 0.99
+    
+    # verify that higher temperature == faster growth
+    perfect_rankcorr = combine(groupby(sim, :T_degC)) do df 
+        
+        df_t = @subset(df, )
+        a = sort(df, :T_degC)[:,[:T_degC,:S]]
+        b = sort(df, :S)[:,[:T_degC,:S]]
 
-    for t in unique(sim.t)
-        sim_rand = @subset(sim, :t .== t)
-        cv_X = sim_rand.X |> x -> std(x)/mean(x)
-        cv_X_sum += cv_X
+        return a == b
     end
 
-    cv_X_mean = cv_X_sum/(length(unique(sim.t))) # average CVs
-
-    @test cv_X_mean < 1e-3 # verify that CV is very small
-    
-    # check that higher temperature == faster growth
-
-    rankcor = combine(groupby(sim, :T_degC), :S => maximum) |> 
-    x -> corspearman(x.T_degC, x.S_maximum)
-    
-    @test rankcor == 1 
-
-    # check that final mass is barely affected
-
-    sim_end = @subset(sim, :t .== maximum(:t))
-    cv_S = sim_end.S |> x -> std(x) / mean(x)
-
-    @test cv_S < 0.01
-
-    
+    @test unique(perfect_rankcorr.x1) == [true]
 end
-
-
