@@ -20,7 +20,7 @@
 
     sim = DataFrame()
 
-    # iterate over nutrient input concentrations
+    # iterate over temperatures
     let T_degC = 10. # temperature in °C
         for _ in 1:4
             T_degC += 5

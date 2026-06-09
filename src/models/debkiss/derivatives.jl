@@ -28,6 +28,96 @@ function isoutofdomain(u, p, t)
     return u.ind.S < 0
 end
 
+
+# ======================================== #
+# TKTD functions
+# ======================================== #
+
+"""
+Toxicokinetic component with two components (2D) and minimal TK dyanmics (no feedbacks).
+"""
+function TK_2D_minimal!(du_TK, u, p, t)::Nothing
+    u = max.(u, 0)
+
+    @unpack C_W1, C_W2 = u.glb
+    @unpack DW_1_G, DW_2_G, DW_1_M, DW_2_M, DW_1_A, DW_2_A, DW_1_R, DW_2_R= u.ind.TKTD
+    @unpack k_D1_G, k_D1_M, k_D1_A, k_D1_R, k_D2_G, k_D2_M, k_D2_A, k_D2_R = p.ind.TKTD
+
+    # compute change in damage for different substances and PMoAs
+
+    du_TK.DW_1_G = minimal_TK(k_D1_G, C_W1, DW_1_G)
+    du_TK.DW_2_G = minimal_TK(k_D2_G, C_W2, DW_2_G)
+
+    du_TK.DW_1_M = minimal_TK(k_D1_M, C_W1, DW_1_M)
+    du_TK.DW_2_M = minimal_TK(k_D2_M, C_W2, DW_2_M)
+
+    du_TK.DW_1_A = minimal_TK(k_D1_A, C_W1, DW_1_A)
+    du_TK.DW_2_A = minimal_TK(k_D2_A, C_W2, DW_2_A)
+
+    du_TK.DW_1_R = minimal_TK(k_D1_R, C_W1, DW_1_R)
+    du_TK.DW_2_R = minimal_TK(k_D2_R, C_W2, DW_2_R)
+
+    return nothing
+end
+
+function LL2neg(D::Real, e::Real, b::Real)
+    return 1/(1+(D/e)^b)
+end
+
+function LL2pos(D::Real, e::Real, b::Real)
+    return 1 - log(1/(1+(D/e)^b))
+end
+
+"""
+Toxicodynamics for two mixture components, assuming log-logistic dose-responses and independent action (IA) for substances with shared PMoAs. 
+"""
+function TD_2D_loglogistic_IA(
+    eta_AS, eta_IA, k_M, k_J, eta_AR,
+    u_TKTD, p_TKTD
+    )::NTuple{5}
+
+    @unpack DW_1_G, DW_1_M, DW_1_A, DW_1_R, 
+            DW_2_G, DW_2_M, DW_2_A, DW_2_R = u_TKTD
+
+    @unpack e1_G, e1_M, e1_A, e1_R, 
+            e2_G, e2_M, e2_A, e2_R = p_TKTD
+
+    @unpack b1_G, b1_M, b1_A, b1_R, 
+            b2_G, b2_M, b2_A, b2_R = p_TKTD
+
+    # chemical effects expressed as relative resonses
+
+    y_G1 = LL2neg(DW_1_G, e1_G, b1_G)
+    y_M1 = LL2pos(DW_1_M, e1_M, b1_M)
+    y_A1 = LL2neg(DW_1_A, e1_A, b1_A)
+    y_R1 = LL2neg(DW_1_R, e1_R, b1_R)
+
+    y_G2 = LL2neg(DW_2_G, e2_G, b2_G)
+    y_M2 = LL2pos(DW_2_M, e2_M, b2_M)
+    y_A2 = LL2neg(DW_2_A, e2_A, b2_A)
+    y_R2 = LL2neg(DW_2_R, e2_R, b2_R)
+
+    eta_AS_t = eta_AS * y_G1 * y_G2
+    eta_IA_t = eta_IA * y_A1 * y_A2
+    k_M_t = k_M * y_M1 * y_M2
+    k_J_t = k_J * y_M1 * y_M2
+    eta_AR_t = eta_AR * y_R1 * y_R2 
+
+    return (
+        eta_AS_t, 
+        eta_IA_t,
+        k_M_t, 
+        k_J_t, 
+        eta_AR_t
+    )
+
+end
+
+# ======================================== #
+# DEB functions
+# ======================================== #
+
+
 function embryo!(du, u, p, t)::Nothing
 
     # TODO: to make the implementation compatible with gradient-based solvers, it might be better to use NaNMath instead
@@ -71,16 +161,17 @@ function juvenile!(du, u, p, t)::Nothing
 
     @unpack V_patch = p.glb
     @unpack X = u.glb
-    @unpack eta_AR, kappa, H_p, K_X = p.ind
-    @unpack X_emb, H, S, is_embryo, is_adult = u.ind
+    @unpack eta_IA, eta_AS, k_M, k_J, eta_AR, kappa, H_p, K_X = p.ind
+    @unpack X_emb, H, S = u.ind
 
-    yT = f_T(p.ind.T_A, p.ind.T_ref, p.glb.T)
-    fX = f_X(X, V_patch, K_X)
+    # environmental effects
+    
+    yT = f_T(p.ind.T_A, p.ind.T_ref, p.glb.T) # temperature
+    fX = f_X(X, V_patch, K_X) # food concentration
 
-    # ingestion (is_embryo & post-birth)
+    eta_AS_t, eta_IA_t, k_M_t, k_J_t, _ = TD_2D_loglogistic_IA(eta_AS, eta_IA, k_M, k_J, eta_AR, u.ind.TKTD, p.ind.TKTD)
 
-    # TODO: to make the implementation compatible with gradient-based solvers, it might be better to use NaNMath instead
-    u = max.(u, 0) # this is valid for implicit solvers and using isoutofdomain()
+    # ingestion & feedback with environmental food concentration
  
     dI = dI_postbirth(fX, p.ind.dI_max, S) * yT # assuming ingestion rate to scale like a metabolic rate
     du.ind.I = dI
@@ -89,10 +180,10 @@ function juvenile!(du, u, p, t)::Nothing
     du.ind.X_emb = 0. # vitellus (X_emb) remains constant after birth
 
     # remaining fluxes
-    du.ind.A = dA(du.ind.I, p.ind.eta_IA)   # assimilation
-    du.ind.M = dM(S, p.ind.k_M) * yT  # somatic maintenance
-    du.ind.J = dJ(H, p.ind.k_J) * yT  # maturity maintenance
-    du.ind.S = dS(kappa, du.ind.A, du.ind.M, p.ind.eta_SA, p.ind.eta_AS)
+    du.ind.A = dA(du.ind.I, eta_IA_t)   # assimilation
+    du.ind.M = dM(S, k_M_t) * yT  # somatic maintenance
+    du.ind.J = dJ(H, k_J_t) * yT  # maturity maintenance
+    du.ind.S = dS(kappa, du.ind.A, du.ind.M, p.ind.eta_SA, eta_AS_t)
     du.ind.H = dH(kappa, du.ind.A, du.ind.J)
     du.ind.R = 0.
 
@@ -106,13 +197,17 @@ function adult!(du, u, p, t)::Nothing
     
     @unpack V_patch = p.glb
     @unpack X = u.glb
-    @unpack eta_AR, kappa, H_p, K_X = p.ind
+    @unpack eta_IA, eta_AS, eta_AR, k_M, k_J, kappa, H_p, K_X = p.ind
     @unpack X_emb, H, S, is_embryo, is_adult = u.ind
 
-    yT = f_T(p.ind.T_A, p.ind.T_ref, p.glb.T)
-    fX = f_X(X, V_patch, K_X)
+    # environmental effects
+    
+    yT = f_T(p.ind.T_A, p.ind.T_ref, p.glb.T) # temperature
+    fX = f_X(X, V_patch, K_X) # food concentration
 
-    # ingestion (is_embryo & post-birth)
+    eta_AS_t, eta_IA_t, k_M_t, k_J_t, eta_AR_t = TD_2D_loglogistic_IA(eta_AS, eta_IA, k_M, k_J, eta_AR, u.ind.TKTD, p.ind.TKTD)
+
+    # ingestion & feedback with environmental food concentration
  
     dI = dI_postbirth(fX, p.ind.dI_max, S) * yT # assuming ingestion rate to scale like a metabolic rate
     du.ind.I = dI
@@ -121,28 +216,31 @@ function adult!(du, u, p, t)::Nothing
     du.ind.X_emb = 0. # vitellus (X_emb) remains constant after birth
 
     # remaining fluxes
-    du.ind.A = dA(du.ind.I, p.ind.eta_IA)   # assimilation
-    du.ind.M = dM(S, p.ind.k_M) * yT  # somatic maintenance
-    du.ind.J = dJ(H, p.ind.k_J) * yT  # maturity maintenance
-    du.ind.S = dS(kappa, du.ind.A, du.ind.M, p.ind.eta_SA, p.ind.eta_AS)
+    du.ind.A = dA(du.ind.I, eta_IA_t)   # assimilation
+    du.ind.M = dM(S, k_M_t) * yT  # somatic maintenance
+    du.ind.J = dJ(H, k_J_t) * yT  # maturity maintenance
+    du.ind.S = dS(kappa, du.ind.A, du.ind.M, p.ind.eta_SA, eta_AS_t)
     du.ind.H = 0.
-    du.ind.R = dR(eta_AR, kappa, du.ind.A, du.ind.J)
+    du.ind.R = dR(eta_AR_t, kappa, du.ind.A, du.ind.J)
 
     return nothing
 end
 
 function sys_embryo!(du, u, p, t)
     du.glb .= 0.
+    du.ind.TKTD .= 0.
     embryo!(du, u, p, t)
 end
 
 function sys_juvenile!(du, u, p, t)
     constant_nutrient_influx!(du, u, p, t)
+    TK_2D_minimal!(du.ind.TKTD, u, p, t)
     juvenile!(du, u, p, t)
 end
 
 function sys_adult!(du, u, p, t)
     constant_nutrient_influx!(du, u, p, t)
+    TK_2D_minimal!(du.ind.TKTD, u, p, t)
     adult!(du, u, p, t)
 end
 

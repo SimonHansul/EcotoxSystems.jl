@@ -54,3 +54,4 @@ Initial version.
 
 - updated DEBkiss implementation to omit function wrapping in struct (matching `EnergyBudgetModelZoo` approach)
 - added type `FullDEBkiss <: SimplifiedEnergyBudget` for future integration into `EnergyBudgetModelZoo`
+- **⚠️ as of v0.5.0, model implementations should not be part of EcotoxSystems.jl anymore**

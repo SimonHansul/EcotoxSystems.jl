@@ -4,19 +4,21 @@
 # but their main purpose is to serve as a reference during development and testing (including extensions of the base model)
 
 # Global parameters with ComponentVector
-debkiss_global_params = ComponentVector(
+debkiss_global_params() = ComponentVector(
     N0 = 1,                    # initial number of individuals [#]
     t_max = 21.0,              # maximum simulation time [days]
     dX_in = 1200.0,          # nutrient influx [μg C d-1]
     k_V = 0.0,                 # chemostat dilution rate [d-1]
     V_patch = 0.05,            # volume of a patch [L]
-    T = 293.15                 # ambient temperature [K]
+    T = 293.15,                # ambient temperature [K]
+    C_W1 = 0.,                 # aqueous concentration of chemical 1 [e.g. μg L^-1]
+    C_W2 = 0.,                 # aqueous concentration of chemical 2 [e.g. μg L^-1]
 )
 
 # Species-level DEB and TKTD parameters with ComponentVector
 # TODO: harmonize parameter naming with debkiss literature
 # TODO: add specific density, set to 1 by default
-debkiss_species_params = ComponentVector(
+debkiss_species_params() = ComponentVector(
     Z = Dirac(1.0), # individual variability through zoom factor
     T_A = 8000.0,    # Arrhenius temperature [K]
     T_ref = 293.15,  # reference temperature [K]
@@ -32,30 +34,47 @@ debkiss_species_params = ComponentVector(
     k_M = 0.59,     # somatic maintenance rate constant [d^-1]
     k_J = 0.504,    # maturity maintenance rate constant [d^-1]
     H_p = 100,    # maturity at puberty [μgC]
-    #KD = Real[0. 0. 0. 0.;], # KD - value per PMoA (G,M,A,R) and stressor (1 row = 1 stressor)
-    #B = Real[2. 2. 2. 2.;], # slope parameters
-    #E = Real[1e10 1e10 1e10 167;], # sensitivity parameters (thresholds)
-    #KD_h = Real[0.;], # KD - value for GUTS-SD module (1 row = 1 stressor)
-    #E_h = Real[1e10;], # sensitivity parameter (threshold) for GUTS-SD module
-    #B_h = Real[2.;], # slope parameter for GUTS-SD module 
-    # these are curently only used in an individual-based context, but could find application in the pure-ODE implementation 
-    # for example by triggering emptying of the reproduction buffer through callbacks
-    W_S_rel_crit = 0.66,  # relative amount of structure which can be lost before hazard rate kicks in
-    h_S = 0.7, # starvation hazard rate caused be shrinking below W_S_rel_crit
-    a_max = Truncated(Normal(60, 6), 0, Inf), # maximum life span 
-    tau_R = 2.0, # reproduction interval
-    # additional component for intermediate quantities, 
-    # these are not technically model parameters (although they could be treated so), 
-    # but this is nevertheless the best place to put them
-    #intermediates = ComponentVector( 
-    #    y_j = ones(4), 
-    #    h_z = 0.0
-    #)
+    # TKTD parameters for two substance and four standard PMoAs
+    TKTD = ComponentVector( 
+        k_D1_G = 0., # dominant rate constant PMoA growth efficiency [d^-1]
+        k_D1_M = 0., # PMoA maintenance costs
+        k_D1_A = 0., # PMoA assimilation efficiency
+        k_D1_R = 0., # PMoA reproduction efficiency
+
+        e1_G = 1., # sensitivity parameter (ED50); e.g. [μg L^-1]
+        e1_M = 1.,
+        e1_A = 1.,
+        e1_R = 1.,
+
+        b1_G = 1., # slope parameter [-]
+        b1_M = 1.,
+        b1_A = 1.,
+        b1_R = 1.,
+        
+        k_D2_G = 0.,
+        k_D2_M = 0.,
+        k_D2_A = 0.,
+        k_D2_R = 0.,
+
+        e2_G = 1.,
+        e2_M = 1.,
+        e2_A = 1.,
+        e2_R = 1.,
+
+        b2_G = 1.,
+        b2_M = 1.,
+        b2_A = 1.,
+        b2_R = 1.,
+    ),
+    aux_IBM = ComponentVector( # addition parameters used in the IBM part
+        a_max = Truncated(Normal(60, 6), 0, Inf), # maximum life span 
+        tau_R = 2.0, # reproduction interval    
+    )
 )
 
-debkiss_defaultparams = ComponentVector{Union{Real,Distribution}}(
-    glb = debkiss_global_params,
-    spc = debkiss_species_params
+debkiss_defaultparams() = ComponentVector{Union{Real,Distribution}}(
+    glb = debkiss_global_params(),
+    spc = debkiss_species_params()
 )
 
 
@@ -142,7 +161,7 @@ link_ind_params!(p) = begin
 end
 
 p = deepcopy(debkiss_defaultparams)
-link_params!(p, (spc = link_ind_params!,) # apply link ahead of simulation 
+link_params!(p, (spc = link_ind_params!,)) # apply link ahead of simulation 
 ```
 
 Alternatively, we provide the links as a keyword argument to `ODE_simulator`, 
@@ -164,4 +183,36 @@ link_params!(p::ComponentVector, links::NamedTuple = (spc = link_ind_params!,)):
     return nothing
 end
 
-link_params!(p::ComponentVector, links::Nothing)::Nothing = nothing
+link_params!(::ComponentVector, ::Nothing)::Nothing = nothing
+
+"""
+Convenience function to update a TKTD parameter.
+
+## args
+
+- `p_tktd::ComponentVector`: A parameter Vector that contains TKTD parameters, with parameters named according to a fixed pattern: `[par][chemical_index]_[PMoA_label]`.             
+- `par::Symbol` is the name of the parameter (e.g. `:k_D`).
+- `chemical_index::Int` is the number of the component in the mixture (1, 2, ..n).
+- `PMoA_label` is the abbreviation of the PMoA (e.g. `:G`, `:A`, `:A`, `:R`)
+
+## Examples 
+
+```
+debkiss = FullDEBkiss()
+p = debkiss.parameters # contains a component called `spc.TKTD` 
+set_TKTD_param!(p, )
+```
+"""
+function set_TKTD_param!(
+    p_tktd::ComponentVector, 
+    par::Union{Symbol,String}, 
+    chemical_index::Int, 
+    PMoA_label::Union{Symbol,String}, 
+    value::Real
+    )::Nothing
+
+    parlabel = Symbol("$par$(chemical_index)_$(PMoA_label)")
+    setindex!(p_tktd, value, parlabel)
+
+    return nothing
+end

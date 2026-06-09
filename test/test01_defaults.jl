@@ -1,16 +1,9 @@
 include("test00_setup.jl")
 
 using EcotoxSystems.DEBkiss
-
 debkiss = FullDEBkiss()
-sim = DEBkiss.sim_all(debkiss.parameters)
 
-@df sim plot(
-    plot(:t, :S), 
-    plot(:t, :H)
-)
-
-
+sim = DEBkiss.sim_all(debkiss.parameters);
 
 begin # setting up a debkiss instance
     debkiss = FullDEBkiss() |> instantiate
@@ -25,7 +18,9 @@ end
     @test isapprox(maximum(sim.S), DEBkiss.calc_S_max(p.spc), rtol = 0.1)
 end;
 
-#@time sim = simulate(debkiss); # bencmark around 2.5 ms is decent...✅
+# median benchmark around 2.5 ms is decent...✅
+#   adding TKTD did not change the benchmark measurably
+#@time sim = simulate(debkiss); 
 #using BenchmarkTools; 
 #@benchmark simulate(debkiss)
 

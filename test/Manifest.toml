@@ -684,7 +684,7 @@ version = "1.10.0"
 deps = ["ComponentArrays", "DataFrames", "Distributions", "OrdinaryDiffEq", "Parameters", "PrecompileTools", "Random", "RecipesBase", "StaticArrays", "StatsBase"]
 path = ".."
 uuid = "a070e96f-54e2-4e3c-8571-6208d1dd8981"
-version = "0.3.3"
+version = "0.4.0"
 
 [[deps.EnumX]]
 git-tree-sha1 = "7bebc8aad6ee6217c78c5ddcf7ed289d65d0263e"

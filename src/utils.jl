@@ -96,27 +96,24 @@ kwargs:
 
 ## Example 
 
-```Julia@f
-using MechanisticEffectModels.EcotoxSystems, MechanisticEffectModels.Utils
-
-simfunct(x) = @replicates EcotoxSystems.simulator(x) 10
-
-sim = exposure(simfunct, Params(), [0., 100., 200.]) |>
-x -> relative_response(x, [:S, :H, :R]) # -> data frame will contain columns y_S, y_H, y_R for control-normalized values
+```Julia
+using EcotoxSytems; EcotoxSystems.DEBkiss
+sim = DEBkiss.simulate_constant_exposure(p, :C_W1 => [0, 1, 3, 10])
+rr = relative_response(sim, [:S, :R], :C_W1; groupby_vars = [:t]) # calculates relative response over time for S and R
 ```
-
 """
 function relative_response(
     sim::D, 
     response_vars::Vector{Symbol},
     treatment_var::Symbol; 
     groupby_vars::Vector{Symbol} = Symbol[],
-    identify_control = minimum
+    identify_control::Function = minimum
     ) where D <: AbstractDataFrame
 
     #=
     Calculation of the conditional control mean
     =#
+
     reference = sim[sim[:,treatment_var] .== identify_control(sim[:,treatment_var]),:] |> # extract the control
     x -> groupby(x, groupby_vars) |> # group by conditioning variables
     x -> combine(x) do df 
@@ -131,13 +128,15 @@ function relative_response(
     #=
     Calculation of the relative response
     =#
-    sim = leftjoin(sim, reference, on = groupby_vars) # add references as new columns
+
+    sim = innerjoin(sim, reference, on = groupby_vars) # add references as new columns
     for var in response_vars # for every response variable
         y_var = Symbol("y_" * String(var)) # get the relative response column name
         var_ref = Symbol(String(var) * "_ref") # get the reference column name
         sim[!,y_var] = [rr(row[var], row[var_ref]) for row in eachrow(sim)] # calculate the relative response
         select!(sim, Not(var_ref)) # drop the reference column
     end
+
     return sim
 end
 

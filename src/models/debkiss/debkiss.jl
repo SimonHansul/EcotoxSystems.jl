@@ -4,55 +4,10 @@ abstract type SimplifiedEnergyBudget <: AbstractEnergyBudget end
 
 # TODO: add callback_set to keep this consistent with EnergyBudgetModelZoo
 Base.@kwdef mutable struct FullDEBkiss <: AbstractEnergyBudget
-    parameters::ComponentVector = debkiss_defaultparams
-
-    # global component
-
-    #initialize_global_statevars::Union{Function,Nothing} = debkiss_global_statevars
-    #global_derivatives!::Union{Function,Nothing} = constant_nutrient_influx!
-    #global_rules!::Function = default_global_rules!
-    
-    # individual-level component
-    
-    #initialize_individual_statevars::Function = debkiss_individual_statevars
-    #individual_derivatives!::Function = debkiss!
-    #individual_rules!::Function = default_individual_rules!
-    #generate_individual_params::Function = debkiss_individual_params
-
-    # composed model
-
-    #initialize_all_statevars::Union{Function,Nothing} = nothing
-    #complete_derivatives!::Union{Function,Nothing} = nothing
-    #callback_set::CallbackSet = debkiss_callback_set
-end
-
-function instantiate(deb::FullDEBkiss; verbose = false)::FullDEBkiss
-    
-    #compose_derivatives!(deb)
-    #compose_statevars!(deb)
-    #compound_parameters!(deb; verbose = verbose)
-    
-    return deb
-end
-
-
-function compose_statevars!(deb::FullDEBkiss)::Nothing
-    let init_global_statevars = isnothing(deb.initialize_global_statevars) ? p -> ComponentVector() : deb.initialize_global_statevars, 
-    init_individual_statevars = deb.initialize_individual_statevars
-
-        deb.initialize_all_statevars = function (p::ComponentVector)
-            ComponentVector(
-                glb = init_global_statevars(p),
-                ind = init_individual_statevars(p)
-            )
-        end
-
-        return nothing
-    end
+    parameters::ComponentVector = debkiss_defaultparams()
 end
 
 simulate(debkiss::FullDEBkiss; kwargs...) = sim_all(debkiss.parameters; kwargs...)
-
 
 function simulate_ibm(
     deb::FullDEBkiss; 
@@ -63,7 +18,7 @@ function simulate_ibm(
     kwargs...
     )
 
-     sim = EcotoxSystems.IBM_simulator(
+    sim = EcotoxSystems.IBM_simulator(
         deb.parameters;
         init_global_statevars = deb.initialize_global_statevars,
         global_ode! = deb.global_derivatives!,
@@ -79,8 +34,33 @@ function simulate_ibm(
         record_individuals = record_individuals,
         showinfo = showinfo,
         kwargs...
-        )
+    )
 
     return sim
 end
 
+
+"""
+Simulate constant exposure to a single stressor for DEBkiss model.
+"""
+function simulate_constant_exposure(
+    p::ComponentVector, 
+    C::Pair{Symbol,Vector{R}}; 
+    kwargs...
+    ) where R <: Real
+
+    sim = DataFrame()
+
+    C_label = C.first 
+    C_values = C.second
+
+    for (i,C_value) in enumerate(C_values) # iterate over concentrations
+        setindex!(p.glb, C_value, C_label)
+        sim_i = sim_all(p; kwargs...)
+        sim_i[!,:treatment_id] .= i
+        sim_i[!,:C_W_nominal] .= C_value
+        append!(sim, sim_i)
+    end
+
+    return sim
+end

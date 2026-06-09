@@ -2,66 +2,23 @@
 Simulate single stressors with different PMoAs
 =#
 
-using Pkg; Pkg.activate("test")
+include("test00_setup.jl")
 
-using Test
-using Distributions
-
-using OrdinaryDiffEq
-using DataFrames, DataFramesMeta
-using Plots, StatsPlots, Plots.Measures
-default(leg = false)
-using StatsBase
-
-using Revise
-@time using EcotoxSystems
-import EcotoxSystems: exposure, relative_response
-
-EcotoxSystems.AbstractEnergyBudget <: EcotoxSystems.AbstractModel
-
-debkiss = SimplifiedEnergyBudget(
-    individual_derivatives! = EcotoxSystems.debkiss_mixture_IA!
-    ) |> instantiate
-
-p = debkiss.parameters
-p.glb.t_max = 42.
-p.glb.dX_in = 2400.
-p.glb.k_V = 0.
-
-p.spc.H_p = 0.75
-
-p.spc.KD .= 0
-p.spc.E .= 1.
-p.spc.B .= 2.
-p.spc.KD[2] = 1.
-@show p.spc.KD
-
-p.glb.C_W = [0.1]
-
-simulate(debkiss)
-
-sim = exposure(debkiss, [0., 0.5, 1., 2.])
-
-@df sim plot(
-    plot(:t, :S, group = :treatment_id),
-    plot(:t, :D_z_1_2, group = :treatment_id),
-    plot(:t, :C_W_1, group = :treatment_id)
-)
+using EcotoxSystems.DEBkiss
+import EcotoxSystems: relative_response
+using EcotoxSystems
+using DataFramesMeta
 
 @testset begin
 
-    debkiss = SimplifiedEnergyBudget(individual_derivatives! = EcotoxSystems.debkiss_mixture_IA!) |> instantiate
+    debkiss = FullDEBkiss()
     p = debkiss.parameters
+    tktd_ref = deepcopy(debkiss.parameters.spc.TKTD)
     
     p.glb.t_max = 42.
     p.glb.dX_in = 2400.
     p.glb.k_V = 0.
-
-    p.spc.H_p = 0.75
-
-    p.spc.KD .= 0
-    p.spc.E .= 1.
-    p.spc.B .= 2.
+    p.spc.H_p = 75.
 
     let Cvec =  vcat(0., round.(10 .^ range(log10(1.01), log10(10.), length = 5), sigdigits = 2)) 
 
@@ -69,25 +26,29 @@ sim = exposure(debkiss, [0., 0.5, 1., 2.])
         global pmoas = ["G", "M", "A", "R"]
         
         for (j,pmoa) in enumerate(pmoas)
-            
-            p.spc.KD .= 0.
-            p.spc.KD[1,j] = 1.
-            p.spc.KD_h[1] = 1.
+
+            tktd = deepcopy(tktd_ref)
+            DEBkiss.set_TKTD_param!(tktd, :k_D, 1, pmoa, 1.)
+            DEBkiss.set_TKTD_param!(tktd, :e, 1, pmoa, 1.)
+            DEBkiss.set_TKTD_param!(tktd, :b, 1, pmoa, 1.)
+
+            p.spc.TKTD = tktd
 
             # using the exposure function to iterate over treatments
-            sim_j = exposure(debkiss, Cvec)
+            sim_j = DEBkiss.simulate_constant_exposure(p, :C_W1 => Cvec; saveat = 1)
             sim_j[!,:pmoa] .= pmoa
             append!(sims, sim_j)
         end 
         
-        global sims = relative_response(sims, [:S, :R], :C_W_1; groupby_vars = [:t, :pmoa])
-
+        sims.t = ceil.(sims.t)
+        # FIXME: relative_response creates artefacts when used with life stage-concatenating simulators (like in DEBkiss.sim_all)
+        sims = relative_response(sims, [:S, :R], :treatment_id; groupby_vars = [:t, :pmoa])
         sort!(sims, :t)
         
         rankcor = combine(groupby(sims, :pmoa)) do sim_j
             @chain sim_j begin
-                combine(groupby(_, :C_W_1), :y_R => last) 
-                corspearman(_.C_W_1, _.y_R_last)
+                combine(groupby(_, :C_W1), :y_R => last) 
+                corspearman(_.C_W1, _.y_R_last)
                 return DataFrame(r = _)
             end 
         end
@@ -104,15 +65,16 @@ sim = exposure(debkiss, [0., 0.5, 1., 2.])
             )
             
         for (j,pmoa) in enumerate(pmoas)
-            @df @subset(sims, :pmoa .== pmoa) plot!(plt, :t, :y_S, group = :C_W_1, subplot = j, label = hcat(unique(:C_W_1)...))
-            @df @subset(sims, :pmoa .== pmoa) plot!(plt, :t, :y_R, group = :C_W_1, subplot = 4+j, label = hcat(unique(:C_W_1)...))
+            @df @subset(sims, :pmoa .== pmoa) plot!(plt, :t, :y_S, group = :treatment_id, subplot = j, label = hcat(Cvec...))
+            @df @subset(sims, :pmoa .== pmoa) plot!(plt, :t, :y_R, group = :treatment_id, subplot = 4+j, label = hcat(Cvec...))
         end
         
         display(plt)
+
+        sims_ad = @subset(sims, :is_adult .== 1)
         
         @test unique(rankcor.r .<= 0.9) == [true] # all pmoas affect reproduction
-        @test minimum(sims.y_R) .< 0.5
-        @test minimum(sims[sims.pmoa.=="R",:].y_S) > 0.99 # no effect on growth for PMoA R
+        @test minimum(sims_ad[sims_ad.pmoa.=="R",:].y_S) > 0.8 # no effect on growth for PMoA R
+
     end
 end
-

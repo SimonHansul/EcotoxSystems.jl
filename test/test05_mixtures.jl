@@ -3,7 +3,7 @@ Simulate mixtures with different PMoAs
 =#
 
 using DataFramesMeta
-import EcotoxSystems: exposure, relative_response, debkiss_mixture_IA!
+import EcotoxSystems: sim_exp, relative_response, debkiss_mixture_IA!
 import ComponentArrays: ComponentVector; const CV = ComponentVector
 
 debkiss = SimplifiedEnergyBudget(individual_derivatives! = debkiss_mixture_IA!) |> instantiate
@@ -84,7 +84,7 @@ p.spc.KD
 p.spc.E
 p.spc.B
 
-sim = exposure(debkiss, Cmat);
+sim = sim_exp(debkiss, Cmat);
 
 @df sim plot(
     plot(:t, :S, group = :treatment_id, leg = true),
@@ -105,7 +105,7 @@ p.spc.KD = [
     0. 0. 0. 1.
     ]
 
-sim = exposure(EcotoxSystems.ODE_simulator, p, Cmat);
+sim = sim_exp(EcotoxSystems.ODE_simulator, p, Cmat);
 
 @df sim plot(
     plot(:t, :S, group = :treatment_id, leg = true),
