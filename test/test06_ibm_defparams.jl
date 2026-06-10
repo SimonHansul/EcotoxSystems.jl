@@ -12,9 +12,114 @@ using Test
 using Revise
 using EcotoxSystems; const ETS = EcotoxSystems
 import EcotoxSystems: @replicates, Individual, treplicates
-
-
 using Plots, StatsPlots
+using EcotoxSystems.DEBkiss
+
+# re-writing the IBM simulator to avoid function wrapping altogether...
+
+using Pkg; Pkg.develop(path=".")
+
+global_ode! = DEBkiss.constant_nutrient_influx!
+global_rules! = DEBkiss.default_global_rules!
+
+DEBkiss.debkiss!
+individual_ode! = DEBkiss.debkiss!
+individual_rules! = DEBkiss.individual_rules
+
+
+# step 1: instantiate an individual
+
+mutable struct Individual
+    du::ComponentVector
+    u::ComponentVector
+    p::ComponentVector 
+    t::ComponentVector
+end
+
+ function Individual(
+    p::Componentvector, 
+    u_glb::ComponentVector, 
+    generate_individual_params::Function; 
+    cohort::Ind = 1, id::Int = 1
+    )
+
+    ind = new()
+    ind.p = generate_individual_params(p)
+    ind.u = ComponentVector(
+        glb = u_glb,
+        ind = ComponentVector(
+            initialize_individual_statevars(ind.p),
+            a.p, id = id, 
+            cohort = cohort
+        )
+    )
+
+    ind.du = similar(ind.u)
+    ind.du .= 0.
+
+    return ind
+end
+
+
+# step 2: instantiate a model
+
+mutable struct IndividualBasedModel 
+    individuals::Vector{Individual}
+    du::ComponentVector
+    u::ComponentVector
+    p::ComponentVector
+    t::Real
+    dt::Real
+    idcount::Int
+    saveat::Float64
+    global_record::Vector{ComponentVector}
+    individual_record::Vector{ComponentVector}
+end
+
+# step 3: put individuals into model
+# step 4: run an individual step
+
+
+"""
+Second-order function to capture individual step.
+"""
+function make_individual_step(individual_ode!, individual_rules!)
+
+    function individual_step!(ind::Individual, m::IBM)::Nothing
+        get_global_statevar!(ind, m)
+        individual_ode!(ind.du, ind.u, ind.p, m.t)
+        Euler!(ind.u, ind.du, m.t)
+        individual_rules!(ind.du, ind.u, ind.p, m.t)
+        return nothing
+    end
+
+    return individual_step!
+end
+
+individual_step = make_individual_step(individual_ode!, individual_rules!)
+
+# step 5: run a  model step
+
+function make_model_step(global_ode!, global_rules!, individual_step!)
+
+    function model_step!(m::IndividualBasedModel)::Nothing
+        global_ode!(m.du, m.u, m.p, m.t)
+        Euler!(m.u, m.du, m.t)
+        global_rules!(m)
+        step_all_individuals!(m.individuals, individual_step!)
+        m.t += m.dt
+        record_global!(m)
+        return nothing
+    end
+
+    return model_step!
+
+end
+
+model_step = make_model_step(global_ode!, global_rules!, Individual_step!)
+
+# step 6: put it all together
+
 
 # the output for a single individual from the IBM is compared with the pure-ODE solution 
 # this is done for a case with food limitation, since that is where there are most likely to be discrepancies

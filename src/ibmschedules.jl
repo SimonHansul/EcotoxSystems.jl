@@ -126,17 +126,6 @@ end
 
 
 """
-    default_global_rules!(m)
-
-Global rule-based portion of the default model. 
-"""
-function default_global_rules!(m)
-    m.u.glb.N = length(m.individuals) # tracking population size
-    m.u.glb.X = max.(0, m.u.glb.X) # HOTFIX : negative resource abundances can cause chaos
-end
-
-
-"""
     model_step!(m::AbstractIBM)::Nothing
 
 Generic definition of an individual-based model step.

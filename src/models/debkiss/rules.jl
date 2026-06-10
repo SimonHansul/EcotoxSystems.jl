@@ -1,3 +1,17 @@
+# ======================================== #
+# Rule-based portion of IBM simulation
+# ======================================== #
+
+"""
+    default_global_rules!(m)
+
+Global rule-based portion of the default model. 
+"""
+function default_global_rules!(m)
+    m.u.glb.N = length(m.individuals) # tracking population size
+    m.u.glb.X = max.(0, m.u.glb.X) # HOTFIX : negative resource abundances can cause chaos
+end
+
 # individuals.jl 
 # definition of the default individual and default individual rules
 # the mutabe struct for individuals should be generic enough for most applications, 
@@ -148,16 +162,16 @@ end
         individual_ode! = default_individual_ODE!,
         individual_rules! = default_individual_rules,
         init_individual_statevars = initialize_individual_statevars,
-        gen_ind_params = generate_individual_params
+        generate_individual_params::Function = debkiss_individual_params
         )
         
         a = new() 
 
-        a.individual_ode! = individual_ode!
-        a.individual_rules! = individual_rules!
-        a.init_individual_statevars = init_individual_statevars
-        a.generate_individual_params = gen_ind_params
-        a.p = a.generate_individual_params(p)
+        #a.individual_ode! = individual_ode!
+        #a.individual_rules! = individual_rules!
+        #a.init_individual_statevars = init_individual_statevars
+        #a.generate_individual_params = gen_ind_params
+        a.p = generate_individual_params(p)
         
         # individual stores a reference to global states + copy of own states
         a.u = ComponentVector(
@@ -173,3 +187,4 @@ end
         return a
     end
 end
+

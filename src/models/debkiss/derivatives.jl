@@ -373,3 +373,26 @@ end
     )::Real
     return k_D * (C_W - D)
 end
+
+"""
+Complete ODE for use in IBM simulations.
+"""
+function debkiss!(du, u, p, t)
+
+    Base.ifelse(
+        u.ind.is_embryo > 0,
+        embryo!(du, u, p, t)
+    )
+
+    Base.ifelse(
+        u.ind.is_juvenile > 0,
+        juvenile!(du, u, p, t)
+    )
+
+    Base.ifelse(
+        u.ind.is_adult > 0,
+        adult!(du, u, p, t)
+    )
+
+    return nothing
+end
