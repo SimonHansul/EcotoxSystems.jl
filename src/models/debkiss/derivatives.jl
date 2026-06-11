@@ -253,7 +253,7 @@ function sim_embryo(
     kwargs...
     )
 
-    p_ind = debkiss_individual_params(p)
+    p_ind = generate_individual_params(p)
     u0 = initialize_statevars(p_ind)
     tspan = (0,p.glb.t_max)
     prob = ODEProblem(sys_embryo!, u0, tspan, p_ind)

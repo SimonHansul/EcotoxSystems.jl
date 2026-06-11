@@ -1,18 +1,17 @@
-# debkiss_defaultparams.jl 
+# defaultparams.jl 
 # default parameter sets for the default model
 # the default parameters are a plausible starting point for *Daphnia* with model currency μgC, 
 # but their main purpose is to serve as a reference during development and testing (including extensions of the base model)
 
 # Global parameters with ComponentVector
 debkiss_global_params() = ComponentVector(
-    N0 = 1,                    # initial number of individuals [#]
-    t_max = 21.0,              # maximum simulation time [days]
+    t_max = 21.0,            # maximum simulation time [days]
     dX_in = 1200.0,          # nutrient influx [μg C d-1]
-    k_V = 0.0,                 # chemostat dilution rate [d-1]
-    V_patch = 0.05,            # volume of a patch [L]
-    T = 293.15,                # ambient temperature [K]
-    C_W1 = 0.,                 # aqueous concentration of chemical 1 [e.g. μg L^-1]
-    C_W2 = 0.,                 # aqueous concentration of chemical 2 [e.g. μg L^-1]
+    k_V = 0.0,               # chemostat dilution rate [d-1]
+    V_patch = 0.05,          # volume of a patch [L]
+    T = 293.15,              # ambient temperature [K]
+    C_W1 = 0.,               # aqueous concentration of chemical 1 [e.g. μg L^-1]
+    C_W2 = 0.,               # aqueous concentration of chemical 2 [e.g. μg L^-1]
 )
 
 # Species-level DEB and TKTD parameters with ComponentVector
@@ -72,7 +71,7 @@ debkiss_species_params() = ComponentVector(
     )
 )
 
-debkiss_defaultparams() = ComponentVector{Union{Real,Distribution}}(
+defaultparams() = ComponentVector{Union{Real,Distribution}}(
     glb = debkiss_global_params(),
     spc = debkiss_species_params()
 )
@@ -111,16 +110,7 @@ function generate_individual_params(p::ComponentVector; kwargs...)::ComponentVec
     )
 end
 
-function generate_individual_params_nozoom(p::ComponentVector; kwargs...)::ComponentVector
-    return ComponentVector(
-        glb = p.glb, 
-        ind = getval.(p.spc); 
-        kwargs...
-    ) #|> 
-    #x -> ComponentVector{Real}(x) # type must not bee to specific for autodiff compatibility
-end
-
-function debkiss_individual_params(p::ComponentVector; kwargs...)
+function generate_individual_params(p::ComponentVector; kwargs...)
 
     ind = getval.(p.spc) |> 
     x -> Real.(x) |> 
@@ -160,7 +150,7 @@ link_ind_params!(p) = begin
     p.k_J_emb = (1-p.kappa_emb)/p.kappa_emb * p.k_M_emb
 end
 
-p = deepcopy(debkiss_defaultparams)
+p = deepcopy(defaultparams)
 link_params!(p, (spc = link_ind_params!,)) # apply link ahead of simulation 
 ```
 

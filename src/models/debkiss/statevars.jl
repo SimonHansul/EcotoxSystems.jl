@@ -68,9 +68,6 @@ function initialize_global_statevars(p::ComponentVector)::ComponentVector
         X = p.glb.dX_in, # initial resource abundance equal to influx rate [e.g. μg C]
         C_W1 = p.glb.C_W1, # aqueous concentration of chemical 1 [e.g. μg L^-1]
         C_W2 = p.glb.C_W2, # aqueous concentration of chemical 2  [e.g. μg L^-1]
-        aux_IBM = ComponentVector( # auxiliary state vars for IBM simulation
-            N = p.glb.N0, # population size [#]
-        )
     )
 end
 

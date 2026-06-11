@@ -1,80 +1,101 @@
 using Pkg; Pkg.activate("test")
-#using Plots, StatsPlots
-
-using Plots
-default(leg = false)
-
+Pkg.rm("EcotoxSystems")
+Pkg.develop(path = ".")
+Pkg.precompile()
 using Distributions
 using DataFramesMeta
 using DataFrames
 using Test
+using Plots, StatsPlots
 
 using Revise
-using EcotoxSystems; const ETS = EcotoxSystems
-import EcotoxSystems: @replicates, Individual, treplicates
-using Plots, StatsPlots
-using EcotoxSystems.DEBkiss
+using EcotoxSystems, EcotoxSystems.DEBkiss, EcotoxSystems.IBM
 
 # re-writing the IBM simulator to avoid function wrapping altogether...
-
-using Pkg; Pkg.develop(path=".")
 
 global_ode! = DEBkiss.constant_nutrient_influx!
 global_rules! = DEBkiss.default_global_rules!
 
 DEBkiss.debkiss!
 individual_ode! = DEBkiss.debkiss!
-individual_rules! = DEBkiss.individual_rules
+individual_rules! = DEBkiss.individual_rules!
 
+using EcotoxSystems.ComponentArrays, EcotoxSystems.Parameters
 
-# step 1: instantiate an individual
+# step 1: instantiate an individual ✅
 
-mutable struct Individual
-    du::ComponentVector
-    u::ComponentVector
-    p::ComponentVector 
-    t::ComponentVector
+p = DEBkiss.defaultparams()
+u_glb = DEBkiss.initialize_global_statevars(p)
+
+Pkg.develop(path=".")
+
+@time a = IBM.Individual(
+    p, 
+    u_glb, 
+    DEBkiss.initialize_individual_statevars,
+    DEBkiss.generate_individual_params
+);
+
+@testset "initialization of Individual expands the state vector" begin
+    @test a.u.ind.cohort == 1
+    @test a.u.ind.id == 1
 end
 
- function Individual(
-    p::Componentvector, 
-    u_glb::ComponentVector, 
-    generate_individual_params::Function; 
-    cohort::Ind = 1, id::Int = 1
-    )
+@testset "accessing individual properties is allocation-free" begin
 
-    ind = new()
-    ind.p = generate_individual_params(p)
-    ind.u = ComponentVector(
-        glb = u_glb,
-        ind = ComponentVector(
-            initialize_individual_statevars(ind.p),
-            a.p, id = id, 
-            cohort = cohort
-        )
-    )
+    # this caused ≈ 1200 allocations when `a` was a mutable struct
+    # expecting 0 when a is `a` NamedTuple
+    function alloc_test(a)
+        for _ in 1:1000
+            a.u.ind.id
+        end
+    end
 
-    ind.du = similar(ind.u)
-    ind.du .= 0.
-
-    return ind
+    [alloc_test(a) for _ in 1:10];
+    allocs = @allocated alloc_test(a) # 
+    @test allocs == 0
 end
-
 
 # step 2: instantiate a model
+# TODO: same for model as for individuals...=> NamedTuple instead of struct!
 
-mutable struct IndividualBasedModel 
-    individuals::Vector{Individual}
-    du::ComponentVector
-    u::ComponentVector
-    p::ComponentVector
-    t::Real
-    dt::Real
-    idcount::Int
-    saveat::Float64
-    global_record::Vector{ComponentVector}
-    individual_record::Vector{ComponentVector}
+m = (
+    individuals = NamedTuple[],
+)
+
+push!(m.individuals, (age = 0, length = 1e-3))
+
+typeof(m)
+
+import Base.show
+
+function show(io::IO, m::NamedTuple{(:individuals,)})
+    print(io, "Model with $(length(m.individuals)) individuals.")
 end
+m
+
+@testset "Instantiating a model and population" begin
+
+    global m = IBM.Model(
+        p; 
+        initialize_global_statevars = DEBkiss.initialize_global_statevars,
+        initialize_individual_statevars = DEBkiss.initialize_individual_statevars, 
+        generate_individual_params = DEBkiss.generate_individual_params,
+        dt = 1/24, 
+        N0 = 10
+    )
+
+    @test length(m.individuals) == 10
+    @test m.idcount == 10
+end
+
+@time map(a->a.u.ind.id, m.individuals);
+[m.individuals[i] for i in eachindex(m.individuals)];
+allocs_ind = @allocated m.individuals[1]
+@test allocs_ind == 0 # acessing an individual should be allocation-free
+
+allocs_u = @allocated m.u.glb.X
+@test allocs_u == 0 # accessing global states should be allocation-free
 
 # step 3: put individuals into model
 # step 4: run an individual step

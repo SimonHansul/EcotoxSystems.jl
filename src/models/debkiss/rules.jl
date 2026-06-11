@@ -73,13 +73,36 @@ A crude rule for starvation mortality is implemented, applying a constant hazard
 
 Reproduction is assumed to occur in fixed time intervals, according to `spc.tau_R`.
 """
-function default_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothing
+function individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothing
 
     p = a.p
     u = a.u
     u.ind.age += m.dt 
 
- 
+    @unpack is_embryo, is_juvenile, is_adult, X_emb, H = u.ind
+    @unpack H_p = p.ind
+
+    # ======================================== #
+    # life stage transitions
+    # ======================================== #
+
+    if X_emb <= 0
+        u.ind.is_embryo = 0.
+        if H >= H_p
+            u.ind.is_juvenile = 0. 
+            u.ind.is_adult = 1.
+        else
+            u.ind.is_juvenile = 1. 
+            u.ind.is_adult = 0.
+        end
+    else
+        u.ind.is_embryo = 1
+    end
+
+    # ======================================== #
+    # mortality
+    # ======================================== #
+
     # aging is implemented in a non-mechanistic manner 
     # individuals die when they exceed their maximum age a_max
     # a_max is subject to individual variability
@@ -95,7 +118,9 @@ function default_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothi
         u.ind.cause_of_death = 2.
     end
 
-    # reproduction, assuming a constant reproduction period
+    # ======================================== #
+    # reproduction
+    # ======================================== #
     
     # reproduction only occurs if the reproduction period has been exceeded
     if check_reproduction_period(u.ind[:time_since_last_repro], p[:ind][:tau_R]) 
@@ -127,64 +152,64 @@ function default_individual_rules!(a::AbstractIndividual, m::AbstractIBM)::Nothi
 end
 
 
-@with_kw mutable struct Individual <: AbstractIndividual
-
-    du::ComponentVector
-    u::ComponentVector
-    p::ComponentVector
-
-    individual_ode!::Function # equation-based portion of the individual step
-    individual_rules!::Function # rule-based portion of the individual step
-    init_individual_statevars::Function # function to initialize individual state variables
-    generate_individual_params::Function # function to initialize individual parameters
-
-    """
-    Individual(
-            p::ComponentVector, 
-            global_statevars::ComponentVector;
-            id::Int = 1,
-            cohort::Int = 0,
-            individual_ode! = default_individual_ODE!,
-            individual_rules! = default_individual_rules,
-            init_individual_statevars = initialize_individual_statevars,
-            )::Individual
-
-    Initialization of an individual based on parameters `p` 
-    and global state `global_statevars`. 
-
-    Keyword arguments are used to assure that rules and equations for individual behaviour are inherited correctly.
-    """
-    function Individual(
-        p::ComponentVector, 
-        global_statevars::ComponentVector;
-        id::Int = 1,
-        cohort::Int = 0,
-        individual_ode! = default_individual_ODE!,
-        individual_rules! = default_individual_rules,
-        init_individual_statevars = initialize_individual_statevars,
-        generate_individual_params::Function = debkiss_individual_params
-        )
-        
-        a = new() 
-
-        #a.individual_ode! = individual_ode!
-        #a.individual_rules! = individual_rules!
-        #a.init_individual_statevars = init_individual_statevars
-        #a.generate_individual_params = gen_ind_params
-        a.p = generate_individual_params(p)
-        
-        # individual stores a reference to global states + copy of own states
-        a.u = ComponentVector(
-            glb = global_statevars, # global states
-            ind = ComponentVector( # own states
-                a.init_individual_statevars(a.p, id = id, cohort = cohort);
-            )
-        )
-
-        a.du = similar(a.u)
-        a.du .= 0.
-        
-        return a
-    end
-end
+#@with_kw mutable struct Individual <: AbstractIndividual
+#
+#    du::ComponentVector
+#    u::ComponentVector
+#    p::ComponentVector
+#
+#    individual_ode!::Function # equation-based portion of the individual step
+#    individual_rules!::Function # rule-based portion of the individual step
+#    init_individual_statevars::Function # function to initialize individual state variables
+#    generate_individual_params::Function # function to initialize individual parameters
+#
+#    """
+#    Individual(
+#            p::ComponentVector, 
+#            global_statevars::ComponentVector;
+#            id::Int = 1,
+#            cohort::Int = 0,
+#            individual_ode! = default_individual_ODE!,
+#            individual_rules! = default_individual_rules,
+#            init_individual_statevars = initialize_individual_statevars,
+#            )::Individual
+#
+#    Initialization of an individual based on parameters `p` 
+#    and global state `global_statevars`. 
+#
+#    Keyword arguments are used to assure that rules and equations for individual behaviour are inherited correctly.
+#    """
+#    function Individual(
+#        p::ComponentVector, 
+#        global_statevars::ComponentVector;
+#        id::Int = 1,
+#        cohort::Int = 0,
+#        individual_ode! = default_individual_ODE!,
+#        individual_rules! = default_individual_rules,
+#        init_individual_statevars = initialize_individual_statevars,
+#        generate_individual_params::Function = generate_individual_params
+#        )
+#        
+#        a = new() 
+#
+#        #a.individual_ode! = individual_ode!
+#        #a.individual_rules! = individual_rules!
+#        #a.init_individual_statevars = init_individual_statevars
+#        #a.generate_individual_params = gen_ind_params
+#        a.p = generate_individual_params(p)
+#        
+#        # individual stores a reference to global states + copy of own states
+#        a.u = ComponentVector(
+#            glb = global_statevars, # global states
+#            ind = ComponentVector( # own states
+#                a.init_individual_statevars(a.p, id = id, cohort = cohort);
+#            )
+#        )
+#
+#        a.du = similar(a.u)
+#        a.du .= 0.
+#        
+#        return a
+#    end
+#end
 

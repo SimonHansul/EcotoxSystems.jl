@@ -9,7 +9,7 @@ debkiss = FullDEBkiss()
 
 # simulating two stressors with different PMoAs
 
-p = DEBkiss.debkiss_defaultparams()
+p = DEBkiss.defaultparams()
 DEBkiss.set_TKTD_param!(p.spc.TKTD, :k_D, 1, "G", 1.)
 DEBkiss.set_TKTD_param!(p.spc.TKTD, :k_D, 2, "R", 1.)
 
@@ -40,7 +40,7 @@ sim = DEBkiss.simulate_constant_exposure(
 # so there should be no effects on growth in any of the treatments, 
 # but every treatment should affect repro
 
-p = DEBkiss.debkiss_defaultparams()
+p = DEBkiss.defaultparams()
 DEBkiss.set_TKTD_param!(p.spc.TKTD, :k_D, 1, "R", 1.)
 DEBkiss.set_TKTD_param!(p.spc.TKTD, :k_D, 2, "R", 1.)
 

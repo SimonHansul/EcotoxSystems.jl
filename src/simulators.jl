@@ -49,7 +49,7 @@ Run a model as purely ODE-based system:
 
 ```Julia
 using EcotoxSystems
-sim = DEB.ODE_simulator(EcotoxSystems.debkiss_defaultparams(p))
+sim = DEB.ODE_simulator(EcotoxSystems.defaultparams(p))
 ```
 
 """
@@ -224,16 +224,16 @@ end
 
 
 """
-    replicates(simulator::Function, debkiss_defaultparams::ComponentVector, nreps::Int64; kwargs...)
+    replicates(simulator::Function, defaultparams::ComponentVector, nreps::Int64; kwargs...)
 
-Perform replicated runs of `simulator` with parameters `debkiss_defaultparams` (`simulator(debkiss_defaultparams)` has to be a valid function call). 
+Perform replicated runs of `simulator` with parameters `defaultparams` (`simulator(defaultparams)` has to be a valid function call). 
 Analogous to `@replicates`, but a bit more flexible.
 """
-function replicates(simulator::Function, debkiss_defaultparams::ComponentVector, nreps::Int64; kwargs...)
+function replicates(simulator::Function, defaultparams::ComponentVector, nreps::Int64; kwargs...)
     sim = []
 
     for replicate in 1:nreps
-        sim_i = simulator(debkiss_defaultparams; kwargs...)
+        sim_i = simulator(defaultparams; kwargs...)
         push!(sim, sim_i)
     end
     
@@ -243,7 +243,7 @@ end
 """
     treplicates(
         simulator::Function, 
-        debkiss_defaultparams::ComponentVector, 
+        defaultparams::ComponentVector, 
         nreps::Int64; 
         kwargs...)
 
@@ -263,14 +263,14 @@ for more information.
 """
 function treplicates(
     simulator::Function, 
-    debkiss_defaultparams::ComponentVector, 
+    defaultparams::ComponentVector, 
     nreps::Int64; 
     kwargs...)
 
     sim = Vector{Any}(undef, nreps)
 
     @threads for replicate in 1:nreps
-        sim_i = simulator(debkiss_defaultparams; kwargs...)
+        sim_i = simulator(defaultparams; kwargs...)
     end
     
     return combine_outputs(Vector{typeof(sim[1])}(sim))
@@ -393,20 +393,20 @@ Threaded version of `exposure()`.
 """
 function texposure(
     simulator::Function, 
-    debkiss_defaultparams::ComponentVector, 
+    defaultparams::ComponentVector, 
     C_Wvec::Vector{Float64}
     )
     
-    let C_W_int = debkiss_defaultparams.glb.C_W # we will modify this value and then reset to the initial value
+    let C_W_int = defaultparams.glb.C_W # we will modify this value and then reset to the initial value
         sim = DataFrame()
 
         @threads for C_W in C_Wvec
-            debkiss_defaultparams.glb.C_W[1] = C_W
-            sim_i = simulator(debkiss_defaultparams)
+            defaultparams.glb.C_W[1] = C_W
+            sim_i = simulator(defaultparams)
             append!(sim, sim_i)
         end
         
-        debkiss_defaultparams.glb.C_W = C_W_int 
+        defaultparams.glb.C_W = C_W_int 
 
         return sim
     end
