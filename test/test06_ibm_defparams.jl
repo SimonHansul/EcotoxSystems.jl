@@ -27,7 +27,6 @@ using EcotoxSystems.ComponentArrays, EcotoxSystems.Parameters
 p = DEBkiss.defaultparams()
 u_glb = DEBkiss.initialize_global_statevars(p)
 
-Pkg.develop(path=".")
 
 @time a = IBM.Individual(
     p, 
@@ -56,90 +55,131 @@ end
     @test allocs == 0
 end
 
-# step 2: instantiate a model
+# step 2: instantiate a model ✅
+# step 3: put individuals into model ✅
 # TODO: same for model as for individuals...=> NamedTuple instead of struct!
-
-m = (
-    individuals = NamedTuple[],
-)
-
-push!(m.individuals, (age = 0, length = 1e-3))
-
-typeof(m)
-
-import Base.show
-
-function show(io::IO, m::NamedTuple{(:individuals,)})
-    print(io, "Model with $(length(m.individuals)) individuals.")
-end
-m
 
 @testset "Instantiating a model and population" begin
 
     global m = IBM.Model(
         p; 
-        initialize_global_statevars = DEBkiss.initialize_global_statevars,
-        initialize_individual_statevars = DEBkiss.initialize_individual_statevars, 
-        generate_individual_params = DEBkiss.generate_individual_params,
+        init_u_glb = DEBkiss.initialize_global_statevars,
+        init_u_ind = DEBkiss.initialize_individual_statevars,
+        gen_p_ind = DEBkiss.generate_individual_params,
         dt = 1/24, 
         N0 = 10
     )
 
     @test length(m.individuals) == 10
-    @test m.idcount == 10
+    @test m.aux.idcount == 10
 end
 
-@time map(a->a.u.ind.id, m.individuals);
-[m.individuals[i] for i in eachindex(m.individuals)];
-allocs_ind = @allocated m.individuals[1]
-@test allocs_ind == 0 # acessing an individual should be allocation-free
+@time map(a->a.u.ind.id, m.individuals); # reference: ca. 0.07 seconds
 
-allocs_u = @allocated m.u.glb.X
-@test allocs_u == 0 # accessing global states should be allocation-free
-
-# step 3: put individuals into model
-# step 4: run an individual step
-
-
-"""
-Second-order function to capture individual step.
-"""
-function make_individual_step(individual_ode!, individual_rules!)
-
-    function individual_step!(ind::Individual, m::IBM)::Nothing
-        get_global_statevar!(ind, m)
-        individual_ode!(ind.du, ind.u, ind.p, m.t)
-        Euler!(ind.u, ind.du, m.t)
-        individual_rules!(ind.du, ind.u, ind.p, m.t)
-        return nothing
+function test_ind_access_allocs(m)
+    for _ in 1:1000
+        m.individuals[1] # accesing individual should be allocation-free
+        m.individuals[1].u.ind.id # accessing individual state should be allocation-free
     end
-
-    return individual_step!
 end
 
-individual_step = make_individual_step(individual_ode!, individual_rules!)
+@allocated test_ind_access_allocs(m) # precompile
+@test (@allocated test_ind_access_allocs(m)) == 0
 
-# step 5: run a  model step
 
-function make_model_step(global_ode!, global_rules!, individual_step!)
+# step 4: run an individual step ✅
+# step 5: run a  model step ✅
+#   the example simulation does not work yet, but we are now in model-specification territory...
 
-    function model_step!(m::IndividualBasedModel)::Nothing
-        global_ode!(m.du, m.u, m.p, m.t)
-        Euler!(m.u, m.du, m.t)
-        global_rules!(m)
-        step_all_individuals!(m.individuals, individual_step!)
-        m.t += m.dt
-        record_global!(m)
-        return nothing
-    end
+individual_step! = IBM.make_individual_step(
+    individual_ode!, 
+    individual_rules!, 
+    DEBkiss.initialize_individual_statevars,
+    DEBkiss.generate_individual_params
+    )
 
-    return model_step!
+m = IBM.Model(
+        p; 
+        init_u_glb = DEBkiss.initialize_global_statevars,
+        init_u_ind = DEBkiss.initialize_individual_statevars,
+        gen_p_ind = DEBkiss.generate_individual_params,
+        dt = 1/24, 
+        N0 = 10_000
+    )
 
-end
+model_step! = IBM.make_model_step(global_ode!, global_rules!, individual_step!)
 
-model_step = make_model_step(global_ode!, global_rules!, Individual_step!)
 
 # step 6: put it all together
+
+
+# FIXME: life stage indicators occasionally go through the roof...
+# FIXME: individuals are not dying...?
+#       - [x] food levels are not updated...
+#           - fixed: forgot to include _set_global_states!()
+#       - [ ] still no death.
+#           - do inds lose struct?
+#           - is cause_of_death set correctly?  
+#       - [ ] values in aux_IBM do not seem to be updated correctly...
+
+
+theme(:juno)
+
+p.spc.aux_IBM.tau_R = 2
+p.spc.H_p
+p.glb.t_max = 30.
+p.glb.dX_in = 1000.
+p.glb.k_V = 0.5
+
+@time sim = IBM.simulate(
+    p; 
+    global_ode! = DEBkiss.constant_nutrient_influx!,
+    individual_ode! = DEBkiss.debkiss!,
+
+    global_rules! = DEBkiss.default_global_rules!,
+    individual_rules! = DEBkiss.individual_rules!,
+
+    init_u_glb = DEBkiss.initialize_global_statevars,
+    init_u_ind = DEBkiss.initialize_individual_statevars,
+    gen_p_ind = DEBkiss.generate_individual_params,
+
+    N0 = 10, 
+    record_individuals = true, 
+    saveat = 1/12
+);
+
+using ProgressMeter
+
+#num_steps = p.glb.t_max * dt
+#prog = ProgressThresh(num_steps; desc=":", showvalues = [("N",iter), ("x",x)])
+
+
+sim.spc.id
+sim.spc.cohort
+
+@df sim.glb plot(
+    plot(:t, :N), 
+    plot(:t, :X)
+)
+
+sim.spc.aux_IBM
+
+@df @subset(sim.spc, :id .<= 10) plot(
+    plot(:t, :S)
+)
+
+sim_ODE = DEBkiss.sim_all(p);
+
+
+
+#@df sim.spc plot(
+#    plot(:t, :S, group = :id),
+#    plot(:t, [:is_embryo :is_juvenile :is_adult]), 
+#    plot(:t, :X_emb), 
+#    leg = false
+#)
+
+
 
 
 # the output for a single individual from the IBM is compared with the pure-ODE solution 

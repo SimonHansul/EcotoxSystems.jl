@@ -18,7 +18,7 @@ debkiss_global_params() = ComponentVector(
 # TODO: harmonize parameter naming with debkiss literature
 # TODO: add specific density, set to 1 by default
 debkiss_species_params() = ComponentVector(
-    Z = Dirac(1.0), # individual variability through zoom factor
+    Z = Dirac(1.0), # mass-based zoom factor [-]
     T_A = 8000.0,    # Arrhenius temperature [K]
     T_ref = 293.15,  # reference temperature [K]
     X_emb_int = 19.42, # initial vitellus [μgC]
@@ -67,7 +67,10 @@ debkiss_species_params() = ComponentVector(
     ),
     aux_IBM = ComponentVector( # addition parameters used in the IBM part
         a_max = Truncated(Normal(60, 6), 0, Inf), # maximum life span 
-        tau_R = 2.0, # reproduction interval    
+        tau_R = 2.0, # reproduction interval  
+        S_rel_crit = 0.5, # critical fraction of structure that can be lost before starvation hazard rate sets in [-]
+        h_S = 1e-3, # starvation hazard rate [d^-1]
+        cause_of_death = 0.
     )
 )
 

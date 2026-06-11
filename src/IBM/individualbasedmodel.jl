@@ -66,10 +66,10 @@ mutable struct IndividualBasedModel <: AbstractIBM
         record_individuals::Bool = true
         )::IndividualBasedModel
 
-        m = new()
-        m.global_ode! = global_ode!
-        m.global_rules! = global_rules!
-        m.individuals = Vector{Individual}(undef, Int(p.glb.N0))
+        #m = new()
+        #m.global_ode! = global_ode!
+        #m.global_rules! = global_rules!
+        #m.individuals = Vector{Individual}(undef, Int(p.glb.N0))
         
         # setting up global states and individuals
         

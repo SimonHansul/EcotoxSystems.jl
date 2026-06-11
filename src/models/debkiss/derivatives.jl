@@ -379,20 +379,20 @@ Complete ODE for use in IBM simulations.
 """
 function debkiss!(du, u, p, t)
 
-    Base.ifelse(
-        u.ind.is_embryo > 0,
+    if u.ind.is_embryo > 0.5
         embryo!(du, u, p, t)
-    )
+        return nothing
+    end
 
-    Base.ifelse(
-        u.ind.is_juvenile > 0,
+    if u.ind.is_juvenile > 0.5
         juvenile!(du, u, p, t)
-    )
+        return nothing
+    end
 
-    Base.ifelse(
-        u.ind.is_adult > 0,
+    if u.ind.is_adult > 0.5
         adult!(du, u, p, t)
-    )
+        return nothing
+    end
 
-    return nothing
+    error("No active life stage found.")
 end

@@ -3,18 +3,7 @@
 
 get_recorded_individual_var_indices(m::AbstractIBM) = map(x -> x in m.recorded_individual_vars,  keys(ind)) |> BitVector
 
-"""
-    get_global_statevars!(a::AbstractIndividual, m::AbstractIBM)::Nothing
 
-Retrieve global state variables and derivatives for use in the individual-level model step.
-"""
-function get_global_statevars!(a::AbstractIndividual, m::AbstractIBM)::Nothing
-    
-    a.du.glb = m.du.glb
-    a.u.glb = m.u.glb
-
-    return nothing
-end
 
 """
     set_global_statevars!(m::AbstractIBM, a::AbstractIndividual)::Nothing
@@ -66,22 +55,6 @@ function Euler!(u::ComponentVector, du::ComponentVector, dt::Real)::Nothing
 end
 
 
-"""
-    record_individual!(a::AbstractIndividual, m::AbstractIBM)::Nothing
-
-Store individual-level state variables in `m.individual_record`.
-"""
-function record_individual!(a::AbstractIndividual, m::AbstractIBM)::Nothing
-
-    if m.record_individuals && isapprox(m.t % m.saveat, 0, atol = m.dt)
-        push!(
-            m.individual_record,
-            ComponentVector(a.u.ind; t = m.t)
-        )
-    end
-
-    return nothing
-end
 
 
 """
@@ -91,38 +64,14 @@ Store global state variables in `m.global_record`.
 """
 function record_global!(m::AbstractIBM)::Nothing
 
-    if isapprox(m.t % m.saveat, 0, atol = m.dt)
-        push!(m.global_record,ComponentVector(m.u; t = m.t))
+    if isapprox(m.simstate.t % m.simstate.saveat, 0, atol = m.simstate.dt)
+        push!(m.global_record,ComponentVector(m.u; t = m.simstate.t, N = m.u.aux.N))
     end
 
     return nothing
 end
 
 
-"""
-    filter_individuals!(m::AbstractIBM)
-
-Remove individuals which have been flagged to die after the current time-step. 
-Individuals for which the condition `u.ind.cause_of_death == 0` applies are retained.
-"""
-filter_individuals!(m::AbstractIBM) = m.individuals = filter(x -> x.u.ind.cause_of_death == 0, m.individuals)
-
-function step_all_individuals!(m::AbstractIBM)::Nothing
-    
-    shuffle!(m.individuals)
-
-    for a in m.individuals
-        # before an individual step is executed, the global derivatives are reset to 0. this
-        # this is so that individuals can modify the global states, e.g. when ingesting food
-        m.du.glb .= 0. 
-        individual_step!(a, m)
-        record_individual!(a, m)
-    end
-
-    filter_individuals!(m)
-
-    return nothing
-end
 
 
 """

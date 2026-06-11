@@ -27,8 +27,6 @@ function initialize_individual_statevars(
         A = 0., # cumulative assimilation
         M = 0., # cumulative somatic maintenance
         J = 0., # cumulative maturity maintenance 
-        I_emb = 0., # cumulative ingestion from vitellus
-        I_p = 0., # cumulative ingestion from external food resource
 
         TKTD = ComponentVector(
             DW_1_G = 0.,

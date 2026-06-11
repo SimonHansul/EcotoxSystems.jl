@@ -52,6 +52,12 @@ Initial version.
 
 ## v0.4.0
 
+- Major update to internals and API! 
 - updated DEBkiss implementation to omit function wrapping in struct (matching `EnergyBudgetModelZoo` approach)
 - added type `FullDEBkiss <: SimplifiedEnergyBudget` for future integration into `EnergyBudgetModelZoo`
-- **⚠️ as of v0.5.0, model implementations should not be part of EcotoxSystems.jl anymore**
+    - **⚠️ as of v0.5.0, model implementations should not be part of EcotoxSystems.jl anymore**
+    - the long-term strategy is to separate models via SubModules, rather than structs
+- for the IBM part, the use of structs is omitted entirely:
+    - Individuals and models are just `NamedTuples`. Some exploratory analysis of the resulting performance showed that this is way more efficient because we can remove most of the type instability issues we previously had. 
+    - The same strategy is applied to the Model representation.
+    - The IBM implementation also omits wrapping of functions entirely, and instead uses closures to derive model-specific schedules based on a generic step and the component-wise functions.
