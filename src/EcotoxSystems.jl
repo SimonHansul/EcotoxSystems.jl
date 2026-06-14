@@ -251,7 +251,7 @@ function make_model_step(
 
     function model_step!(m)::Nothing
         global_ode!(m.du, m.u, m.p, m.aux.t)
-        _Euler!(m.u, m.du, m.aux.t)
+        _Euler!(m.u, m.du, m.aux.dt)
         global_rules!(m)
         _step_all_individuals!(m, individual_step!)
         m.aux.t += m.aux.dt
