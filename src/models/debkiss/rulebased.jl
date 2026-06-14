@@ -9,7 +9,8 @@ Global rule-based portion of the default model.
 """
 function default_global_rules!(m)
     m.aux.N = length(m.individuals) # tracking population size
-    m.u.glb.X = max.(0, m.u.glb.X) # HOTFIX : negative resource abundances can cause chaos
+    #m.u.glb.X = max.(0, m.u.glb.X) # HOTFIX : negative resource abundances can cause chaos
+    return nothing
 end
 
 abstract type AbstractIndividual end
@@ -31,12 +32,14 @@ end
 @inline function death_by_loss_of_structure(
     S::Float64,
     S_max_hist::Float64,
-    W_S_rel_crit::Float64,
+    S_rel_crit::Float64,
     h_S::Float64,
     dt::Float64
     )::Bool
 
-    return ((S/S_max_hist) < W_S_rel_crit) && (rand() > exp(-h_S * dt))
+    randnum = rand() 
+
+    return ((S/S_max_hist) < S_rel_crit) && (randnum > exp(-h_S * dt))
 
 end
 
@@ -71,7 +74,9 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
 
     p = a.p
     u = a.u
-    a.du.ind.aux_IBM .= 0.
+
+    a.du.ind.age = 1.
+    a.u.ind.aux.Xi = u.glb.X
 
     @unpack is_embryo, is_juvenile, is_adult, X_emb, H = u.ind
     @unpack H_p = p.ind
@@ -97,21 +102,22 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
     # mortality
     # ======================================== #
 
-    @unpack a_max, tau_R = a.p.ind.aux_IBM
+    @unpack a_max, tau_R = a.p.ind.aux
 
     # aging is implemented in a non-mechanistic manner 
     # individuals die when they exceed their maximum age a_max
     # a_max is subject to individual variability
+    
     if death_by_aging(u.ind.age, a_max)
-        u.ind.aux_IBM.cause_of_death = 1.
+        u.ind.aux.cause_of_death = 1.
     end
     
     # for starvation mortality, currently only a limit is set on the amount of mass that can be lost
     # this is basically only a sanity check, and the actual starvation rules should be assessed on a species-by-species basis
-    u.ind.aux_IBM.S_max_hist = determine_S_max_hist(u.ind.S, u.ind.aux_IBM.S_max_hist)
+    u.ind.aux.S_max_hist = determine_S_max_hist(u.ind.S, u.ind.aux.S_max_hist)
 
-    if death_by_loss_of_structure(u.ind.S, u.ind.aux_IBM.S_max_hist, p.ind.aux_IBM.S_rel_crit, p.ind.aux_IBM.h_S, m.dt)
-        u.ind.aux_IBM.cause_of_death = 2.
+    if death_by_loss_of_structure(u.ind.S, u.ind.aux.S_max_hist, p.ind.aux.S_rel_crit, p.ind.aux.h_S, m.aux.dt)
+        u.ind.aux.cause_of_death = 2.
     end
 
     # ======================================== #
@@ -119,13 +125,9 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
     # ======================================== #
     
     # reproduction only occurs if the reproduction period has been exceeded
-    if check_reproduction_period(u.ind.aux_IBM.time_since_last_repro, tau_R) 
+    if check_reproduction_period(u.ind.aux.time_since_last_repro, tau_R) 
         # if that is the case, calculate the number of offspring, 
         # based on the reproduction buffer and the dry mass of an egg
-
-        if isnan(u.ind.R)
-            @show u.ind.S u.ind.age u.glb.X u.ind.I
-        end
 
         N = calc_num_offspring(u.ind.R, p.ind.X_emb_int)
         if isnan(N)
@@ -141,18 +143,18 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
                     a.u.glb, 
                     init_u_ind, 
                     gen_p_ind; 
-                    cohort = a.u.ind.aux_IBM.cohort += 1,
+                    cohort = a.u.ind.aux.cohort += 1,
                     id = m.aux.idcount
                 )
             )
            
             u.ind.R -= p.ind.X_emb_int # decrease reproduction buffer
-            u.ind.aux_IBM.cum_repro += 1 # keep track of cumulative reproduction of the mother individual
+            u.ind.aux.cum_repro += 1 # keep track of cumulative reproduction of the mother individual
         end
-        u.ind.aux_IBM.time_since_last_repro = 0. # reset reproduction period
+        u.ind.aux.time_since_last_repro = 0. # reset reproduction period
     # if reproduction period has not been exceeded,
     else
-        u.ind.aux_IBM.time_since_last_repro += m.dt # track reproduction period
+        u.ind.aux.time_since_last_repro += m.aux.dt # track reproduction period
     end
 
     return nothing

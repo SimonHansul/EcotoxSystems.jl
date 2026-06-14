@@ -1,7 +1,9 @@
 using Pkg; Pkg.activate("test")
-Pkg.rm("EcotoxSystems")
 Pkg.develop(path = ".")
-Pkg.precompile()
+
+#Pkg.rm("EcotoxSystems")
+#Pkg.precompile()
+
 using Distributions
 using DataFramesMeta
 using DataFrames
@@ -26,7 +28,6 @@ using EcotoxSystems.ComponentArrays, EcotoxSystems.Parameters
 
 p = DEBkiss.defaultparams()
 u_glb = DEBkiss.initialize_global_statevars(p)
-
 
 @time a = IBM.Individual(
     p, 
@@ -74,8 +75,6 @@ end
     @test m.aux.idcount == 10
 end
 
-@time map(a->a.u.ind.id, m.individuals); # reference: ca. 0.07 seconds
-
 function test_ind_access_allocs(m)
     for _ in 1:1000
         m.individuals[1] # accesing individual should be allocation-free
@@ -85,7 +84,6 @@ end
 
 @allocated test_ind_access_allocs(m) # precompile
 @test (@allocated test_ind_access_allocs(m)) == 0
-
 
 # step 4: run an individual step ✅
 # step 5: run a  model step ✅
@@ -105,9 +103,9 @@ m = IBM.Model(
         gen_p_ind = DEBkiss.generate_individual_params,
         dt = 1/24, 
         N0 = 10_000
-    )
+    );
 
-model_step! = IBM.make_model_step(global_ode!, global_rules!, individual_step!)
+model_step! = IBM.make_model_step(global_ode!, global_rules!, individual_step!);
 
 
 # step 6: put it all together
@@ -117,59 +115,99 @@ model_step! = IBM.make_model_step(global_ode!, global_rules!, individual_step!)
 # FIXME: individuals are not dying...?
 #       - [x] food levels are not updated...
 #           - fixed: forgot to include _set_global_states!()
-#       - [ ] still no death.
-#           - do inds lose struct?
-#           - is cause_of_death set correctly?  
-#       - [ ] values in aux_IBM do not seem to be updated correctly...
+#       - [x] individual not instantiated correctly
+#       - [x] still no death.
+#           - [x] do inds lose struct? yes
+#           - [x] is cause_of_death set correctly?  no
+#           - [x] aging submodule: age does not change correctly
+#           - [x] starvation submodule...
+#       - [ ] why does the population crash?
+#             - added plausible value for V_patch, K_X
+#       - [ ] X behaves weirdly...goes to 0 as expected but then jumps up, with now effect on individuals 
+#       - [ ] ...
 
 
 theme(:juno)
 
-p.spc.aux_IBM.tau_R = 2
-p.spc.H_p
-p.glb.t_max = 30.
-p.glb.dX_in = 1000.
-p.glb.k_V = 0.5
 
-@time sim = IBM.simulate(
-    p; 
-    global_ode! = DEBkiss.constant_nutrient_influx!,
-    individual_ode! = DEBkiss.debkiss!,
+begin
+    p.glb.t_max = 120.
+    p.glb.dX_in = 2000. # 4,000 μgC ≈ 2 mg DW 
+    p.glb.k_V = 0.1
+    p.glb.V_patch = 0.5
 
-    global_rules! = DEBkiss.default_global_rules!,
-    individual_rules! = DEBkiss.individual_rules!,
+    p.spc.Z = Truncated(Normal(1, 0.1), 0, Inf)
+    p.spc.aux.tau_R = 2
+    p.spc.aux.h_S = 1.
+    p.spc.aux.a_max = Truncated(Normal(30, 12), 0, Inf)
+    p.spc.K_X = 250.
 
-    init_u_glb = DEBkiss.initialize_global_statevars,
-    init_u_ind = DEBkiss.initialize_individual_statevars,
-    gen_p_ind = DEBkiss.generate_individual_params,
+    @time sim = IBM.simulate(
+        p; 
+        global_ode! = DEBkiss.constant_nutrient_influx!,
+        individual_ode! = DEBkiss.debkiss!,
 
-    N0 = 10, 
-    record_individuals = true, 
-    saveat = 1/12
-);
+        global_rules! = DEBkiss.default_global_rules!,
+        individual_rules! = DEBkiss.individual_rules!,
+
+        init_u_glb = DEBkiss.initialize_global_statevars,
+        init_u_ind = DEBkiss.initialize_individual_statevars,
+        gen_p_ind = DEBkiss.generate_individual_params,
+
+        N0 = 10, 
+        record_individuals = true, 
+        saveat = 1/24, 
+        dt = 1/24
+    )
+
+    @df sim.glb plot(
+        plot(:t, :N), # why does population collapes entirely?
+        plot(:t, :X, marker = true) # why does X suddenly jump up, then increase linearly?
+    )
+end
+using CSV
+CSV.write("exploration/example_output_popcrash_glb.csv", sim.glb)
+CSV.write("exploration/example_output_popcrash_spc.csv", sim.spc)
+
+@transform! sim.spc :cause_of_death = map(x -> x.cause_of_death, sim.spc.aux)
+@transform! sim.spc :Xi  = map(x -> x.Xi, sim.spc.aux)
+@test sort(unique(sim.spc.cause_of_death)) == [0., 1., 2.]
+
+using Chain
+
+# FIXME: why does the population not recover at low N...?
+#   - no growth whatsoever towards the end
+#   - recording experienced food density Xi
+#       - in fact, individuals have 0 food...?
+#   - recording at every timestep
+
+@chain sim.spc begin
+    @subset :t .>= 70 :t .<= 75
+    @with _ begin
+        plot(
+            plot(:t, :S, group = :id),
+            plot(:t, :H, group = :id),
+            plot(:t, :Xi, group = :id),
+            leg = false
+        )
+    end
+end
 
 using ProgressMeter
 
-#num_steps = p.glb.t_max * dt
-#prog = ProgressThresh(num_steps; desc=":", showvalues = [("N",iter), ("x",x)])
+dt = 1/24; num_steps = p.glb.t_max / dt
+N = 1e3
 
 
-sim.spc.id
-sim.spc.cohort
 
-@df sim.glb plot(
-    plot(:t, :N), 
-    plot(:t, :X)
-)
+prog = ProgressThresh(num_steps; desc=":")
 
-sim.spc.aux_IBM
+for step in 1:100
+    update!(prog, step, showvalues = ["N", N])
+    sleep(0.1)
+end
 
-@df @subset(sim.spc, :id .<= 10) plot(
-    plot(:t, :S)
-)
-
-sim_ODE = DEBkiss.sim_all(p);
-
+#Progress(10; dt=1) 
 
 
 #@df sim.spc plot(

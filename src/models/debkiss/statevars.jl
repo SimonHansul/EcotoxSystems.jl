@@ -39,14 +39,15 @@ function initialize_individual_statevars(
             DW_2_A = 0.,
             DW_2_R = 0.,
         ),
-        aux_IBM = ComponentVector( # auxiliary varaibles needed for the IBM part
+        aux = ComponentVector( # auxiliary varaibles needed for the IBM part
             S_max_hist = p.ind.X_emb_int * X_EMB_INT_REL, 
             id = id, 
             cohort = cohort,
             age = 0.,
             cause_of_death = 0.,
             time_since_last_repro = 0.,
-            cum_repro = 0.
+            cum_repro = 0.,
+            Xi = 0.,
         )
     )
 end

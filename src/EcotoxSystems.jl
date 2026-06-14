@@ -37,39 +37,6 @@ using DataFrames
 using Random
 using ProgressMeter
 
-#mutable struct Individual
-#    du::ComponentVector 
-#    u::ComponentVector
-#    p::ComponentVector
-#    t::ComponentVector
-#
-#    function Individual(
-#        p::ComponentVector, 
-#        u_glb::ComponentVector, 
-#        initialize_individual_statevars,
-#        generate_individual_params; 
-#        cohort::Real = 1, id::Real = 1
-#        )
-#    
-#        ind = new()
-#        ind.p = generate_individual_params(p)
-#        ind.u = ComponentVector(
-#            glb = u_glb,
-#            ind = ComponentVector(
-#                initialize_individual_statevars(ind.p),
-#                id = id, 
-#                cohort = cohort
-#            )
-#        )
-#
-#        ind.du = similar(ind.u)
-#        ind.du .= 0.
-#
-#        #@assert typeof(generate_individual_params) != typeof(initialize_individual_statevars)
-#
-#        return ind
-#    end
-#end
 
 function Individual(
     p::ComponentVector, 
@@ -91,8 +58,7 @@ function Individual(
   
     du = similar(u)
     du .= 0.
-    
-    #@assert typeof(generate_individual_params) != typeof(initialize_individual_stateva
+
     return (
         u = u, 
         du = du,
@@ -136,7 +102,6 @@ function Model(
         du = du, 
         u = u,
         p = p,
-        dt = dt, 
         individuals = individuals,
         aux = aux,
         global_record = global_record,
@@ -214,33 +179,14 @@ function _set_global_statevars!(m, a)::Nothing
     return nothing
 end
 
-
-"""
-Second-order function to capture individual step.
-"""
-function make_individual_step(ind_ode!, ind_rules!, init_u_ind, gen_p_ind)
-
-    function individual_step!(a, m)::Nothing
-        _get_global_statevars!(a, m)
-        ind_ode!(a.du, a.u, a.p, m.aux.t)
-        _Euler!(a.u, a.du, m.aux.dt)
-        ind_rules!(a, m; init_u_ind = init_u_ind, gen_p_ind = gen_p_ind)
-        _set_global_statevars!(m, a)
-        return nothing
-    end
-
-    return individual_step!
-end
-
-
 function _filter_individuals!(m)::Nothing
-    filter!(x -> x.u.ind.aux_IBM.cause_of_death == 0., m.individuals)
+    filter!(x -> x.u.ind.aux.cause_of_death == 0., m.individuals)
     return nothing
 end
 
 function _record_individual!(a, m)::Nothing
 
-    if (m.aux.record_individuals > 0) && isapprox(m.aux.t % m.aux.saveat, 0, atol = m.dt)
+    if (m.aux.record_individuals > 0) && isapprox(m.aux.t % m.aux.saveat, 0, atol = m.aux.dt)
         push!(
             m.individual_record,
             ComponentVector(a.u.ind; t = m.aux.t)
@@ -257,6 +203,26 @@ function _record_global!(m)::Nothing
     end
 
     return nothing
+end
+
+
+
+"""
+Second-order function to capture individual step.
+"""
+function make_individual_step(ind_ode!, ind_rules!, init_u_ind, gen_p_ind)
+
+    function individual_step!(a, m)::Nothing
+
+        _get_global_statevars!(a, m)
+        ind_ode!(a.du, a.u, a.p, m.aux.t)
+        _Euler!(a.u, a.du, m.aux.dt)
+        ind_rules!(a, m; init_u_ind = init_u_ind, gen_p_ind = gen_p_ind)
+        _set_global_statevars!(m, a)
+        return nothing
+    end
+
+    return individual_step!
 end
 
 function _step_all_individuals!(m, individual_step!)::Nothing
@@ -276,6 +242,7 @@ function _step_all_individuals!(m, individual_step!)::Nothing
     return nothing
 end
 
+
 function make_model_step(
     global_ode!, 
     global_rules!, 
@@ -284,11 +251,11 @@ function make_model_step(
 
     function model_step!(m)::Nothing
         global_ode!(m.du, m.u, m.p, m.aux.t)
-        IBM._Euler!(m.u, m.du, m.aux.t)
+        _Euler!(m.u, m.du, m.aux.t)
         global_rules!(m)
-        IBM._step_all_individuals!(m, individual_step!)
-        m.aux.t += m.dt
-        IBM._record_global!(m)
+        _step_all_individuals!(m, individual_step!)
+        m.aux.t += m.aux.dt
+        _record_global!(m)
         return nothing
     end
 
