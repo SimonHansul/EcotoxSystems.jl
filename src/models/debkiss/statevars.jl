@@ -48,6 +48,7 @@ function initialize_individual_statevars(
             time_since_last_repro = 0.,
             cum_repro = 0.,
             Xi = 0.,
+            fX = 1.
         )
     )
 end

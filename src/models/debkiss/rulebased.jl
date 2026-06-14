@@ -156,6 +156,12 @@ function individual_rules!(a, m; init_u_ind, gen_p_ind)::Nothing
     else
         u.ind.aux.time_since_last_repro += m.aux.dt # track reproduction period
     end
+    
+    # ======================================== #
+    # auxiliary
+    # ======================================== #
+
+    a.u.ind.aux.fX = f_X(u.glb.X, p.glb.V_patch, p.ind.K_X)
 
     return nothing
 end
