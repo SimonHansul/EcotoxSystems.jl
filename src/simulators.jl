@@ -85,80 +85,6 @@ function ODE_simulator(
     error("returntype $returntype not implemented")
 end
 
-"""
-    IBM_simulator(
-        p::ComponentVector; 
-        global_ode! = default_global_ODE!,
-        global_rules! = default_global_rules!,
-        init_global_statevars = initialize_global_statevars,
-        individual_ode! = default_individual_ODE!,
-        individual_rules! = default_individual_rules!,
-        init_individual_statevars = initialize_individual_statevars,
-        dt = 1/24, 
-        saveat = 1,
-        record_individuals = true,
-        showinfo::Number = Inf
-    )
-Simulate the individual-based version of the default model. 
-
-```
-using EcotoxSystems
-p = DEB.params()
-sim = DEB.IBMsimulator(p)
-```
-
-For explanation of arguments, see `IndividualBasedModel`.
-
-"""
-function IBM_simulator(
-    p::ComponentVector; 
-    init_global_statevars = initialize_global_statevars,
-    global_ode! = default_global_ODE!,
-    global_rules! = default_global_rules!,
-    
-    individual_ode! = default_individual_ODE!,
-    individual_rules! = default_individual_rules!,
-    init_individual_statevars = initialize_individual_statevars,
-    gen_ind_params = generate_individual_params,
-    
-    dt = 1/24, 
-    saveat = 1,
-    record_individuals = true,
-    showinfo::Number = Inf
-    )
-
-    showinfo < Inf ? @info("Running IndividualBasedModel simulation with t_max=$(p.glb.t_max)") : nothing
-    
-    global m = IndividualBasedModel(
-        p; 
-
-        init_global_statevars = init_global_statevars,
-        global_ode! = global_ode!, 
-        global_rules! = global_rules!,
-        
-        individual_ode! = individual_ode!,
-        individual_rules! = individual_rules!,
-        init_individual_statevars = init_individual_statevars,
-        gen_ind_params = gen_ind_params,
-        
-        dt = dt, 
-        saveat = saveat,
-        record_individuals = record_individuals
-        )
-
-    while !(m.t > m.p.glb.t_max)
-        if showinfo < Inf && isapprox(m.t % showinfo, 0, atol = m.dt)
-            @info("t=$(m.t), N = $(m.u.glb.N), mem = $(Base.summarysize(m))")
-        end
-
-        model_step!(m)
-    end
-
-    df_spc =  record_individuals ?  individual_record_to_df(m) : nothing
-
-    return (glb = global_record_to_df(m), spc = df_spc)
-end
-
 
 global_record_to_df(m::AbstractIBM)::DataFrame = DataFrame(hcat(m.global_record...)', getcolnames(m))
 
@@ -195,21 +121,6 @@ combine_outputs(outputs::Vector{N}; idcol = :replicate) where N <: NamedTuple = 
     return NamedTuple(zip(keys(outputs[1]), out))
 end
 
-"""
-    @replicates(simcall::Expr, nreps::Int64) 
-
-Perform replicated runs of `simcall`, where `simcall` is a call to a simulator function. 
-
-Example:
-
-```Julia
-    spc = SpeciesParams(Z = Truncated(Normal(1, 0.1), 0, Inf)) # initialize default parameters with variable zoom factor
-    sim = @replicates MechanisticEffectModels.simulator(Params(spc = spc))) 10 # execute replicated runs to simulator
-```
-
-In this case, `sim` will contain the output of 10 replicated simulations. For each replicate, the zoom factor is sampled from a truncated Normal distribution. 
-`sim` contains an additional column `replicate`.
-"""
 macro replicates(simcall::Expr, nreps::Int)
     quote
         sim = []
@@ -222,13 +133,6 @@ macro replicates(simcall::Expr, nreps::Int)
     end
 end
 
-
-"""
-    replicates(simulator::Function, defaultparams::ComponentVector, nreps::Int64; kwargs...)
-
-Perform replicated runs of `simulator` with parameters `defaultparams` (`simulator(defaultparams)` has to be a valid function call). 
-Analogous to `@replicates`, but a bit more flexible.
-"""
 function replicates(simulator::Function, defaultparams::ComponentVector, nreps::Int64; kwargs...)
     sim = []
 
@@ -240,27 +144,6 @@ function replicates(simulator::Function, defaultparams::ComponentVector, nreps::
     return combine_outputs(Vector{typeof(sim[1])}(sim))
 end
 
-"""
-    treplicates(
-        simulator::Function, 
-        defaultparams::ComponentVector, 
-        nreps::Int64; 
-        kwargs...)
-
-Multi-threaded version of `replicates`. 
-
-Only useful if Julia has been started with multiple threads. 
-    
-To check the number of threads, run 
-```using Base.Threads; Threads.nthreads()```.
-
-In VSCode, you can use the entry "julia.NumThreads" in settings.json to set the default number of threads 
-(searching for "julia threads" in the preferences will lead you there). 
-
-Check the [Multi-threading documentation](https://docs.julialang.org/en/v1/manual/multi-threading/) 
-for more information.
-
-"""
 function treplicates(
     simulator::Function, 
     defaultparams::ComponentVector, 
@@ -296,46 +179,6 @@ end
 reshape_Cmat(Cmat::Matrix{Float64}) = Cmat
 reshape_Cmat(Cmat::Vector{Float64}) = hcat(Cmat...)' |> Matrix
 
-"""
-    exposure(
-        simulator::Function, 
-        p::ComponentVector, 
-        Cmat::Union{Vector{R},Matrix{R}}
-    ) where R <: Real
-
-Simulate constant chemical exposure with over an arbitrary number of treatments and chemical stressors, defined in `Cmat`. 
-
-The columns of `C_W` are stressors, the rows are treatments. <br>
-If `C_W` is supplied as a Vector, it is assumed that the elements represent different levels of single-stressor exposure. <br>
-That means, to simulate a single-stressor experiment with three treatments, do 
-
-```Julia 
-Cmat = [0., 1., 2,]
-```
-
-, internally creating a 1 x 3 matrix with exposure concentrations 0, 1 and 2. 
-
-A single treatment with multiple stressors can be defined as 
-
-```Julia
-Cmat = [0 1 2;]
-```
-
-Here, we would have three stressors with the simultaneous exposure concentrations 0,1,2. <br>
-
-Defining four treatments for two stressors looks like this:
-
-```Julia
-Cmat = [
-    0.0 0.0; 
-    0.0 0.5; 
-    1.0 0.0; 
-    0.5 1.0
-    ]
-```
-
-This exposure matrix corresponds to a ray design with constant exposure ratios.
-"""
 function exposure(
     simulator::Function, 
     p::ComponentVector, 
@@ -362,7 +205,6 @@ function exposure(
     end
 end
 
-# FIXME: exposure function may need to be adapted for 0.3.3
 function exposure(model, Cmat::VecOrMat{R}; C = :C_W, simfunc = simulate_ODE) where R <: Real
   
     Cmat = reshape_Cmat(Cmat) # if a Vector has been provided, we have to reshape
