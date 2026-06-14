@@ -30,16 +30,8 @@ to define parameters and state variables for each component.
 
 <img src="implementation_logic.png" alt="Implementation logic">
 
-This approach is work in progress, but overall in a functional state. There are currently some limitations regarding performance of the IBM due to type instabilities that occur in the generic IBM scheduling.
-
-## TODO
-
-
-- [ ] resolve type instabilities in IBM scheduling
-- [ ] update docs
-- [ ] provide example of spatially explicit IBM
-- [ ] native support for multi-species systems
-
+There is room for improvement regarding performance of the IBM due to type instabilities that occur in the generic IBM scheduling.
+The simulations are currently limited to spatially implicit IBMs, although space can be added via auxiliary state variables.
 
 ## Installation 
 
