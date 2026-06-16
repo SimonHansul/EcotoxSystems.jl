@@ -1,28 +1,6 @@
 # drcfuncts.jl
 # dose-response functions used in the default model
 
-#"""
-#Transformation of softNEC2pos for decreasing relationships with domain (0,1).
-#"""
-#@inline softNEC2neg(x::Real, p::NTuple{2,Real}) = 1 / (1 + p[2] *(x - p[1]) * (0.5 + (1 / pi) * atan(1e6 * (x - p[1]))))
-#@inline softNEC2neg(x::Real, p1::Real, p2::Real) = 1 / (1 + p2 *(x - p1) * (0.5 + (1 / pi) * atan(1e6 * (x - p1))))
-#"""
-#Transformation of softNECpos for increasing relationships with domain (0,Inf).
-#"""
-#@inline softNEC2GUTS(x::Real, p::NTuple{2,Real}) = p[2] * (x - p[1]) * (0.5 + (1 / pi) * atan(1e6 * (x - p[1])))
-#@inline softNEC2GUTS(x::Real, p1::Real, p2::Real) = p2 * (x - p1) * (0.5 + (1 / pi) * atan(1e6 * (x - p1)))
-
-
-# more dose-response functions that could be useful
-# currently outcommented because not included in tests
-#
-##Two-parameter log-logistic function. 
-##The expression `y = 1 / (1 + (x/p[1])^p[2])` is extended to 
-##`y = (1 / (1 + Complex(x/p[1])^p[2])).re`. 
-##This way we deal with domain errors which might occur if `x` or `p[1]` temporarily takes a negative value. 
-##Negative values should theoretically be impossible, but very small values of `x` (`<= 1e-20`) might occur during ODE solving. 
-##In this case, the returned real part of the expression evaluates to 1, which is in turn the expected behaviour.  
-#
 @inline function LL2(x::Real, p::NTuple{2,Real})::Real
     return (1 / (1 + (x / p[1]) ^ p[2]))#.re
 end
@@ -39,7 +17,7 @@ end
 
 #
 #
-##Cumulative hazard function of the log-logistic distribution. Mainly used for application in GUTS.
+##Cumulative hazard function of the log-logistic distribution. 
 #
 #@inline function LL2h(x::Real, p::NTuple{2,Real})
 #    -log((1 / (1 + Complex(x / p[1]) ^ p[2])).re)
