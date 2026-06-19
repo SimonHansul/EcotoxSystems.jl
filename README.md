@@ -1,4 +1,5 @@
 # EcotoxSystems.jl : Simulation of component-structured systems in ecotoxicology and ecology
+# ⚠️ Migrated to codeberg: https://codeberg.org/DynamicEcotox/ecotoxsystems.jl
 
 
 [![](https://img.shields.io/badge/docs-dev-blue.svg)](https://simonhansul.github.io/EcotoxSystems.jl/dev/)
